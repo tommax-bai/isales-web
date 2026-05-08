@@ -19,7 +19,7 @@ const router = createRouter({
         {
           path: "dashboard",
           name: "dashboard",
-          component: () => import("@/views/PlaceholderView.vue"),
+          component: () => import("@/views/DashboardView.vue"),
           meta: { title: "数据看板" },
         },
         {
@@ -27,6 +27,72 @@ const router = createRouter({
           name: "campaigns",
           component: () => import("@/views/Campaigns/CampaignList.vue"),
           meta: { title: "任务管理" },
+        },
+        {
+          path: "leads",
+          name: "leads",
+          component: () => import("@/views/Leads/LeadList.vue"),
+          meta: { title: "线索管理" },
+        },
+        {
+          path: "voice-models",
+          name: "voice-models",
+          component: () => import("@/views/VoiceModels/VoiceModelList.vue"),
+          meta: { title: "音色管理" },
+        },
+        {
+          path: "devices",
+          name: "devices",
+          component: () => import("@/views/Devices/DeviceList.vue"),
+          meta: { title: "设备管理" },
+        },
+        {
+          path: "sim-cards",
+          name: "sim-cards",
+          component: () => import("@/views/SimCards/SimCardList.vue"),
+          meta: { title: "SIM 卡" },
+        },
+        {
+          path: "monitor/:campaign_id",
+          name: "monitor",
+          component: () => import("@/views/Monitor/MonitorView.vue"),
+          meta: { title: "通话监控" },
+        },
+        {
+          path: "calls",
+          name: "calls",
+          component: () => import("@/views/Calls/CallList.vue"),
+          meta: { title: "通话记录" },
+        },
+        {
+          path: "calls/:id",
+          name: "call-detail",
+          component: () => import("@/views/Calls/CallDetail.vue"),
+          meta: { title: "通话详情" },
+        },
+        {
+          path: "callback-configs",
+          name: "callback-configs",
+          component: () => import("@/views/Callbacks/CallbackConfigList.vue"),
+          meta: { title: "回调配置" },
+        },
+        {
+          path: "callback-logs",
+          name: "callback-logs",
+          component: () => import("@/views/Callbacks/CallbackLogList.vue"),
+          meta: { title: "回调记录" },
+        },
+        {
+          path: "handoff-tasks",
+          name: "handoff-tasks",
+          component: () => import("@/views/HandoffTasks/HandoffTaskList.vue"),
+          meta: { title: "转人工任务" },
+        },
+        {
+          path: "holidays",
+          name: "holidays",
+          component: () => import("@/views/Holidays/HolidayList.vue"),
+          meta: { title: "节假日" },
         },
       ],
     },
@@ -40,7 +106,6 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to: RouteLocationNormalized) => {
-  // The auth store import is lazy: at module-init Pinia isn't ready yet.
   const { useAuthStore } = await import("@/stores/auth");
   const auth = useAuthStore();
   const isPublic = to.meta.public === true;

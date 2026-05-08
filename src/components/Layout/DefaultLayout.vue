@@ -9,8 +9,44 @@
         <el-menu-item index="campaigns" :route="{ name: 'campaigns' }">
           <span>任务管理</span>
         </el-menu-item>
-        <!-- Subsequent PRs add: leads, voice-models, devices, monitor,
-             calls, callback-configs, handoff-tasks, holidays. -->
+        <el-menu-item index="leads" :route="{ name: 'leads' }">
+          <span>线索管理</span>
+        </el-menu-item>
+        <el-sub-menu index="telephony">
+          <template #title>
+            <span>设备 &amp; 音色</span>
+          </template>
+          <el-menu-item index="voice-models" :route="{ name: 'voice-models' }">
+            音色
+          </el-menu-item>
+          <el-menu-item index="devices" :route="{ name: 'devices' }">设备</el-menu-item>
+          <el-menu-item index="sim-cards" :route="{ name: 'sim-cards' }">
+            SIM 卡
+          </el-menu-item>
+        </el-sub-menu>
+        <el-menu-item index="calls" :route="{ name: 'calls' }">
+          <span>通话记录</span>
+        </el-menu-item>
+        <el-sub-menu index="callbacks">
+          <template #title>
+            <span>回调</span>
+          </template>
+          <el-menu-item
+            index="callback-configs"
+            :route="{ name: 'callback-configs' }"
+          >
+            配置
+          </el-menu-item>
+          <el-menu-item index="callback-logs" :route="{ name: 'callback-logs' }">
+            记录
+          </el-menu-item>
+        </el-sub-menu>
+        <el-menu-item index="handoff-tasks" :route="{ name: 'handoff-tasks' }">
+          <span>转人工任务</span>
+        </el-menu-item>
+        <el-menu-item index="holidays" :route="{ name: 'holidays' }">
+          <span>节假日</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
     <el-container>
@@ -72,7 +108,8 @@ function onLogout() {
   background-color: transparent;
   border-right: none;
 }
-.sidebar :deep(.el-menu-item) {
+.sidebar :deep(.el-menu-item),
+.sidebar :deep(.el-sub-menu__title) {
   color: rgba(255, 255, 255, 0.85);
 }
 .sidebar :deep(.el-menu-item.is-active) {
