@@ -1,19 +1,39 @@
 import apiClient from "@/api/client";
 import type {
   CampaignCreate,
+  CampaignDetail,
   CampaignSummary,
   CampaignUpdate,
+  PaginatedResponse,
 } from "@/types/campaign";
 
 export const campaignsApi = {
-  list: () =>
-    apiClient.get<CampaignSummary[]>("/campaigns").then((r) => r.data),
+  list: async (params: { page?: number; page_size?: number } = {}) => {
+    const r = await apiClient.get<PaginatedResponse<CampaignDetail>>(
+      "/campaigns",
+      { params },
+    );
+    // Backend wraps the list in Page<CampaignDetailRead>; return items so
+    // callers stay shape-stable.
+    return r.data.items;
+  },
+  listPage: async (params: { page?: number; page_size?: number } = {}) => {
+    const r = await apiClient.get<PaginatedResponse<CampaignDetail>>(
+      "/campaigns",
+      { params },
+    );
+    return r.data;
+  },
   get: (id: number) =>
-    apiClient.get<CampaignSummary>(`/campaigns/${id}`).then((r) => r.data),
+    apiClient.get<CampaignDetail>(`/campaigns/${id}`).then((r) => r.data),
   create: (body: CampaignCreate) =>
-    apiClient.post<CampaignSummary>("/campaigns", body).then((r) => r.data),
+    apiClient
+      .post<CampaignDetail>("/campaigns", body)
+      .then((r) => r.data) as Promise<CampaignSummary>,
   update: (id: number, body: CampaignUpdate) =>
-    apiClient.patch<CampaignSummary>(`/campaigns/${id}`, body).then((r) => r.data),
+    apiClient
+      .patch<CampaignDetail>(`/campaigns/${id}`, body)
+      .then((r) => r.data) as Promise<CampaignSummary>,
   remove: (id: number) =>
     apiClient.delete<void>(`/campaigns/${id}`).then((r) => r.data),
   start: (id: number) =>

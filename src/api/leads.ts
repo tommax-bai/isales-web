@@ -1,4 +1,5 @@
 import apiClient from "@/api/client";
+import type { PaginatedResponse } from "@/types/campaign";
 import type {
   Lead,
   LeadCreate,
@@ -7,9 +8,23 @@ import type {
   LeadUpdate,
 } from "@/types/lead";
 
+export interface LeadListResponse {
+  items: Lead[];
+  total: number | null;
+}
+
 export const leadsApi = {
-  list: (params: LeadListParams = {}) =>
-    apiClient.get<Lead[]>("/leads", { params }).then((r) => r.data),
+  /** Tolerant list: backend returns Page<Lead> today, but if a future
+   * deployment regresses to a bare array, we still produce the same shape. */
+  list: async (params: LeadListParams = {}): Promise<LeadListResponse> => {
+    const r = await apiClient.get<
+      PaginatedResponse<Lead> | Lead[]
+    >("/leads", { params });
+    if (Array.isArray(r.data)) {
+      return { items: r.data, total: null };
+    }
+    return { items: r.data.items, total: r.data.total };
+  },
   get: (id: number) =>
     apiClient.get<Lead>(`/leads/${id}`).then((r) => r.data),
   create: (body: LeadCreate) =>

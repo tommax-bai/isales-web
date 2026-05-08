@@ -36,7 +36,7 @@ const loading = ref(false);
 async function onRefresh() {
   loading.value = true;
   try {
-    items.value = await callsApi.list({ limit: 50 });
+    items.value = await callsApi.list({ page: 1, page_size: 50 });
   } finally {
     loading.value = false;
   }

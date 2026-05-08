@@ -6,7 +6,7 @@
       :type="iconColor(ev.type)"
       :timestamp="formatTs(ev.ts)"
     >
-      <div class="event-row">
+      <div class="event-row" @click="emit('seek', ev.ts)">
         <el-tag size="small" :type="iconColor(ev.type)">{{ ev.type }}</el-tag>
         <span v-if="getText(ev)" class="event-text">{{ getText(ev) }}</span>
       </div>
@@ -18,6 +18,7 @@
 import type { TranscriptEvent } from "@/types/call";
 
 defineProps<{ events: TranscriptEvent[] }>();
+const emit = defineEmits<{ (e: "seek", tsMs: number): void }>();
 
 function iconColor(type: string): "primary" | "success" | "warning" | "danger" | "info" {
   if (type === "ai_reply" || type === "greeting") return "primary";
@@ -47,6 +48,10 @@ function formatTs(ms: number): string {
   display: flex;
   align-items: center;
   gap: 8px;
+  cursor: pointer;
+}
+.event-row:hover {
+  background-color: #f5f7fa;
 }
 .event-text {
   color: #303133;

@@ -39,8 +39,8 @@ export interface LeadListParams {
   campaign_id?: number;
   status?: LeadStatus;
   search?: string;
-  limit?: number;
-  offset?: number;
+  page?: number;
+  page_size?: number;
 }
 
 export interface LeadImportSummary {

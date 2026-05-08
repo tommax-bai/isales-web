@@ -13,6 +13,11 @@
       <el-table-column prop="vendor" label="厂商" width="120" />
       <el-table-column prop="voice_id" label="vendor voice id" />
       <el-table-column prop="description" label="说明" />
+      <el-table-column label="试听" width="320">
+        <template #default="{ row }">
+          <VoicePreview :voice-id="row.id" />
+        </template>
+      </el-table-column>
     </el-table>
   </el-card>
 </template>
@@ -21,6 +26,7 @@
 import { onMounted, ref } from "vue";
 
 import { voiceApi } from "@/api/voice";
+import VoicePreview from "@/components/VoiceModel/VoicePreview.vue";
 import type { VoiceModel } from "@/types/voice";
 
 const items = ref<VoiceModel[]>([]);

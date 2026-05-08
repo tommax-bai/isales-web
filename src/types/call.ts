@@ -21,4 +21,37 @@ export interface TranscriptEvent {
 export interface CallRecordDetail extends CallRecordSummary {
   transcript: TranscriptEvent[];
   prompt_versions: Record<string, unknown>;
+  extracted_fields?: Record<string, unknown>;
+}
+
+export interface RoleCandidate {
+  parsed_json: unknown;
+  parse_failed: boolean;
+  raw_text: string;
+  tokens_used: number | null;
+  duration_ms: number | null;
+  role_config_id?: number;
+}
+
+export interface JudgeResult {
+  judge_id: number;
+  candidate_index: number;
+  passed: boolean;
+  reason: string | null;
+}
+
+export interface PipelineTraceTurn {
+  turn_id: number;
+  user_input: string;
+  role_candidates: RoleCandidate[];
+  judge_results: JudgeResult[];
+  polish_input: string | null;
+  polish_output: string | null;
+  final_selected_candidate_index: number | null;
+  ts: number | null;
+}
+
+export interface PipelineTrace {
+  call_id: number;
+  turns: PipelineTraceTurn[];
 }

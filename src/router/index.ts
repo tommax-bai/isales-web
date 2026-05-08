@@ -29,6 +29,12 @@ const router = createRouter({
           meta: { title: "任务管理" },
         },
         {
+          path: "campaigns/:id/edit",
+          name: "campaign-edit",
+          component: () => import("@/views/Campaigns/CampaignEdit.vue"),
+          meta: { title: "编辑任务" },
+        },
+        {
           path: "leads",
           name: "leads",
           component: () => import("@/views/Leads/LeadList.vue"),

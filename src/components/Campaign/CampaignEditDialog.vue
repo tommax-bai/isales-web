@@ -50,7 +50,11 @@ import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import { computed, reactive, ref, watch } from "vue";
 
 import { useCampaignsStore } from "@/stores/campaigns";
-import type { CampaignCreate, CampaignSummary } from "@/types/campaign";
+import {
+  CAMPAIGN_DEFAULTS,
+  type CampaignCreate,
+  type CampaignSummary,
+} from "@/types/campaign";
 
 const props = defineProps<{
   modelValue: boolean;
@@ -114,7 +118,12 @@ async function onSubmit() {
       await store.update(props.initial.id, form);
       ElMessage.success("已更新");
     } else {
-      await store.create(form);
+      // Server's CampaignNestedCreate inherits CampaignBase, which has
+      // many non-default required fields. Fill the unset ones with sane
+      // defaults so the small "create" dialog can still produce a valid
+      // payload — the user fills the rest in the 9-tab edit page.
+      const payload: CampaignCreate = { ...CAMPAIGN_DEFAULTS, ...form };
+      await store.create(payload);
       ElMessage.success("已创建");
     }
     emit("saved");

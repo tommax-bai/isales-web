@@ -5,7 +5,8 @@
         <span class="title">线索管理</span>
         <div>
           <el-button @click="onImport">CSV 导入</el-button>
-          <el-button type="primary" @click="onRefresh">刷新</el-button>
+          <el-button type="primary" @click="onNew">新建</el-button>
+          <el-button @click="onRefresh">刷新</el-button>
         </div>
       </div>
     </template>
@@ -35,7 +36,7 @@
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="onRefresh">查询</el-button>
+        <el-button type="primary" @click="onSearch">查询</el-button>
       </el-form-item>
     </el-form>
 
@@ -52,21 +53,60 @@
       <el-table-column prop="follow_up_count" label="跟进" width="80" />
       <el-table-column prop="next_call_at" label="下次呼叫" width="180" />
       <el-table-column prop="last_hangup_cause" label="最近挂断原因" />
+      <el-table-column label="操作" width="100" fixed="right">
+        <template #default="{ row }">
+          <el-button link type="primary" @click="onEdit(row)">编辑</el-button>
+        </template>
+      </el-table-column>
     </el-table>
 
+    <div class="pagination" v-if="store.total !== null">
+      <el-pagination
+        v-model:current-page="page"
+        v-model:page-size="pageSize"
+        :total="store.total"
+        :page-sizes="[20, 50, 100, 200]"
+        layout="total, sizes, prev, pager, next"
+        background
+        @current-change="onRefresh"
+        @size-change="onRefresh"
+      />
+    </div>
+
     <LeadImportDialog v-model="importVisible" @imported="onRefresh" />
+    <LeadEditDialog
+      v-model="editVisible"
+      :initial="editingLead"
+      @saved="onRefresh"
+    />
   </el-card>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 
+import LeadEditDialog from "@/components/Lead/LeadEditDialog.vue";
 import LeadImportDialog from "@/components/Lead/LeadImportDialog.vue";
 import { useLeadsStore } from "@/stores/leads";
-import type { LeadStatus } from "@/types/lead";
+import type { Lead, LeadStatus } from "@/types/lead";
 
 const store = useLeadsStore();
 const importVisible = ref(false);
+const editVisible = ref(false);
+const editingLead = ref<Lead | null>(null);
+
+const page = computed({
+  get: () => store.params.page ?? 1,
+  set: (v) => {
+    store.params.page = v;
+  },
+});
+const pageSize = computed({
+  get: () => store.params.page_size ?? 50,
+  set: (v) => {
+    store.params.page_size = v;
+  },
+});
 
 const statuses: { value: LeadStatus; label: string }[] = [
   { value: "new", label: "new" },
@@ -99,8 +139,23 @@ function onRefresh() {
   void store.fetchAll();
 }
 
+function onSearch() {
+  store.params.page = 1;
+  onRefresh();
+}
+
 function onImport() {
   importVisible.value = true;
+}
+
+function onNew() {
+  editingLead.value = null;
+  editVisible.value = true;
+}
+
+function onEdit(row: Lead) {
+  editingLead.value = row;
+  editVisible.value = true;
 }
 
 onMounted(onRefresh);
@@ -118,5 +173,10 @@ onMounted(onRefresh);
 }
 .filter {
   margin-bottom: 8px;
+}
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
 }
 </style>

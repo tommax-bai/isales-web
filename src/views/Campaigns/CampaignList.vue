@@ -70,12 +70,14 @@
 <script setup lang="ts">
 import { ElMessage } from "element-plus";
 import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 
 import CampaignEditDialog from "@/components/Campaign/CampaignEditDialog.vue";
 import { useCampaignsStore } from "@/stores/campaigns";
 import type { CampaignSummary } from "@/types/campaign";
 
 const store = useCampaignsStore();
+const router = useRouter();
 
 const dialogVisible = ref(false);
 const dialogInitial = ref<CampaignSummary | null>(null);
@@ -85,13 +87,14 @@ onMounted(() => {
 });
 
 function onNew() {
+  // The dialog still owns "new" since required fields fit in a small form;
+  // editing routes to the full 9-tab CampaignEdit page (impl-web-polish PR #4).
   dialogInitial.value = null;
   dialogVisible.value = true;
 }
 
 function onEdit(row: CampaignSummary) {
-  dialogInitial.value = row;
-  dialogVisible.value = true;
+  void router.push({ name: "campaign-edit", params: { id: row.id } });
 }
 
 async function onStart(row: CampaignSummary) {
