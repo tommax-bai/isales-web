@@ -28,5 +28,12 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     include: ["tests/**/*.{test,spec}.ts"],
+    css: false,
+    server: {
+      // Force vitest to inline element-plus + auto-import shims so injected
+      // CSS imports go through Vite's transform pipeline (which strips CSS
+      // when `css: false`) instead of Node's native ESM loader.
+      deps: { inline: [/element-plus/] },
+    },
   },
 });

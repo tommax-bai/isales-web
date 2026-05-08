@@ -1,9 +1,7 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory, type RouteLocationNormalized } from "vue-router";
 
 import DefaultLayout from "@/components/Layout/DefaultLayout.vue";
 
-// PR #1 ships the bare router skeleton + a placeholder /dashboard. Subsequent
-// PRs add /campaigns, /leads, etc. and the auth guard.
 const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -11,6 +9,7 @@ const router = createRouter({
       path: "/login",
       name: "login",
       component: () => import("@/views/LoginView.vue"),
+      meta: { public: true },
     },
     {
       path: "/",
@@ -29,9 +28,24 @@ const router = createRouter({
       path: "/:pathMatch(.*)*",
       name: "not-found",
       component: () => import("@/views/PlaceholderView.vue"),
-      meta: { title: "404" },
+      meta: { title: "404", public: true },
     },
   ],
+});
+
+router.beforeEach(async (to: RouteLocationNormalized) => {
+  // The auth store import is lazy: at module-init Pinia isn't ready yet.
+  const { useAuthStore } = await import("@/stores/auth");
+  const auth = useAuthStore();
+  const isPublic = to.meta.public === true;
+
+  if (!isPublic && !auth.isAuthenticated) {
+    return { name: "login", query: { redirect: to.fullPath } };
+  }
+  if (to.name === "login" && auth.isAuthenticated) {
+    return { name: "dashboard" };
+  }
+  return true;
 });
 
 export default router;
