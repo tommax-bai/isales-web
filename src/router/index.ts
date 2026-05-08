@@ -22,6 +22,12 @@ const router = createRouter({
           component: () => import("@/views/PlaceholderView.vue"),
           meta: { title: "数据看板" },
         },
+        {
+          path: "campaigns",
+          name: "campaigns",
+          component: () => import("@/views/Campaigns/CampaignList.vue"),
+          meta: { title: "任务管理" },
+        },
       ],
     },
     {

@@ -6,8 +6,11 @@
         <el-menu-item index="dashboard" :route="{ name: 'dashboard' }">
           <span>数据看板</span>
         </el-menu-item>
-        <!-- Subsequent PRs add: campaigns, leads, voice-models, devices,
-             monitor, calls, callback-configs, handoff-tasks, holidays. -->
+        <el-menu-item index="campaigns" :route="{ name: 'campaigns' }">
+          <span>任务管理</span>
+        </el-menu-item>
+        <!-- Subsequent PRs add: leads, voice-models, devices, monitor,
+             calls, callback-configs, handoff-tasks, holidays. -->
       </el-menu>
     </el-aside>
     <el-container>
