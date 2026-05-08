@@ -33,7 +33,7 @@ export interface LeadCreate {
   status?: LeadStatus;
 }
 
-export interface LeadUpdate extends Partial<LeadCreate> {}
+export type LeadUpdate = Partial<LeadCreate>;
 
 export interface LeadListParams {
   campaign_id?: number;

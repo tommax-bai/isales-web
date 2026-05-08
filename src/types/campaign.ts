@@ -19,4 +19,4 @@ export interface CampaignCreate {
   default_replies?: string[];
 }
 
-export interface CampaignUpdate extends Partial<CampaignCreate> {}
+export type CampaignUpdate = Partial<CampaignCreate>;

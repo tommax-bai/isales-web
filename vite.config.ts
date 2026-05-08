@@ -24,6 +24,28 @@ export default defineConfig({
       "/ws": { target: "ws://localhost:8000", ws: true, changeOrigin: true },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          // Pull the heaviest vendor packages into their own chunks so
+          // initial-load pages don't drag in everything. echarts in
+          // particular blew DashboardView past 500KB before this split.
+          if (id.includes("node_modules/echarts") || id.includes("zrender")) {
+            return "vendor-echarts";
+          }
+          if (id.includes("node_modules/element-plus")) {
+            return "vendor-element-plus";
+          }
+          if (id.includes("node_modules/@codemirror") || id.includes("node_modules/@lezer")) {
+            return "vendor-codemirror";
+          }
+          return undefined;
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
+  },
   test: {
     environment: "jsdom",
     globals: true,
