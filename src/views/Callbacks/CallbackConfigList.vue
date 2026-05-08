@@ -3,17 +3,12 @@
     <template #header>
       <div class="header">
         <span class="title">回调配置</span>
-        <el-button type="primary" @click="onRefresh">刷新</el-button>
+        <div>
+          <el-button type="primary" @click="onNew">新建</el-button>
+          <el-button @click="onRefresh">刷新</el-button>
+        </div>
       </div>
     </template>
-    <el-alert
-      type="info"
-      :closable="false"
-      class="hint"
-    >
-      回调编辑器（trigger 用 JsonLogic / payload 用 Jinja2）作为
-      follow-up PR 接入 CodeMirror 6；当前页面仅提供配置列表 + 触发记录浏览。
-    </el-alert>
     <el-table v-loading="loading" :data="items" stripe empty-text="暂无回调">
       <el-table-column prop="id" label="ID" width="80" />
       <el-table-column prop="campaign_id" label="campaign" width="100" />
@@ -27,16 +22,32 @@
           </el-tag>
         </template>
       </el-table-column>
+      <el-table-column label="操作" width="160" fixed="right">
+        <template #default="{ row }">
+          <el-button type="primary" link @click="onEdit(row)">编辑</el-button>
+          <el-popconfirm
+            title="确认删除？"
+            @confirm="onDelete(row)"
+          >
+            <template #reference>
+              <el-button type="danger" link>删除</el-button>
+            </template>
+          </el-popconfirm>
+        </template>
+      </el-table-column>
     </el-table>
   </el-card>
 </template>
 
 <script setup lang="ts">
+import { ElMessage } from "element-plus";
 import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 
 import { callbackConfigsApi } from "@/api/callbacks";
 import type { CallbackConfig } from "@/types/callback";
 
+const router = useRouter();
 const items = ref<CallbackConfig[]>([]);
 const loading = ref(false);
 
@@ -46,6 +57,24 @@ async function onRefresh() {
     items.value = await callbackConfigsApi.list();
   } finally {
     loading.value = false;
+  }
+}
+
+function onNew() {
+  void router.push({ name: "callback-config-edit", params: { id: "new" } });
+}
+
+function onEdit(row: CallbackConfig) {
+  void router.push({ name: "callback-config-edit", params: { id: row.id } });
+}
+
+async function onDelete(row: CallbackConfig) {
+  try {
+    await callbackConfigsApi.remove(row.id);
+    ElMessage.success("已删除");
+    await onRefresh();
+  } catch {
+    ElMessage.error("删除失败");
   }
 }
 
@@ -61,8 +90,5 @@ onMounted(onRefresh);
 .title {
   font-size: 16px;
   font-weight: 600;
-}
-.hint {
-  margin-bottom: 12px;
 }
 </style>

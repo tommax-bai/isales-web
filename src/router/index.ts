@@ -77,6 +77,12 @@ const router = createRouter({
           meta: { title: "回调配置" },
         },
         {
+          path: "callback-configs/:id",
+          name: "callback-config-edit",
+          component: () => import("@/views/Callbacks/CallbackConfigEdit.vue"),
+          meta: { title: "回调编辑" },
+        },
+        {
           path: "callback-logs",
           name: "callback-logs",
           component: () => import("@/views/Callbacks/CallbackLogList.vue"),
