@@ -1,5 +1,7 @@
 # isales-web
 
+[![CI](https://github.com/isales/isales-web/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/isales/isales-web/actions/workflows/ci.yml)
+
 Vue 3 admin frontend for the iSales platform — stage 7 of the rollout. Drives
 all admin operations (campaigns / leads / voice / devices / monitoring / call
 records / callbacks) against the **isales-api** HTTP + WebSocket endpoints.

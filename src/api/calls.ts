@@ -14,12 +14,26 @@ export interface CallListParams {
   page_size?: number;
 }
 
+export interface CallListResponse {
+  items: CallRecordSummary[];
+  total: number | null;
+}
+
 export const callsApi = {
   list: async (params: CallListParams = {}): Promise<CallRecordSummary[]> => {
     const r = await apiClient.get<
       PaginatedResponse<CallRecordSummary> | CallRecordSummary[]
     >("/calls", { params });
     return Array.isArray(r.data) ? r.data : r.data.items;
+  },
+  listPage: async (params: CallListParams = {}): Promise<CallListResponse> => {
+    const r = await apiClient.get<
+      PaginatedResponse<CallRecordSummary> | CallRecordSummary[]
+    >("/calls", { params });
+    if (Array.isArray(r.data)) {
+      return { items: r.data, total: null };
+    }
+    return { items: r.data.items, total: r.data.total };
   },
   get: (id: number) =>
     apiClient.get<CallRecordDetail>(`/calls/${id}`).then((r) => r.data),

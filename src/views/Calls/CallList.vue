@@ -19,6 +19,19 @@
         </template>
       </el-table-column>
     </el-table>
+
+    <div v-if="total !== null" class="pagination">
+      <el-pagination
+        v-model:current-page="page"
+        v-model:page-size="pageSize"
+        :total="total"
+        :page-sizes="[20, 50, 100, 200]"
+        layout="total, sizes, prev, pager, next"
+        background
+        @current-change="onRefresh"
+        @size-change="onRefresh"
+      />
+    </div>
   </el-card>
 </template>
 
@@ -31,12 +44,20 @@ import type { CallRecordSummary } from "@/types/call";
 
 const router = useRouter();
 const items = ref<CallRecordSummary[]>([]);
+const total = ref<number | null>(null);
+const page = ref(1);
+const pageSize = ref(50);
 const loading = ref(false);
 
 async function onRefresh() {
   loading.value = true;
   try {
-    items.value = await callsApi.list({ page: 1, page_size: 50 });
+    const result = await callsApi.listPage({
+      page: page.value,
+      page_size: pageSize.value,
+    });
+    items.value = result.items;
+    total.value = result.total;
   } finally {
     loading.value = false;
   }
@@ -58,5 +79,10 @@ onMounted(onRefresh);
 .title {
   font-size: 16px;
   font-weight: 600;
+}
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
 }
 </style>
