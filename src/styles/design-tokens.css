@@ -1,0 +1,114 @@
+/**
+ * design-tokens.css — Figma Make 设计 token 落地
+ *
+ * Spec: openspec/changes/web-admin-ui-redesign — capability `web-admin-ui` §
+ * "设计 token 与主题". 暴露 oklch 色板 + 圆角 + 字号 + 语义化状态色，供
+ * design-tokens 驱动的客户面 view 使用；运营 view 仍可读取这些变量。
+ *
+ * `.dark` 变量保留但 v1.0 不激活（无主题切换 UI）。
+ */
+
+:root {
+  /* ---- 基础调色 (oklch) ----------------------------------------------- */
+  --isales-background: oklch(1 0 0);
+  --isales-foreground: oklch(0.145 0 0);
+  --isales-card: oklch(1 0 0);
+  --isales-card-foreground: oklch(0.145 0 0);
+  --isales-muted: oklch(0.97 0 0);
+  --isales-muted-foreground: oklch(0.556 0 0);
+  --isales-border: oklch(0.922 0 0);
+  --isales-input: oklch(0.922 0 0);
+  --isales-ring: oklch(0.708 0 0);
+
+  /* 主色（Figma `#030213`） */
+  --isales-primary: #030213;
+  --isales-primary-foreground: oklch(0.985 0 0);
+
+  /* secondary / accent / destructive */
+  --isales-secondary: oklch(0.97 0 0);
+  --isales-secondary-foreground: oklch(0.205 0 0);
+  --isales-accent: oklch(0.97 0 0);
+  --isales-accent-foreground: oklch(0.205 0 0);
+  --isales-destructive: oklch(0.577 0.245 27.325);
+  --isales-destructive-foreground: oklch(0.985 0 0);
+
+  /* ---- 形状 ----------------------------------------------------------- */
+  --isales-radius: 0.625rem;
+  --isales-radius-sm: 0.375rem;
+  --isales-radius-lg: 0.875rem;
+
+  /* ---- 字号 ----------------------------------------------------------- */
+  --isales-font-size-base: 16px;
+  --isales-font-size-sm: 14px;
+  --isales-font-size-xs: 12px;
+  --isales-font-size-lg: 18px;
+  --isales-font-weight-medium: 500;
+  --isales-font-weight-bold: 600;
+
+  /* ---- 语义化状态色 — 三档（bg=100 / border=700 / text=800） ----------
+   * 用于 lead / call / appointment / 意向等 badge。
+   * 命名约定 --isales-status-{name}-{100|700|800}
+   */
+
+  /* blue — new / answered / 信息 */
+  --isales-status-blue-100: #dbeafe;
+  --isales-status-blue-700: #1d4ed8;
+  --isales-status-blue-800: #1e40af;
+
+  /* yellow — contacted / 中等意向 / pending */
+  --isales-status-yellow-100: #fef3c7;
+  --isales-status-yellow-700: #b45309;
+  --isales-status-yellow-800: #92400e;
+
+  /* green — interested / 高意向 / confirmed / completed */
+  --isales-status-green-100: #dcfce7;
+  --isales-status-green-700: #15803d;
+  --isales-status-green-800: #166534;
+
+  /* purple — appointed */
+  --isales-status-purple-100: #f3e8ff;
+  --isales-status-purple-700: #7e22ce;
+  --isales-status-purple-800: #6b21a8;
+
+  /* gray — visited / cancelled / 无意向 */
+  --isales-status-gray-100: #f3f4f6;
+  --isales-status-gray-700: #374151;
+  --isales-status-gray-800: #1f2937;
+
+  /* red — lost / failed / destructive */
+  --isales-status-red-100: #fee2e2;
+  --isales-status-red-700: #b91c1c;
+  --isales-status-red-800: #991b1b;
+
+  /* ---- 气泡（AI 蓝 / 客户绿） ----------------------------------------- */
+  --isales-bubble-ai-bg: #dbeafe;
+  --isales-bubble-ai-fg: #1e3a8a;
+  --isales-bubble-customer-bg: #dcfce7;
+  --isales-bubble-customer-fg: #14532d;
+
+  /* ---- shadow ----------------------------------------------------------- */
+  --isales-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --isales-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+}
+
+.dark {
+  /* dark 模式预留 — v1.0 不激活 */
+  --isales-background: oklch(0.145 0 0);
+  --isales-foreground: oklch(0.985 0 0);
+  --isales-card: oklch(0.145 0 0);
+  --isales-card-foreground: oklch(0.985 0 0);
+  --isales-muted: oklch(0.269 0 0);
+  --isales-muted-foreground: oklch(0.708 0 0);
+  --isales-border: oklch(0.269 0 0);
+  --isales-input: oklch(0.269 0 0);
+  --isales-ring: oklch(0.439 0 0);
+
+  --isales-primary: oklch(0.985 0 0);
+  --isales-primary-foreground: oklch(0.205 0 0);
+  --isales-secondary: oklch(0.269 0 0);
+  --isales-secondary-foreground: oklch(0.985 0 0);
+  --isales-accent: oklch(0.269 0 0);
+  --isales-accent-foreground: oklch(0.985 0 0);
+  --isales-destructive: oklch(0.396 0.141 25.723);
+  --isales-destructive-foreground: oklch(0.985 0 0);
+}

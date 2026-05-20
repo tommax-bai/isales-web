@@ -8,7 +8,10 @@ export type LeadStatus =
   | "failed"
   | "follow_up_exhausted"
   | "do_not_call"
-  | "transferred";
+  | "transferred"
+  | "appointed"
+  | "visited"
+  | "lost";
 
 export interface Lead {
   id: number;

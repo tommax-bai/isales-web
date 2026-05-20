@@ -9,12 +9,20 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [
     vue(),
-    AutoImport({ resolvers: [ElementPlusResolver()] }),
-    Components({ resolvers: [ElementPlusResolver()] }),
+    AutoImport({ resolvers: [ElementPlusResolver({ importStyle: "sass" })] }),
+    Components({ resolvers: [ElementPlusResolver({ importStyle: "sass" })] }),
   ],
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
+  },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: "modern-compiler",
+        additionalData: `@use "@/styles/element-plus-theme.scss" as *;`,
+      },
     },
   },
   server: {

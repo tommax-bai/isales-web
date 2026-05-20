@@ -12,6 +12,17 @@ export interface CallRecordSummary {
   transfer_reason: string | null;
 }
 
+export interface CallSummary {
+  id: number;
+  call_record_id: number;
+  summary_text: string | null;
+  extracted_fields: Record<string, unknown>;
+  goal_achieved: boolean;
+  goal_type: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface TranscriptEvent {
   type: string;
   ts: number;

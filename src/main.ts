@@ -1,3 +1,4 @@
+import "@/styles/design-tokens.css";
 import "element-plus/dist/index.css";
 import "@/assets/reset.css";
 

@@ -7,6 +7,19 @@
       </div>
     </template>
 
+    <div v-if="detail" class="customer-summary">
+      <div class="customer-summary__bubbles">
+        <h4>通话内容</h4>
+        <TranscriptBubbles
+          :transcript="detail.transcript"
+          max-height="20rem"
+        />
+      </div>
+      <div class="customer-summary__goal">
+        <GoalAchievementPanel :summary="summary" />
+      </div>
+    </div>
+
     <div v-if="detail" class="layout">
       <div class="col left">
         <h4>基本信息</h4>
@@ -68,14 +81,17 @@ import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { callsApi } from "@/api/calls";
+import GoalAchievementPanel from "@/components/Calls/GoalAchievementPanel.vue";
 import PipelineTracePanel from "@/components/Calls/PipelineTracePanel.vue";
+import TranscriptBubbles from "@/components/Calls/TranscriptBubbles.vue";
 import TranscriptTimeline from "@/components/Calls/TranscriptTimeline.vue";
-import type { CallRecordDetail } from "@/types/call";
+import type { CallRecordDetail, CallSummary } from "@/types/call";
 
 const route = useRoute();
 const router = useRouter();
 const id = Number(route.params.id);
 const detail = ref<CallRecordDetail | null>(null);
+const summary = ref<CallSummary | null>(null);
 const loading = ref(false);
 const audioRef = ref<HTMLAudioElement | null>(null);
 
@@ -91,6 +107,7 @@ async function load() {
   loading.value = true;
   try {
     detail.value = await callsApi.get(id);
+    summary.value = await callsApi.summary(id);
   } finally {
     loading.value = false;
   }
@@ -151,5 +168,22 @@ onMounted(load);
 }
 .trace-section {
   margin-top: 16px;
+}
+.customer-summary {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--isales-border);
+}
+.customer-summary h4 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+@media (max-width: 1024px) {
+  .customer-summary {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

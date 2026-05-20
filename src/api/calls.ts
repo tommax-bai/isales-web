@@ -3,6 +3,7 @@ import type { PaginatedResponse } from "@/types/campaign";
 import type {
   CallRecordDetail,
   CallRecordSummary,
+  CallSummary,
   PipelineTrace,
 } from "@/types/call";
 
@@ -43,4 +44,10 @@ export const callsApi = {
     apiClient
       .get<PipelineTrace>(`/calls/${id}/trace`)
       .then((r) => r.data),
+  /** Returns null on 404 (summary not yet written by worker). */
+  summary: (id: number): Promise<CallSummary | null> =>
+    apiClient
+      .get<CallSummary>(`/calls/${id}/summary`)
+      .then((r) => r.data)
+      .catch(() => null),
 };

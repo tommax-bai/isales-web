@@ -2,6 +2,22 @@ import { createRouter, createWebHistory, type RouteLocationNormalized } from "vu
 
 import DefaultLayout from "@/components/Layout/DefaultLayout.vue";
 
+/**
+ * 旧顶级路径 → /operations 下的新路径，beforeEach 中做客户端 301 等价重定向。
+ * Spec: capability `web-admin-ui` § "运营面 view 收纳" 第 2 个 scenario.
+ */
+const OPERATIONS_REDIRECTS: Record<string, string> = {
+  "/dashboard": "/operations/dashboard",
+  "/campaigns": "/operations/campaigns",
+  "/devices": "/operations/devices",
+  "/sim-cards": "/operations/sim-cards",
+  "/holidays": "/operations/holidays",
+  "/callback-configs": "/operations/callback-configs",
+  "/callback-logs": "/operations/callback-logs",
+  "/handoff-tasks": "/operations/handoff-tasks",
+  "/voice-models": "/operations/voice-models",
+};
+
 const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -14,26 +30,9 @@ const router = createRouter({
     {
       path: "/",
       component: DefaultLayout,
-      redirect: { name: "dashboard" },
+      redirect: { name: "leads" },
       children: [
-        {
-          path: "dashboard",
-          name: "dashboard",
-          component: () => import("@/views/DashboardView.vue"),
-          meta: { title: "数据看板" },
-        },
-        {
-          path: "campaigns",
-          name: "campaigns",
-          component: () => import("@/views/Campaigns/CampaignList.vue"),
-          meta: { title: "任务管理" },
-        },
-        {
-          path: "campaigns/:id/edit",
-          name: "campaign-edit",
-          component: () => import("@/views/Campaigns/CampaignEdit.vue"),
-          meta: { title: "编辑任务" },
-        },
+        // ---- 客户面 6 个 view ------------------------------------------
         {
           path: "leads",
           name: "leads",
@@ -41,34 +40,10 @@ const router = createRouter({
           meta: { title: "线索管理" },
         },
         {
-          path: "voice-models",
-          name: "voice-models",
-          component: () => import("@/views/VoiceModels/VoiceModelList.vue"),
-          meta: { title: "音色管理" },
-        },
-        {
-          path: "devices",
-          name: "devices",
-          component: () => import("@/views/Devices/DeviceList.vue"),
-          meta: { title: "设备管理" },
-        },
-        {
-          path: "sim-cards",
-          name: "sim-cards",
-          component: () => import("@/views/SimCards/SimCardList.vue"),
-          meta: { title: "SIM 卡" },
-        },
-        {
-          path: "monitor/:campaign_id",
-          name: "monitor",
-          component: () => import("@/views/Monitor/MonitorView.vue"),
-          meta: { title: "通话监控" },
-        },
-        {
           path: "calls",
           name: "calls",
           component: () => import("@/views/Calls/CallList.vue"),
-          meta: { title: "通话记录" },
+          meta: { title: "外呼记录" },
         },
         {
           path: "calls/:id",
@@ -77,34 +52,108 @@ const router = createRouter({
           meta: { title: "通话详情" },
         },
         {
-          path: "callback-configs",
-          name: "callback-configs",
+          path: "appointments",
+          name: "appointments",
+          component: () => import("@/views/Appointments/AppointmentList.vue"),
+          meta: { title: "预约管理" },
+        },
+        {
+          path: "config/ai-call",
+          name: "config-ai-call",
+          component: () => import("@/views/Config/AICallConfig.vue"),
+          meta: { title: "AI 外呼配置" },
+        },
+        {
+          path: "config/voice-channels",
+          name: "config-voice-channels",
+          component: () => import("@/views/Config/VoiceChannelConfig.vue"),
+          meta: { title: "ASR/TTS 通路" },
+        },
+        {
+          path: "config/model-providers",
+          name: "config-model-providers",
+          component: () => import("@/views/Config/ModelProviderConfig.vue"),
+          meta: { title: "模型厂商" },
+        },
+
+        // ---- /operations/* 9 个运营 view（view 文件不动） ---------------
+        {
+          path: "operations",
+          name: "operations-index",
+          component: () => import("@/views/Operations/OperationsIndex.vue"),
+          meta: { title: "运营管理" },
+        },
+        {
+          path: "operations/dashboard",
+          name: "operations-dashboard",
+          component: () => import("@/views/DashboardView.vue"),
+          meta: { title: "数据看板" },
+        },
+        {
+          path: "operations/campaigns",
+          name: "operations-campaigns",
+          component: () => import("@/views/Campaigns/CampaignList.vue"),
+          meta: { title: "任务管理" },
+        },
+        {
+          path: "operations/campaigns/:id/edit",
+          name: "operations-campaign-edit",
+          component: () => import("@/views/Campaigns/CampaignEdit.vue"),
+          meta: { title: "编辑任务" },
+        },
+        {
+          path: "operations/monitor/:campaign_id",
+          name: "operations-monitor",
+          component: () => import("@/views/Monitor/MonitorView.vue"),
+          meta: { title: "通话监控" },
+        },
+        {
+          path: "operations/callback-configs",
+          name: "operations-callback-configs",
           component: () => import("@/views/Callbacks/CallbackConfigList.vue"),
           meta: { title: "回调配置" },
         },
         {
-          path: "callback-configs/:id",
-          name: "callback-config-edit",
+          path: "operations/callback-configs/:id",
+          name: "operations-callback-config-edit",
           component: () => import("@/views/Callbacks/CallbackConfigEdit.vue"),
           meta: { title: "回调编辑" },
         },
         {
-          path: "callback-logs",
-          name: "callback-logs",
+          path: "operations/callback-logs",
+          name: "operations-callback-logs",
           component: () => import("@/views/Callbacks/CallbackLogList.vue"),
           meta: { title: "回调记录" },
         },
         {
-          path: "handoff-tasks",
-          name: "handoff-tasks",
+          path: "operations/handoff-tasks",
+          name: "operations-handoff-tasks",
           component: () => import("@/views/HandoffTasks/HandoffTaskList.vue"),
           meta: { title: "转人工任务" },
         },
         {
-          path: "holidays",
-          name: "holidays",
+          path: "operations/holidays",
+          name: "operations-holidays",
           component: () => import("@/views/Holidays/HolidayList.vue"),
           meta: { title: "节假日" },
+        },
+        {
+          path: "operations/devices",
+          name: "operations-devices",
+          component: () => import("@/views/Devices/DeviceList.vue"),
+          meta: { title: "设备管理" },
+        },
+        {
+          path: "operations/sim-cards",
+          name: "operations-sim-cards",
+          component: () => import("@/views/SimCards/SimCardList.vue"),
+          meta: { title: "SIM 卡" },
+        },
+        {
+          path: "operations/voice-models",
+          name: "operations-voice-models",
+          component: () => import("@/views/VoiceModels/VoiceModelList.vue"),
+          meta: { title: "音色管理" },
         },
       ],
     },
@@ -118,6 +167,26 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to: RouteLocationNormalized) => {
+  // 1. 旧顶级运营路径 → /operations/* 客户端永久重定向。
+  //    仅当请求路径正好是某个旧路径或其下子段（如 /campaigns/123/edit）才转发，
+  //    /monitor/:campaign_id 之类带参数的旧路径同样命中。
+  for (const [oldPrefix, newPrefix] of Object.entries(OPERATIONS_REDIRECTS)) {
+    if (to.path === oldPrefix || to.path.startsWith(`${oldPrefix}/`)) {
+      const rewritten = to.path.replace(oldPrefix, newPrefix);
+      return { path: rewritten, query: to.query, hash: to.hash, replace: true };
+    }
+  }
+  // 旧 monitor 路径单独处理（带 campaign_id）
+  if (to.path.startsWith("/monitor/")) {
+    return {
+      path: to.path.replace(/^\/monitor\//, "/operations/monitor/"),
+      query: to.query,
+      hash: to.hash,
+      replace: true,
+    };
+  }
+
+  // 2. 鉴权守卫（不变）
   const { useAuthStore } = await import("@/stores/auth");
   const auth = useAuthStore();
   const isPublic = to.meta.public === true;
@@ -126,7 +195,7 @@ router.beforeEach(async (to: RouteLocationNormalized) => {
     return { name: "login", query: { redirect: to.fullPath } };
   }
   if (to.name === "login" && auth.isAuthenticated) {
-    return { name: "dashboard" };
+    return { name: "leads" };
   }
   return true;
 });
