@@ -42,10 +42,10 @@
         </div>
         <div class="cfg__row cfg__row--inline">
           <el-select v-model="c.provider" placeholder="provider">
-            <el-option v-for="p in PROVIDERS" :key="p" :label="p" :value="p" />
+            <el-option v-for="p in ASR_TTS_PROVIDERS" :key="p" :label="p" :value="p" />
           </el-select>
-          <el-input v-model="c.model" placeholder="model（例如 paraformer-realtime-v2）" />
-          <el-input v-model="c.endpoint" placeholder="endpoint URL（可选）" />
+          <el-input v-model="c.model" placeholder="ASR model（volcengine 走 wss 通道，model 字段可留空）" />
+          <el-input v-model="c.endpoint" placeholder="endpoint URL（可选；默认 wss://openspeech.bytedance.com/api/v3/asr）" />
         </div>
       </article>
     </section>
@@ -73,10 +73,10 @@
         </div>
         <div class="cfg__row cfg__row--inline">
           <el-select v-model="c.provider" placeholder="provider">
-            <el-option v-for="p in PROVIDERS" :key="p" :label="p" :value="p" />
+            <el-option v-for="p in ASR_TTS_PROVIDERS" :key="p" :label="p" :value="p" />
           </el-select>
-          <el-input v-model="c.model" placeholder="model" />
-          <el-input v-model="c.endpoint" placeholder="endpoint URL（可选）" />
+          <el-input v-model="c.model" placeholder="TTS model（volcengine 走 HTTP 流式合成，可留空）" />
+          <el-input v-model="c.endpoint" placeholder="endpoint URL（可选；默认 https://openspeech.bytedance.com/api/v1）" />
         </div>
       </article>
     </section>
@@ -104,9 +104,12 @@
         </div>
         <div class="cfg__row cfg__row--inline">
           <el-select v-model="v.provider" placeholder="provider">
-            <el-option v-for="p in PROVIDERS" :key="p" :label="p" :value="p" />
+            <el-option v-for="p in VOICE_PROVIDERS" :key="p" :label="p" :value="p" />
           </el-select>
-          <el-input v-model="v.voice_id" placeholder="voice_id（例如 xiaolu）" />
+          <el-input
+            v-model="v.voice_id"
+            placeholder="voice_id（volcengine 例如 BV001_streaming / zh_female_qingxin）"
+          />
           <el-select v-model="v.gender" placeholder="性别">
             <el-option label="女" value="female" />
             <el-option label="男" value="male" />
@@ -177,7 +180,10 @@ interface VoiceConfig {
   description: string;
 }
 
-const PROVIDERS = ["aliyun", "azure", "openai", "google"];
+// 对齐 isales-engine factory.KNOWN_{ASR,TTS}_PROVIDERS — 只有
+// volcengine + mock 已实装。spec: openspec/specs/provider-abc.
+const ASR_TTS_PROVIDERS = ["volcengine", "mock"];
+const VOICE_PROVIDERS = ["volcengine", "mock"];
 
 const asr = useLocalConfigStash<ASRConfig[]>("vc:asr", () => []);
 const tts = useLocalConfigStash<TTSConfig[]>("vc:tts", () => []);
@@ -200,14 +206,15 @@ function rid(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
+// 默认值对齐 isales-engine.settings 中 volcengine ASR/TTS endpoint。
 function addAsr() {
   asr.value.push({
     id: rid("asr"),
     name: "",
     enabled: true,
-    provider: "aliyun",
-    model: "paraformer-realtime-v2",
-    endpoint: "",
+    provider: "volcengine",
+    model: "",
+    endpoint: "wss://openspeech.bytedance.com/api/v3/asr",
   });
 }
 
@@ -216,9 +223,9 @@ function addTts() {
     id: rid("tts"),
     name: "",
     enabled: true,
-    provider: "aliyun",
-    model: "cosyvoice-v1",
-    endpoint: "",
+    provider: "volcengine",
+    model: "",
+    endpoint: "https://openspeech.bytedance.com/api/v1",
   });
 }
 
@@ -227,8 +234,8 @@ function addVoice() {
     id: rid("voice"),
     name: "",
     enabled: true,
-    provider: "aliyun",
-    voice_id: "",
+    provider: "volcengine",
+    voice_id: "BV001_streaming",
     gender: "female",
     language: "zh-CN",
     sample_rate: 24000,

@@ -116,7 +116,10 @@ const props = defineProps<{
   providers?: string[];
 }>();
 
-const providers = computed(() => props.providers ?? ["openai", "anthropic", "azure", "google"]);
+// 默认 LLM provider 列表对齐 isales-engine factory.KNOWN_LLM_PROVIDERS
+// (`volcengine` / `openai` / `mock`). 不再列 anthropic/azure/google —
+// 引擎层未实装，列在 UI 会误导。
+const providers = computed(() => props.providers ?? ["volcengine", "openai", "mock"]);
 
 const badgeColor = computed(() => props.badgeColor);
 
@@ -130,12 +133,14 @@ const containerStyle = computed(() => ({
 }));
 
 function onAdd() {
+  // 默认 volcengine + doubao-pro-32k 对齐 isales-engine.settings 的
+  // `volcengine_llm_model` 默认值。
   props.configs.push({
     id: `cfg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     name: "",
     enabled: true,
-    provider: "openai",
-    model: "gpt-4o-mini",
+    provider: "volcengine",
+    model: "doubao-pro-32k",
     temperature: 0.7,
     top_p: 1.0,
     prompt: "",

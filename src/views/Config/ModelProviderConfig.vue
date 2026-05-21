@@ -13,11 +13,13 @@
       show-icon
       class="mp__banner"
     >
-      <template #title>Backend storage pending</template>
+      <template #title>厂商列表对齐引擎实装</template>
       <template #default>
-        当前 provider_credential 表与 HTTP 端点均未实现；本视图先把 API key 暂存在浏览器
-        localStorage，方便先把工作流跑通。实际生产环境下，API key 仍由 env 文件下发；
-        见 design.md Open Q §2。
+        当前 isales-engine 已对接 <strong>volcengine</strong> (火山方舟 / 豆包) 与
+        <strong>openai</strong> 两家；anthropic / azure / google 暂未对接，故本视图
+        不再列出。Volcengine 的 app_key + app_token 同时供 LLM (ark) / ASR / TTS
+        三路使用。provider_credential 表与 HTTP CRUD 端点尚未实现，API key 当前
+        暂存浏览器；生产环境仍由 env 文件下发（见 design.md Open Q §2）。
       </template>
     </el-alert>
 
@@ -42,12 +44,20 @@
           <el-form-item label="启用">
             <el-switch v-model="data[p.id].enabled" />
           </el-form-item>
-          <el-form-item label="API key">
+          <!-- volcengine 是 app_key + app_token 双密钥；这里 api_key 字段
+               承载 app_token（env 里 ISALES_VOLCENGINE_APP_TOKEN）。 -->
+          <el-form-item v-if="p.id === 'volcengine'" label="app key">
+            <el-input
+              v-model="data[p.id].app_key"
+              placeholder="ISALES_VOLCENGINE_APP_KEY（也用于 ASR/TTS 鉴权）"
+            />
+          </el-form-item>
+          <el-form-item :label="p.id === 'volcengine' ? 'app token' : 'API key'">
             <div class="key-row">
               <el-input
                 v-model="data[p.id].api_key"
                 :type="reveal[p.id] ? 'text' : 'password'"
-                placeholder="sk-..."
+                :placeholder="p.id === 'volcengine' ? 'ISALES_VOLCENGINE_APP_TOKEN' : 'sk-...'"
                 clearable
               />
               <el-button @click="reveal[p.id] = !reveal[p.id]">
@@ -64,10 +74,10 @@
               :placeholder="p.default_endpoint"
             />
           </el-form-item>
-          <el-form-item v-if="p.id === 'openai'" label="org id">
+          <el-form-item label="默认 model">
             <el-input
-              v-model="data[p.id].org_id"
-              placeholder="org-..."
+              v-model="data[p.id].default_model"
+              :placeholder="p.default_model"
             />
           </el-form-item>
           <a class="provider__doc" :href="p.docs" target="_blank" rel="noopener">
@@ -100,13 +110,18 @@ import PageHeader from "@/components/Common/PageHeader.vue";
 import StatusBadge from "@/components/Common/StatusBadge.vue";
 import { useLocalConfigStash } from "@/composables/useLocalConfigStash";
 
-type ProviderId = "openai" | "anthropic" | "azure" | "google";
+// 厂商列表对齐 isales-engine factory.KNOWN_LLM_PROVIDERS — v1.0 实装的
+// 只有 `volcengine` (火山方舟 / 豆包) 和 `openai`；`mock` 走代码里的
+// stub provider，没有 API key 需要配置，所以本视图不暴露。
+// Anthropic / Azure / Google 暂未对接引擎，删掉避免误导。
+type ProviderId = "volcengine" | "openai";
 
 interface ProviderData {
   enabled: boolean;
   api_key: string;
   endpoint: string;
-  org_id?: string;
+  app_key?: string; // volcengine 专用 (app_key + app_token 双密钥)
+  default_model?: string;
 }
 
 const PROVIDERS: {
@@ -116,62 +131,57 @@ const PROVIDERS: {
   color: string;
   hint: string;
   default_endpoint: string;
+  default_model: string;
   docs: string;
 }[] = [
+  {
+    id: "volcengine",
+    name: "火山方舟（豆包）",
+    short: "豆包",
+    color: "#d33d3d",
+    hint: "Doubao 系列 / 同时供 ASR + TTS（共用 app_key + app_token）",
+    default_endpoint: "https://ark.cn-beijing.volces.com/api/v3",
+    default_model: "doubao-pro-32k",
+    docs: "https://console.volcengine.com/ark",
+  },
   {
     id: "openai",
     name: "OpenAI",
     short: "OAI",
     color: "#10a37f",
-    hint: "GPT-4o / o-series / 嵌入",
+    hint: "GPT-4o / o-series 等",
     default_endpoint: "https://api.openai.com/v1",
+    default_model: "gpt-4o-mini",
     docs: "https://platform.openai.com/api-keys",
-  },
-  {
-    id: "anthropic",
-    name: "Anthropic",
-    short: "A",
-    color: "#d97706",
-    hint: "Claude Opus / Sonnet / Haiku",
-    default_endpoint: "https://api.anthropic.com/v1",
-    docs: "https://console.anthropic.com/settings/keys",
-  },
-  {
-    id: "azure",
-    name: "Azure OpenAI",
-    short: "Az",
-    color: "#0078d4",
-    hint: "Azure 托管的 GPT 模型",
-    default_endpoint: "https://<resource>.openai.azure.com",
-    docs: "https://portal.azure.com/",
-  },
-  {
-    id: "google",
-    name: "Google",
-    short: "G",
-    color: "#4285f4",
-    hint: "Gemini 系列",
-    default_endpoint: "https://generativelanguage.googleapis.com/v1beta",
-    docs: "https://aistudio.google.com/apikey",
   },
 ];
 
+// `model-providers-v2` — v1 stash had openai/anthropic/azure/google; this
+// view now only ships providers actually wired into isales-engine
+// (volcengine + openai), so we bump the key so old data doesn't leak.
 const stash = useLocalConfigStash<Record<ProviderId, ProviderData>>(
-  "model-providers",
+  "model-providers-v2",
   () => ({
-    openai: { enabled: false, api_key: "", endpoint: "", org_id: "" },
-    anthropic: { enabled: false, api_key: "", endpoint: "" },
-    azure: { enabled: false, api_key: "", endpoint: "" },
-    google: { enabled: false, api_key: "", endpoint: "" },
+    volcengine: {
+      enabled: false,
+      api_key: "",
+      app_key: "",
+      endpoint: "https://ark.cn-beijing.volces.com/api/v3",
+      default_model: "doubao-pro-32k",
+    },
+    openai: {
+      enabled: false,
+      api_key: "",
+      endpoint: "https://api.openai.com/v1",
+      default_model: "gpt-4o-mini",
+    },
   }),
 );
 
 const data = stash.value;
 const reveal = reactive<Record<ProviderId, boolean>>({
+  volcengine: false,
   openai: false,
-  anthropic: false,
-  azure: false,
-  google: false,
 });
 
 function maskedKey(k: string): string {

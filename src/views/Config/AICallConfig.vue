@@ -173,14 +173,17 @@ const WEEKDAYS = [
   { value: 7, label: "日" },
 ];
 
+// 通路 placeholder ID 对齐 isales-engine factory.KNOWN_ASR_PROVIDERS /
+// KNOWN_TTS_PROVIDERS — 只有 mock + volcengine 已实装。实际可选的
+// 配置 ID 由 VoiceChannelConfig 里的 ASR/TTS/voices 列表决定。
 const channelOptions = useLocalConfigStash<{
   asr: string[];
   tts: string[];
   voice: string[];
 }>("ai-call:channel-options", () => ({
-  asr: ["aliyun-asr-default", "azure-asr-zh-CN"],
-  tts: ["aliyun-tts-default", "azure-tts-zh-CN-XiaoyiNeural"],
-  voice: ["xiaolu-default", "xiaoying-neutral"],
+  asr: ["volcengine-asr-default", "mock-asr-scripted"],
+  tts: ["volcengine-tts-default", "mock-tts-fixed-length"],
+  voice: ["volcengine-BV001_streaming", "volcengine-zh_female_qingxin"],
 }));
 
 const channels = useLocalConfigStash<{
