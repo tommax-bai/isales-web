@@ -218,76 +218,79 @@ function onSave() {
 .ai-config {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--isales-space-4);
   padding-bottom: 80px;
 }
 .ai-config__banner {
-  margin-bottom: 8px;
+  margin-bottom: var(--isales-space-1);
+  border-radius: var(--isales-radius-md);
 }
 .card {
   background: var(--isales-card);
   border: 1px solid var(--isales-border);
   border-radius: var(--isales-radius);
-  padding: 16px;
+  padding: var(--isales-space-4);
 }
 .card__head {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: var(--isales-space-2);
+  margin-bottom: var(--isales-space-3);
 }
 .card__title {
-  margin: 0;
-  font-size: 15px;
-  font-weight: var(--isales-font-weight-bold);
+  font-size: var(--isales-font-size-title-3);
+  font-weight: var(--isales-font-weight-semibold);
+  line-height: var(--isales-line-height-tight);
   flex: 1;
 }
 .card__grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
+  gap: var(--isales-space-3);
 }
 .card__empty {
-  margin: 8px 0;
+  margin: var(--isales-space-2) 0;
   text-align: center;
   color: var(--isales-muted-foreground);
-  font-size: 13px;
+  font-size: var(--isales-font-size-sm);
 }
 .window {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px;
+  gap: var(--isales-space-2);
+  padding: var(--isales-space-3);
   background: var(--isales-muted);
-  border-radius: var(--isales-radius);
-  margin-bottom: 8px;
+  border-radius: var(--isales-radius-md);
+  margin-bottom: var(--isales-space-2);
 }
 .window__time {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--isales-space-2);
 }
 .window__dash {
   color: var(--isales-muted-foreground);
 }
 .save-bar {
   position: sticky;
-  bottom: 16px;
-  margin-top: 16px;
+  bottom: var(--isales-space-4);
+  margin-top: var(--isales-space-4);
   background: var(--isales-card);
   border: 1px solid var(--isales-border);
   border-radius: var(--isales-radius);
-  padding: 12px 16px;
+  padding: var(--isales-space-3) var(--isales-space-4);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: var(--isales-shadow-md);
+  gap: var(--isales-space-3);
+  box-shadow: var(--isales-shadow-lg);
 }
 .save-bar__hint {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: var(--isales-font-size-xs);
   color: var(--isales-muted-foreground);
+  line-height: var(--isales-line-height-snug);
 }
 </style>

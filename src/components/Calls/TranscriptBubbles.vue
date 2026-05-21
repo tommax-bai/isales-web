@@ -44,24 +44,24 @@ const containerStyle = computed(() =>
 .bubbles {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 8px;
+  gap: var(--isales-space-2);
+  padding: var(--isales-space-3);
   background: var(--isales-muted);
-  border-radius: var(--isales-radius);
+  border-radius: var(--isales-radius-md);
 }
 .bubbles--scroll {
   overflow-y: auto;
 }
 .bubbles__empty {
-  margin: 8px 0;
+  margin: var(--isales-space-2) 0;
   text-align: center;
   color: var(--isales-muted-foreground);
-  font-size: 13px;
+  font-size: var(--isales-font-size-sm);
 }
 .bubble-row {
   display: flex;
   align-items: flex-end;
-  gap: 6px;
+  gap: var(--isales-space-2);
 }
 .bubble-row--ai {
   justify-content: flex-start;
@@ -71,17 +71,18 @@ const containerStyle = computed(() =>
   flex-direction: row-reverse;
 }
 .bubble-role {
-  font-size: 10px;
+  font-size: var(--isales-font-size-2xs);
   color: var(--isales-muted-foreground);
   align-self: flex-start;
   margin-top: 2px;
+  letter-spacing: var(--isales-letter-spacing-wide);
 }
 .bubble {
   max-width: 70%;
-  padding: 8px 12px;
-  border-radius: var(--isales-radius);
-  font-size: 13px;
-  line-height: 1.45;
+  padding: var(--isales-space-2) var(--isales-space-3);
+  border-radius: var(--isales-radius-md);
+  font-size: var(--isales-font-size-sm);
+  line-height: var(--isales-line-height-normal);
   word-break: break-word;
   white-space: pre-wrap;
 }
@@ -96,8 +97,9 @@ const containerStyle = computed(() =>
   border-top-right-radius: 4px;
 }
 .bubble-ts {
-  font-size: 10px;
+  font-size: var(--isales-font-size-2xs);
   color: var(--isales-muted-foreground);
   flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
 }
 </style>

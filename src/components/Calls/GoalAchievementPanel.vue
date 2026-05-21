@@ -125,52 +125,55 @@ const keyPoints = computed<string[]>(() => {
 <style scoped>
 .goal {
   border: 1px solid var(--isales-border);
-  border-radius: var(--isales-radius);
-  padding: 12px;
+  border-radius: var(--isales-radius-md);
+  padding: var(--isales-space-3);
   background: var(--isales-card);
 }
 .goal__head {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: var(--isales-space-2);
+  margin-bottom: var(--isales-space-2);
 }
 .goal__title {
   font-weight: var(--isales-font-weight-medium);
-  font-size: 14px;
+  font-size: var(--isales-font-size-body);
   flex: 1;
+  line-height: var(--isales-line-height-tight);
 }
 .goal__metrics {
   display: grid;
   grid-template-columns: max-content 1fr;
-  column-gap: 12px;
+  column-gap: var(--isales-space-3);
   row-gap: 6px;
-  font-size: 13px;
+  font-size: var(--isales-font-size-sm);
   margin: 0;
 }
 .goal__metrics dt {
   color: var(--isales-muted-foreground);
+  font-size: var(--isales-font-size-xs);
 }
 .goal__metrics dd {
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--isales-space-2);
 }
 .goal__score {
   font-variant-numeric: tabular-nums;
-  font-size: 12px;
+  font-size: var(--isales-font-size-xs);
   color: var(--isales-muted-foreground);
 }
 .goal__points {
-  margin-top: 10px;
-  padding-top: 10px;
+  margin-top: var(--isales-space-2);
+  padding-top: var(--isales-space-2);
   border-top: 1px dashed var(--isales-border);
 }
 .goal__points-title {
-  margin: 0 0 4px;
-  font-size: 12px;
+  font-size: var(--isales-font-size-xs);
   color: var(--isales-muted-foreground);
+  margin-bottom: 4px;
+  letter-spacing: var(--isales-letter-spacing-wide);
 }
 .goal__points ul {
   margin: 0;
@@ -183,8 +186,9 @@ const keyPoints = computed<string[]>(() => {
 .goal__points li {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13px;
+  gap: var(--isales-space-2);
+  font-size: var(--isales-font-size-sm);
+  line-height: var(--isales-line-height-snug);
 }
 .goal__points-icon {
   color: var(--isales-status-green-700);

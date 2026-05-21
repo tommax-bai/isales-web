@@ -121,37 +121,39 @@ onMounted(onRefresh);
 .appointments {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: var(--isales-space-8);
 }
 .group {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--isales-space-3);
 }
 .group__head {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
+  gap: var(--isales-space-2);
+  color: var(--isales-muted-foreground);
 }
 .group__title {
-  margin: 0;
-  font-size: 16px;
-  font-weight: var(--isales-font-weight-bold);
+  font-size: var(--isales-font-size-title-2);
+  font-weight: var(--isales-font-weight-semibold);
+  color: var(--isales-foreground);
+  line-height: var(--isales-line-height-tight);
 }
 .group__empty {
   margin: 0;
-  padding: 24px;
+  padding: var(--isales-space-6);
   text-align: center;
   color: var(--isales-muted-foreground);
   background: var(--isales-card);
   border: 1px dashed var(--isales-border);
   border-radius: var(--isales-radius);
-  font-size: 14px;
+  font-size: var(--isales-font-size-sm);
 }
 .group__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: var(--isales-space-4);
+  align-items: stretch;
 }
 </style>

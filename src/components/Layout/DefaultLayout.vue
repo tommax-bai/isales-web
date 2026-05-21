@@ -22,11 +22,11 @@ import TopNav from "@/components/TopNav.vue";
 }
 .app-main {
   flex: 1;
-  padding: 24px 0 48px;
+  padding: var(--isales-space-6) 0 var(--isales-space-12);
 }
 .app-main__inner {
-  max-width: 1280px;
+  max-width: var(--isales-container-max);
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 var(--isales-container-px);
 }
 </style>

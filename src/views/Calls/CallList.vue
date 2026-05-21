@@ -246,32 +246,38 @@ onMounted(onRefresh);
 .calls__list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--isales-space-3);
 }
 .calls__pagination {
   display: flex;
   justify-content: flex-end;
-  margin-top: 24px;
+  margin-top: var(--isales-space-6);
 }
 
 .call-card {
   background: var(--isales-card);
   border: 1px solid var(--isales-border);
   border-radius: var(--isales-radius);
-  padding: 16px;
+  padding: var(--isales-space-4);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--isales-space-3);
+  transition: box-shadow 0.15s;
+}
+.call-card:hover {
+  box-shadow: var(--isales-shadow-sm);
 }
 .call-card__head {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: var(--isales-space-2);
 }
 .call-card__primary {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--isales-space-3);
+  min-width: 0;
 }
 .call-card__avatar {
   width: 36px;
@@ -282,47 +288,53 @@ onMounted(onRefresh);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 .call-card__lead {
-  margin: 0;
-  font-size: 14px;
-  font-weight: var(--isales-font-weight-bold);
+  font-size: var(--isales-font-size-title-3);
+  font-weight: var(--isales-font-weight-semibold);
+  line-height: var(--isales-line-height-tight);
 }
 .call-card__phone {
-  margin: 2px 0 0;
-  font-size: 13px;
+  margin-top: 2px;
+  font-size: var(--isales-font-size-sm);
   color: var(--isales-muted-foreground);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--isales-line-height-snug);
 }
 .call-card__meta {
   margin: 0;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 8px;
-  font-size: 13px;
+  gap: var(--isales-space-3);
+  font-size: var(--isales-font-size-sm);
 }
 .call-card__meta dt {
   color: var(--isales-muted-foreground);
-  font-size: 11px;
+  font-size: var(--isales-font-size-xs);
+  margin-bottom: 2px;
+  letter-spacing: var(--isales-letter-spacing-wide);
 }
 .call-card__meta dd {
   margin: 0;
+  line-height: var(--isales-line-height-snug);
 }
 .call-card__actions {
   display: flex;
-  gap: 8px;
+  gap: var(--isales-space-2);
   flex-wrap: wrap;
-  padding-top: 8px;
-  border-top: 1px dashed var(--isales-border);
+  padding-top: var(--isales-space-3);
+  border-top: 1px solid var(--isales-border);
 }
 .call-card__transcript {
-  border-top: 1px dashed var(--isales-border);
-  padding-top: 12px;
+  border-top: 1px solid var(--isales-border);
+  padding-top: var(--isales-space-3);
 }
 .loading-line {
   text-align: center;
-  margin: 8px 0;
+  margin: var(--isales-space-2) 0;
   color: var(--isales-muted-foreground);
-  font-size: 13px;
+  font-size: var(--isales-font-size-sm);
 }
 
 .fade-enter-active,

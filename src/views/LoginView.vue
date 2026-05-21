@@ -1,13 +1,18 @@
 <template>
   <div class="login-root">
     <div class="login-card">
+      <div class="login-brand">
+        <span class="login-brand__logo" aria-hidden="true">
+          <PhoneCall :size="18" />
+        </span>
+      </div>
       <h1 class="login-title">{{ tenantName }}</h1>
-      <p class="login-subtitle">请登录</p>
+      <p class="login-subtitle">客户外呼系统</p>
       <el-form
         ref="formRef"
         :model="form"
         :rules="rules"
-        label-width="64px"
+        label-width="56px"
         @submit.prevent="onSubmit"
       >
         <el-form-item label="账号" prop="username">
@@ -40,6 +45,7 @@
 
 <script setup lang="ts">
 import type { FormInstance, FormRules } from "element-plus";
+import { PhoneCall } from "lucide-vue-next";
 import { reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
@@ -69,7 +75,7 @@ async function onSubmit() {
   errorMessage.value = null;
   try {
     await auth.login({ username: form.username, password: form.password });
-    const redirect = (route.query.redirect as string | undefined) ?? "/dashboard";
+    const redirect = (route.query.redirect as string | undefined) ?? "/leads";
     await router.push(redirect);
   } catch (err: unknown) {
     errorMessage.value = extractError(err);
@@ -95,34 +101,55 @@ function extractError(err: unknown): string {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1890ff 0%, #001529 100%);
+  background:
+    radial-gradient(circle at 20% 20%, rgba(125, 92, 207, 0.18), transparent 60%),
+    radial-gradient(circle at 80% 80%, rgba(48, 71, 165, 0.18), transparent 55%),
+    var(--isales-primary);
+  padding: var(--isales-space-4);
 }
 .login-card {
-  background: #fff;
-  padding: 48px 64px;
-  border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  min-width: 360px;
+  background: var(--isales-card);
+  padding: var(--isales-space-8) var(--isales-space-10);
+  border-radius: var(--isales-radius-lg);
+  box-shadow: var(--isales-shadow-lg);
+  width: 100%;
+  max-width: 380px;
+}
+.login-brand {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--isales-space-4);
+}
+.login-brand__logo {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--isales-radius-md);
+  background: var(--isales-primary);
+  color: var(--isales-primary-foreground);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .login-title {
-  margin: 0 0 4px 0;
-  font-size: 22px;
-  color: #333;
+  font-size: var(--isales-font-size-title-1);
+  font-weight: var(--isales-font-weight-semibold);
+  letter-spacing: var(--isales-letter-spacing-tight);
   text-align: center;
+  line-height: var(--isales-line-height-tight);
 }
 .login-subtitle {
-  margin: 0 0 24px 0;
-  color: #888;
-  font-size: 13px;
+  margin: 4px 0 var(--isales-space-6);
+  color: var(--isales-muted-foreground);
+  font-size: var(--isales-font-size-sm);
   text-align: center;
 }
 .login-button {
   width: 100%;
 }
 .login-error {
-  margin: 12px 0 0 0;
-  color: #f56c6c;
-  font-size: 13px;
+  margin-top: var(--isales-space-3);
+  color: var(--isales-destructive);
+  font-size: var(--isales-font-size-sm);
   text-align: center;
 }
 </style>

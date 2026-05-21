@@ -114,25 +114,31 @@ const formattedTime = computed(() => {
   background: var(--isales-card);
   border: 1px solid var(--isales-border);
   border-radius: var(--isales-radius);
-  padding: 16px;
+  padding: var(--isales-space-4);
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  transition: opacity 0.15s;
+  gap: var(--isales-space-3);
+  transition:
+    opacity 0.15s,
+    box-shadow 0.15s;
+}
+.ap-card:hover {
+  box-shadow: var(--isales-shadow-sm);
 }
 .ap-card--dim {
-  opacity: 0.75;
+  opacity: 0.7;
 }
 .ap-card__head {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 8px;
+  gap: var(--isales-space-2);
 }
 .ap-card__lead {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--isales-space-3);
+  min-width: 0;
 }
 .ap-card__avatar {
   width: 36px;
@@ -143,44 +149,50 @@ const formattedTime = computed(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 .ap-card__name {
-  margin: 0;
-  font-size: 15px;
-  font-weight: var(--isales-font-weight-bold);
+  font-size: var(--isales-font-size-title-3);
+  font-weight: var(--isales-font-weight-semibold);
+  line-height: var(--isales-line-height-tight);
+  letter-spacing: var(--isales-letter-spacing-tight);
 }
 .ap-card__phone {
-  margin: 2px 0 0;
-  font-size: 13px;
+  margin-top: 2px;
+  font-size: var(--isales-font-size-sm);
   color: var(--isales-muted-foreground);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--isales-line-height-snug);
 }
 .ap-card__meta {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: 13px;
+  gap: var(--isales-space-2);
+  font-size: var(--isales-font-size-sm);
 }
 .ap-card__meta dt {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   color: var(--isales-muted-foreground);
-  font-size: 12px;
+  font-size: var(--isales-font-size-xs);
   margin-bottom: 2px;
+  letter-spacing: var(--isales-letter-spacing-wide);
 }
 .ap-card__meta dd {
   margin: 0;
   color: var(--isales-foreground);
-  line-height: 1.4;
+  line-height: var(--isales-line-height-snug);
 }
 .ap-card__directions {
   white-space: pre-wrap;
 }
 .ap-card__actions {
   display: flex;
-  gap: 8px;
-  padding-top: 8px;
-  border-top: 1px dashed var(--isales-border);
+  gap: var(--isales-space-2);
+  padding-top: var(--isales-space-3);
+  margin-top: auto;
+  border-top: 1px solid var(--isales-border);
 }
 </style>

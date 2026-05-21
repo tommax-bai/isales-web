@@ -2,7 +2,7 @@
   <section class="operations">
     <header class="ops-header">
       <div class="ops-header__icon" aria-hidden="true">
-        <LayoutGrid :size="22" />
+        <LayoutGrid :size="20" />
       </div>
       <div>
         <h1 class="ops-header__title">运营管理</h1>
@@ -20,7 +20,7 @@
         class="ops-card"
       >
         <span class="ops-card__icon" :style="{ color: card.color }">
-          <component :is="card.icon" :size="22" />
+          <component :is="card.icon" :size="18" />
         </span>
         <div class="ops-card__body">
           <h3 class="ops-card__title">{{ card.label }}</h3>
@@ -134,71 +134,81 @@ const cards = [
 .operations {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--isales-space-5);
 }
 .ops-header {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--isales-space-3);
 }
 .ops-header__icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--isales-radius-lg);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--isales-radius-md);
   background: var(--isales-primary);
   color: var(--isales-primary-foreground);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 .ops-header__title {
-  margin: 0;
-  font-size: 22px;
-  font-weight: var(--isales-font-weight-bold);
+  font-size: var(--isales-font-size-title-1);
+  font-weight: var(--isales-font-weight-semibold);
+  line-height: var(--isales-line-height-tight);
+  letter-spacing: var(--isales-letter-spacing-tight);
 }
 .ops-header__sub {
-  margin: 4px 0 0;
-  font-size: 14px;
+  margin-top: 2px;
+  font-size: var(--isales-font-size-sm);
   color: var(--isales-muted-foreground);
 }
 .ops-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--isales-space-3);
 }
 .ops-card {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 16px;
+  gap: var(--isales-space-3);
+  padding: var(--isales-space-4);
   background: var(--isales-card);
   border: 1px solid var(--isales-border);
   border-radius: var(--isales-radius);
   text-decoration: none;
   color: inherit;
-  transition: box-shadow 0.15s, transform 0.15s;
+  transition:
+    box-shadow 0.15s,
+    transform 0.15s,
+    border-color 0.15s;
 }
 .ops-card:hover {
   box-shadow: var(--isales-shadow-md);
   transform: translateY(-1px);
+  border-color: var(--isales-status-gray-700);
 }
 .ops-card__icon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--isales-radius);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--isales-radius-md);
   background: var(--isales-muted);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+}
+.ops-card__body {
+  min-width: 0;
 }
 .ops-card__title {
-  margin: 0;
-  font-size: 15px;
+  font-size: var(--isales-font-size-title-3);
   font-weight: var(--isales-font-weight-medium);
+  line-height: var(--isales-line-height-tight);
 }
 .ops-card__desc {
-  margin: 4px 0 0;
-  font-size: 13px;
+  margin-top: 2px;
+  font-size: var(--isales-font-size-sm);
   color: var(--isales-muted-foreground);
+  line-height: var(--isales-line-height-snug);
 }
 </style>

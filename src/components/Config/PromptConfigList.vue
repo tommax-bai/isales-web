@@ -152,58 +152,61 @@ function onRemove(i: number) {
   background: var(--isales-card);
   border: 1px solid var(--isales-border);
   border-radius: var(--isales-radius);
-  padding: 16px;
+  padding: var(--isales-space-4);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--isales-space-3);
 }
 .prompt-list__head {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--isales-space-3);
 }
 .prompt-list__icon {
   width: 36px;
   height: 36px;
-  border-radius: var(--isales-radius);
+  border-radius: var(--isales-radius-md);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 .prompt-list__title-block {
   flex: 1;
+  min-width: 0;
 }
 .prompt-list__title {
-  margin: 0;
-  font-size: 15px;
-  font-weight: var(--isales-font-weight-bold);
+  font-size: var(--isales-font-size-title-3);
+  font-weight: var(--isales-font-weight-semibold);
+  line-height: var(--isales-line-height-tight);
 }
 .prompt-list__desc {
-  margin: 2px 0 0;
-  font-size: 12px;
+  margin-top: 2px;
+  font-size: var(--isales-font-size-xs);
   color: var(--isales-muted-foreground);
+  line-height: var(--isales-line-height-snug);
 }
 .prompt-list__empty {
-  margin: 8px 0;
-  font-size: 13px;
+  margin: var(--isales-space-2) 0;
+  font-size: var(--isales-font-size-sm);
   color: var(--isales-muted-foreground);
   text-align: center;
-  padding: 16px;
+  padding: var(--isales-space-4);
   border: 1px dashed var(--isales-border);
-  border-radius: var(--isales-radius);
+  border-radius: var(--isales-radius-md);
 }
 .prompt-cfg {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px;
+  gap: var(--isales-space-2);
+  padding: var(--isales-space-3);
   background: var(--isales-muted);
-  border-radius: var(--isales-radius);
+  border-radius: var(--isales-radius-md);
 }
 .prompt-cfg__row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--isales-space-2);
 }
 .prompt-cfg__row--inline {
   flex-wrap: wrap;

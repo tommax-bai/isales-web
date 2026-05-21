@@ -1,9 +1,10 @@
 /**
  * design-tokens.css — Figma Make 设计 token 落地
  *
- * Spec: openspec/changes/web-admin-ui-redesign — capability `web-admin-ui` §
- * "设计 token 与主题". 暴露 oklch 色板 + 圆角 + 字号 + 语义化状态色，供
- * design-tokens 驱动的客户面 view 使用；运营 view 仍可读取这些变量。
+ * Spec: openspec/changes/web-admin-ui-redesign — capability `web-admin-ui`
+ * § "设计 token 与主题". 暴露 oklch 色板 + 圆角 + 字号 + 字重 + 行高 +
+ * 间距 + 语义化状态色，供 design-tokens 驱动的客户面 view 使用；
+ * 运营 view 仍可读取这些变量。
  *
  * `.dark` 变量保留但 v1.0 不激活（无主题切换 UI）。
  */
@@ -33,22 +34,68 @@
   --isales-destructive-foreground: oklch(0.985 0 0);
 
   /* ---- 形状 ----------------------------------------------------------- */
-  --isales-radius: 0.625rem;
-  --isales-radius-sm: 0.375rem;
-  --isales-radius-lg: 0.875rem;
+  --isales-radius: 0.625rem; /* 10px */
+  --isales-radius-sm: 0.375rem; /* 6px */
+  --isales-radius-md: 0.5rem; /* 8px */
+  --isales-radius-lg: 0.75rem; /* 12px */
 
-  /* ---- 字号 ----------------------------------------------------------- */
-  --isales-font-size-base: 16px;
-  --isales-font-size-sm: 14px;
-  --isales-font-size-xs: 12px;
-  --isales-font-size-lg: 18px;
-  --isales-font-weight-medium: 500;
-  --isales-font-weight-bold: 600;
-
-  /* ---- 语义化状态色 — 三档（bg=100 / border=700 / text=800） ----------
-   * 用于 lead / call / appointment / 意向等 badge。
-   * 命名约定 --isales-status-{name}-{100|700|800}
+  /* ---- 字号体系 — 中文密致基线（base 14px）---------------------------
+   *
+   * Hierarchy:
+   *   title-1  20px  — 页面主标题 (PageHeader)
+   *   title-2  17px  — section / 卡片组标题
+   *   title-3  15px  — 卡片标题 / dialog 标题
+   *   body     14px  — 正文 / 表单 / 按钮 (= base)
+   *   sm       13px  — 卡片副文 / meta 值
+   *   xs       12px  — caption / 标签 / dt
+   *   2xs      11px  — badge / 角标
    */
+  --isales-font-size-base: 14px;
+  --isales-font-size-2xs: 11px;
+  --isales-font-size-xs: 12px;
+  --isales-font-size-sm: 13px;
+  --isales-font-size-body: 14px;
+  --isales-font-size-title-3: 15px;
+  --isales-font-size-title-2: 17px;
+  --isales-font-size-title-1: 20px;
+
+  /* legacy 别名 — 让旧引用渐进迁移 */
+  --isales-font-size-lg: var(--isales-font-size-title-3);
+
+  /* ---- 字重 ----------------------------------------------------------- */
+  --isales-font-weight-normal: 400;
+  --isales-font-weight-medium: 500;
+  --isales-font-weight-semibold: 600;
+  --isales-font-weight-bold: 700;
+
+  /* ---- 行高 ----------------------------------------------------------- */
+  --isales-line-height-tight: 1.25; /* 标题 */
+  --isales-line-height-snug: 1.4;
+  --isales-line-height-normal: 1.55; /* 中文正文最舒适 */
+  --isales-line-height-relaxed: 1.7;
+
+  /* ---- 字间距 -------------------------------------------------------- */
+  --isales-letter-spacing-tight: -0.01em;
+  --isales-letter-spacing-normal: 0;
+  --isales-letter-spacing-wide: 0.02em;
+
+  /* ---- 间距体系（4px 倍数）------------------------------------------ */
+  --isales-space-1: 4px;
+  --isales-space-2: 8px;
+  --isales-space-3: 12px;
+  --isales-space-4: 16px;
+  --isales-space-5: 20px;
+  --isales-space-6: 24px;
+  --isales-space-8: 32px;
+  --isales-space-10: 40px;
+  --isales-space-12: 48px;
+
+  /* ---- 容器 ----------------------------------------------------------- */
+  --isales-container-max: 1280px;
+  --isales-container-px: var(--isales-space-6);
+  --isales-topnav-height: 56px;
+
+  /* ---- 语义化状态色 — 三档（bg=100 / border=700 / text=800） ---------- */
 
   /* blue — new / answered / 信息 */
   --isales-status-blue-100: #dbeafe;
@@ -86,9 +133,10 @@
   --isales-bubble-customer-bg: #dcfce7;
   --isales-bubble-customer-fg: #14532d;
 
-  /* ---- shadow ----------------------------------------------------------- */
-  --isales-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
-  --isales-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+  /* ---- shadow --------------------------------------------------------- */
+  --isales-shadow-sm: 0 1px 2px 0 rgb(15 23 42 / 0.04);
+  --isales-shadow-md: 0 2px 4px -1px rgb(15 23 42 / 0.06), 0 4px 8px -2px rgb(15 23 42 / 0.04);
+  --isales-shadow-lg: 0 4px 8px -2px rgb(15 23 42 / 0.08), 0 8px 16px -4px rgb(15 23 42 / 0.06);
 }
 
 .dark {
@@ -111,4 +159,30 @@
   --isales-accent-foreground: oklch(0.985 0 0);
   --isales-destructive: oklch(0.396 0.141 25.723);
   --isales-destructive-foreground: oklch(0.985 0 0);
+}
+
+/* ---- base typography reset ---------------------------------------------
+ * Applies the design system's typography baseline to <html> so every
+ * component inherits a consistent base unless it explicitly overrides.
+ */
+html {
+  font-size: var(--isales-font-size-base);
+  line-height: var(--isales-line-height-normal);
+  color: var(--isales-foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", system-ui, Arial, sans-serif;
+  font-feature-settings:
+    "kern" 1,
+    "tnum" 1;
+}
+
+/* Tabular numerals for IDs, timestamps, prices — opt-in via class */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }

@@ -31,11 +31,13 @@ const style = computed(() => ({
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px 10px;
+  padding: 1px 8px;
   border-radius: 9999px;
   border: 1px solid;
-  font-size: 12px;
+  font-size: var(--isales-font-size-2xs);
   font-weight: var(--isales-font-weight-medium);
-  line-height: 1.5;
+  line-height: 1.6;
+  letter-spacing: var(--isales-letter-spacing-wide);
+  white-space: nowrap;
 }
 </style>

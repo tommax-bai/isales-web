@@ -4,7 +4,7 @@
       <!-- 左：logo + 标题 -->
       <router-link :to="{ name: 'leads' }" class="brand">
         <span class="brand__logo" aria-hidden="true">
-          <PhoneCall :size="18" />
+          <PhoneCall :size="16" />
         </span>
         <span class="brand__text">
           <span class="brand__title">{{ tenantName }}</span>
@@ -21,7 +21,7 @@
           class="pill__btn"
           :class="{ 'pill__btn--active': isActive(item.name) }"
         >
-          <component :is="item.icon" :size="16" />
+          <component :is="item.icon" :size="14" />
           <span>{{ item.label }}</span>
         </router-link>
       </nav>
@@ -38,13 +38,13 @@
             :title="item.label"
             :aria-label="item.label"
           >
-            <component :is="item.icon" :size="18" />
+            <component :is="item.icon" :size="16" />
           </router-link>
         </nav>
 
         <el-dropdown trigger="click" placement="bottom-end">
           <button class="user-trigger" type="button" :aria-label="username ?? '用户菜单'">
-            <UserCircle :size="22" />
+            <UserCircle :size="18" />
           </button>
           <template #dropdown>
             <el-dropdown-menu>
@@ -124,45 +124,48 @@ function onLogout() {
   box-shadow: var(--isales-shadow-sm);
 }
 .top-nav__inner {
-  max-width: 1280px;
+  max-width: var(--isales-container-max);
   margin: 0 auto;
-  padding: 0 24px;
-  height: 64px;
+  padding: 0 var(--isales-container-px);
+  height: var(--isales-topnav-height);
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--isales-space-4);
 }
 
 /* ---- brand ---- */
 .brand {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--isales-space-2);
   text-decoration: none;
   color: var(--isales-foreground);
+  flex-shrink: 0;
 }
 .brand__logo {
   width: 32px;
   height: 32px;
-  border-radius: var(--isales-radius);
+  border-radius: var(--isales-radius-md);
   background: var(--isales-primary);
   color: var(--isales-primary-foreground);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 .brand__text {
   display: flex;
   flex-direction: column;
-  line-height: 1.1;
+  line-height: var(--isales-line-height-tight);
 }
 .brand__title {
-  font-weight: var(--isales-font-weight-bold);
-  font-size: 14px;
+  font-weight: var(--isales-font-weight-semibold);
+  font-size: var(--isales-font-size-body);
+  letter-spacing: var(--isales-letter-spacing-tight);
 }
 .brand__sub {
-  font-size: 11px;
+  font-size: var(--isales-font-size-xs);
   color: var(--isales-muted-foreground);
+  margin-top: 1px;
 }
 
 /* ---- pill containers ---- */
@@ -171,14 +174,11 @@ function onLogout() {
   align-items: center;
   background: var(--isales-muted);
   border-radius: 9999px;
-  padding: 4px;
+  padding: 3px;
   gap: 2px;
 }
 .pill--business {
   margin: 0 auto;
-}
-.pill--config {
-  background: var(--isales-muted);
 }
 
 /* business pill buttons */
@@ -188,39 +188,44 @@ function onLogout() {
   gap: 6px;
   padding: 6px 14px;
   border-radius: 9999px;
-  font-size: 14px;
+  font-size: var(--isales-font-size-sm);
+  font-weight: var(--isales-font-weight-medium);
   color: var(--isales-muted-foreground);
   text-decoration: none;
-  transition: background 0.15s, color 0.15s;
+  line-height: 1;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 .pill__btn:hover {
   color: var(--isales-foreground);
 }
 .pill__btn--active {
   background: var(--isales-background);
-  color: var(--isales-primary);
-  font-weight: var(--isales-font-weight-medium);
+  color: var(--isales-foreground);
   box-shadow: var(--isales-shadow-sm);
 }
 
 /* config circular buttons */
 .pill__circle {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: var(--isales-muted-foreground);
   text-decoration: none;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 .pill__circle:hover {
   color: var(--isales-foreground);
 }
 .pill__circle--active {
   background: var(--isales-background);
-  color: var(--isales-primary);
+  color: var(--isales-foreground);
   box-shadow: var(--isales-shadow-sm);
 }
 
@@ -228,11 +233,13 @@ function onLogout() {
 .actions {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--isales-space-3);
+  flex-shrink: 0;
 }
 .user-trigger {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
   border-radius: 50%;
   background: transparent;
   border: 1px solid var(--isales-border);
@@ -241,6 +248,9 @@ function onLogout() {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 .user-trigger:hover {
   color: var(--isales-foreground);
@@ -250,6 +260,9 @@ function onLogout() {
 /* ---- responsive: hide business pill on mobile ---- */
 @media (max-width: 768px) {
   .pill--business {
+    display: none;
+  }
+  .brand__sub {
     display: none;
   }
 }
