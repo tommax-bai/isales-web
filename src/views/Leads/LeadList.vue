@@ -71,9 +71,13 @@
       </el-select>
     </div>
 
-    <!-- 卡片网格 -->
-    <div v-loading="store.loading" class="leads__grid">
-      <el-empty v-if="filtered.length === 0" description="暂无线索" />
+    <!-- 卡片网格；空态在网格外居中显示，避免被 grid 第一列约束在左上 -->
+    <el-empty
+      v-if="!store.loading && filtered.length === 0"
+      description="暂无线索"
+      class="leads__empty"
+    />
+    <div v-else v-loading="store.loading" class="leads__grid">
       <article
         v-for="lead in filtered"
         :key="lead.id"
@@ -317,6 +321,12 @@ onMounted(onRefresh);
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: var(--isales-space-4);
   align-items: stretch;
+}
+.leads__empty {
+  padding: var(--isales-space-8) 0;
+  background: var(--isales-card);
+  border: 1px dashed var(--isales-border);
+  border-radius: var(--isales-radius);
 }
 .leads__pagination {
   display: flex;
