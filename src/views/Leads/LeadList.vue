@@ -1,20 +1,19 @@
 <template>
   <section class="leads">
-    <!-- AI 可用状态横幅 — 整圈描边卡片式 -->
-    <div class="ai-banner" :class="`ai-banner--${aiAvailable ? 'ok' : 'warn'}`">
+    <!-- 外呼说明横幅 — 外呼由场景驱动 -->
+    <div class="ai-banner ai-banner--info">
       <span class="ai-banner__icon">
-        <component :is="aiAvailable ? PhoneCall : Clock" :size="16" />
+        <PhoneCall :size="16" />
       </span>
       <p class="ai-banner__text">
-        <strong>{{ aiAvailable ? "AI 外呼可用" : "AI 外呼待命" }}</strong>
+        <strong>外呼由场景驱动</strong>
         <span>
-          {{
-            aiAvailable
-              ? "— 当前在可拨时段内，可对线索发起外呼"
-              : "— 当前不在默认可拨时段（9:00–21:00），由所属 campaign 的 time-window 决定"
-          }}
+          — 在「场景」中创建并启动外呼场景，归属它的线索会自动进入外呼队列
         </span>
       </p>
+      <el-button link type="primary" size="small" @click="goCampaigns">
+        前往场景
+      </el-button>
     </div>
 
     <PageHeader title="线索列表" :subtitle="`共 ${leadCount} 条线索`">
@@ -108,19 +107,10 @@
         </div>
 
         <div class="lead-card__actions">
-          <el-button
-            type="primary"
-            size="large"
-            class="lead-card__dial"
-            :disabled="!aiAvailable || lead.status === 'do_not_call'"
-            @click="onDial(lead)"
-          >
-            <Phone :size="16" style="margin-right: 6px" />
-            外呼
+          <el-button size="large" class="lead-card__edit" @click="onEdit(lead)">
+            <Edit :size="16" style="margin-right: 6px" />
+            编辑
           </el-button>
-          <IconButton label="编辑" @click="onEdit(lead)">
-            <Edit :size="16" />
-          </IconButton>
           <IconButton label="删除" variant="danger" @click="onDelete(lead)">
             <Trash2 :size="16" />
           </IconButton>
@@ -148,8 +138,9 @@
 
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from "element-plus";
-import { Clock, Edit, Phone, PhoneCall, Plus, Search, Trash2, Upload } from "lucide-vue-next";
+import { Edit, PhoneCall, Plus, Search, Trash2, Upload } from "lucide-vue-next";
 import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 
 import { leadsApi } from "@/api/leads";
 import IconButton from "@/components/Common/IconButton.vue";
@@ -162,6 +153,7 @@ import { useLeadsStore } from "@/stores/leads";
 import type { Lead, LeadStatus } from "@/types/lead";
 
 const store = useLeadsStore();
+const router = useRouter();
 const importVisible = ref(false);
 const editVisible = ref(false);
 const editingLead = ref<Lead | null>(null);
@@ -197,13 +189,6 @@ const pageSize = computed({
 });
 
 const leadCount = computed(() => store.total ?? store.items.length);
-
-// 简化版"AI 可用"判定：默认 09:00 ≤ now ≤ 21:00 视为可拨。
-// 真正的逐 campaign time-window 评估在后端 scheduler 内做。
-const aiAvailable = computed(() => {
-  const hour = new Date().getHours();
-  return hour >= 9 && hour < 21;
-});
 
 const filtered = computed(() => {
   const q = searchInput.value.trim().toLowerCase();
@@ -273,19 +258,8 @@ async function onDelete(row: Lead) {
   }
 }
 
-async function onDial(row: Lead) {
-  try {
-    await ElMessageBox.confirm(
-      `将立即对"${row.name || row.phone}"发起 AI 外呼。继续？`,
-      "外呼确认",
-      { type: "info" },
-    );
-    await leadsApi.update(row.id, { status: "queued" });
-    ElMessage.success("外呼已加入队列");
-    onRefresh();
-  } catch {
-    // cancelled
-  }
+function goCampaigns() {
+  void router.push({ name: "campaigns" });
 }
 
 onMounted(onRefresh);
@@ -308,15 +282,10 @@ onMounted(onRefresh);
   margin-bottom: var(--isales-space-5);
   font-size: var(--isales-font-size-sm);
 }
-.ai-banner--ok {
-  background: #f0fdf4;
-  border-color: #86efac;
-  color: var(--isales-status-green-800);
-}
-.ai-banner--warn {
-  background: #fffbeb;
-  border-color: #fcd34d;
-  color: var(--isales-status-yellow-800);
+.ai-banner--info {
+  background: var(--isales-status-blue-100);
+  border-color: var(--isales-status-blue-700);
+  color: var(--isales-status-blue-800);
 }
 .ai-banner__icon {
   display: inline-flex;
@@ -324,6 +293,7 @@ onMounted(onRefresh);
 }
 .ai-banner__text {
   margin: 0;
+  flex: 1;
   line-height: var(--isales-line-height-snug);
 }
 .ai-banner__text strong {
@@ -457,7 +427,7 @@ onMounted(onRefresh);
   gap: var(--isales-space-2);
   margin-top: auto;
 }
-.lead-card__dial {
+.lead-card__edit {
   flex: 1;
 }
 </style>

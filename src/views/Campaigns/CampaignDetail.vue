@@ -56,6 +56,16 @@
           <el-form-item label="并发上限">
             <el-input-number v-model="form.concurrency" :min="1" :max="100" />
           </el-form-item>
+          <el-form-item label="选用音色">
+            <el-select v-model="form.voice_id" placeholder="（暂不指定）" clearable>
+              <el-option
+                v-for="v in voiceModels"
+                :key="v.id"
+                :label="`${v.name}（${v.vendor}）`"
+                :value="v.id"
+              />
+            </el-select>
+          </el-form-item>
         </el-form>
       </section>
 
@@ -105,17 +115,34 @@
         </article>
       </section>
 
-      <!-- AI 外呼策略配置区（§5 填充：4-tier prompt / 垫词 / 音色） -->
-      <section class="card card--placeholder">
-        <header class="card__head">
-          <MessageSquare :size="16" />
-          <h3 class="card__title">AI 外呼策略</h3>
-        </header>
-        <p class="card__empty">
-          4-tier 并行 prompt（对话 / 质量 / 润色 / 垫词）、选用音色等 per-campaign
-          策略配置正在接入。当前可在运营面「任务管理」的高级编辑中调整。
-        </p>
-      </section>
+      <!-- AI 外呼策略：4-tier 并行配置（per-campaign） -->
+      <div class="cd__tiers">
+        <PromptTierEditor
+          :campaign-id="id"
+          kind="role"
+          title="对话策略"
+          description="N 条对话 prompt 并行执行，由质量判别择优"
+          :icon="MessageSquare"
+          badge-color="blue"
+        />
+        <PromptTierEditor
+          :campaign-id="id"
+          kind="judge"
+          title="质量判别"
+          description="对候选回复打分，择优出列"
+          :icon="Target"
+          badge-color="purple"
+        />
+        <PromptTierEditor
+          :campaign-id="id"
+          kind="polish"
+          title="润色"
+          description="对入选回复做风格化打磨"
+          :icon="Sparkles"
+          badge-color="green"
+        />
+        <FillerEditor :campaign-id="id" />
+      </div>
 
       <!-- sticky 保存条 -->
       <div class="save-bar">
@@ -143,18 +170,24 @@ import {
   Plus,
   Save,
   Settings,
+  Sparkles,
   Square,
+  Target,
   Trash2,
 } from "lucide-vue-next";
 import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { campaignsApi } from "@/api/campaigns";
+import { voiceApi } from "@/api/voice";
+import FillerEditor from "@/components/Campaign/FillerEditor.vue";
+import PromptTierEditor from "@/components/Campaign/PromptTierEditor.vue";
 import PageHeader from "@/components/Common/PageHeader.vue";
 import StatusBadge from "@/components/Common/StatusBadge.vue";
 import { leadStatusMeta } from "@/composables/useStatusMeta";
 import type { CampaignDetail, CampaignProgress, TimeWindow, WeekDay } from "@/types/campaign";
 import type { LeadStatus } from "@/types/lead";
+import type { VoiceModel } from "@/types/voice";
 
 const route = useRoute();
 const router = useRouter();
@@ -176,8 +209,11 @@ const progress = ref<CampaignProgress>(EMPTY_PROGRESS);
 const form = reactive<{
   name: string;
   concurrency: number;
+  voice_id: number | null;
   time_windows: TimeWindow[];
-}>({ name: "", concurrency: 1, time_windows: [] });
+}>({ name: "", concurrency: 1, voice_id: null, time_windows: [] });
+
+const voiceModels = ref<VoiceModel[]>([]);
 
 const WEEKDAYS: { value: WeekDay; label: string }[] = [
   { value: "mon", label: "一" },
@@ -207,14 +243,27 @@ async function loadProgress() {
   }
 }
 
+async function loadVoiceModels() {
+  try {
+    const r = (await voiceApi.list()) as unknown;
+    // 容忍后端 Page<VoiceModel> 或裸数组两种返回形态。
+    voiceModels.value = Array.isArray(r)
+      ? (r as VoiceModel[])
+      : ((r as { items?: VoiceModel[] }).items ?? []);
+  } catch {
+    voiceModels.value = [];
+  }
+}
+
 async function onRefresh() {
   loading.value = true;
   try {
     campaign.value = await campaignsApi.get(id);
     form.name = campaign.value.name;
     form.concurrency = campaign.value.concurrency;
+    form.voice_id = campaign.value.voice_id;
     form.time_windows = campaign.value.time_windows.map((w) => ({ ...w, days: [...w.days] }));
-    await loadProgress();
+    await Promise.all([loadProgress(), loadVoiceModels()]);
   } catch (err: unknown) {
     ElMessage.error(err instanceof Error ? err.message : "加载场景失败");
   } finally {
@@ -240,6 +289,7 @@ async function onSave() {
     await campaignsApi.update(id, {
       name: form.name,
       concurrency: form.concurrency,
+      voice_id: form.voice_id,
       time_windows: form.time_windows,
     });
     ElMessage.success("已保存");
@@ -287,14 +337,16 @@ onMounted(onRefresh);
   gap: var(--isales-space-4);
   padding-bottom: 80px;
 }
+.cd__tiers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--isales-space-4);
+}
 .card {
   background: var(--isales-card);
   border: 1px solid var(--isales-border);
   border-radius: var(--isales-radius);
   padding: var(--isales-space-4);
-}
-.card--placeholder {
-  border-style: dashed;
 }
 .card__head {
   display: flex;

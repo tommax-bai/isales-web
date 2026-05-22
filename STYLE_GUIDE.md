@@ -175,7 +175,7 @@ flex，内部按 `header / meta / actions` 分块，块间 `space-4`。hover 抬
 | `PageHeader` | `components/Common/PageHeader.vue` | 页头 |
 | `StatusBadge` | `components/Common/StatusBadge.vue` | 状态徽标 |
 | `IconButton` | `components/Common/IconButton.vue` | 40×40 图标小方钮（次要操作） |
-| `PromptConfigList` | `components/Config/PromptConfigList.vue` | 并行 prompt 配置块 |
+| `PromptTierEditor` | `components/Campaign/PromptTierEditor.vue` | per-campaign 并行 prompt tier 编辑 |
 
 状态映射工具：`composables/useStatusMeta.ts`。
 
