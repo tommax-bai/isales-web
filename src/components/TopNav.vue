@@ -67,12 +67,11 @@ import {
   Calendar,
   Key,
   LayoutGrid,
+  Megaphone,
   Phone,
   PhoneCall,
-  Settings,
   UserCircle,
   Users,
-  Waves,
 } from "lucide-vue-next";
 import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -86,22 +85,22 @@ const tenantName = import.meta.env.VITE_TENANT_NAME ?? "iSales";
 const username = computed(() => auth.username ?? "未登录");
 
 const businessEntries = [
+  { name: "campaigns", label: "场景", icon: Megaphone },
   { name: "leads", label: "线索管理", icon: Users },
   { name: "calls", label: "外呼记录", icon: Phone },
   { name: "appointments", label: "预约管理", icon: Calendar },
 ] as const;
 
 const configEntries = [
-  { name: "config-ai-call", label: "AI 外呼配置", icon: Settings },
-  { name: "config-voice-channels", label: "ASR/TTS 通路", icon: Waves },
   { name: "config-model-providers", label: "模型厂商", icon: Key },
 ] as const;
 
 function isActive(name: string): boolean {
   const current = route.name?.toString() ?? "";
   if (current === name) return true;
-  // call detail / appointment children stay active under the parent entry
-  if (name === "calls" && (current === "call-detail" || current.startsWith("call-"))) return true;
+  // 子路由在父入口下保持高亮
+  if (name === "calls" && current.startsWith("call-")) return true;
+  if (name === "campaigns" && current.startsWith("campaign-")) return true;
   return false;
 }
 

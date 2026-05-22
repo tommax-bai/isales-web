@@ -212,3 +212,11 @@ export const CAMPAIGN_DEFAULTS: CampaignBase = {
   do_not_call_llm_prompt_version_id: null,
   respect_holidays: true,
 };
+
+// GET /campaigns/{id}/progress — 按 lead.status 聚合 + 启停状态。
+export interface CampaignProgress {
+  campaign_id: number;
+  total: number;
+  status_counts: Record<string, number>;
+  is_active: boolean;
+}

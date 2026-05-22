@@ -2,6 +2,7 @@ import apiClient from "@/api/client";
 import type {
   CampaignCreate,
   CampaignDetail,
+  CampaignProgress,
   CampaignSummary,
   CampaignUpdate,
   PaginatedResponse,
@@ -40,4 +41,8 @@ export const campaignsApi = {
     apiClient.post<void>(`/campaigns/${id}/start`).then((r) => r.data),
   pause: (id: number) =>
     apiClient.post<void>(`/campaigns/${id}/pause`).then((r) => r.data),
+  progress: (id: number) =>
+    apiClient
+      .get<CampaignProgress>(`/campaigns/${id}/progress`)
+      .then((r) => r.data),
 };

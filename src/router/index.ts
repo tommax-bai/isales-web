@@ -8,7 +8,6 @@ import DefaultLayout from "@/components/Layout/DefaultLayout.vue";
  */
 const OPERATIONS_REDIRECTS: Record<string, string> = {
   "/dashboard": "/operations/dashboard",
-  "/campaigns": "/operations/campaigns",
   "/devices": "/operations/devices",
   "/sim-cards": "/operations/sim-cards",
   "/holidays": "/operations/holidays",
@@ -32,7 +31,19 @@ const router = createRouter({
       component: DefaultLayout,
       redirect: { name: "leads" },
       children: [
-        // ---- 客户面 6 个 view ------------------------------------------
+        // ---- 客户面 view ------------------------------------------------
+        {
+          path: "campaigns",
+          name: "campaigns",
+          component: () => import("@/views/Campaigns/CampaignWorkspace.vue"),
+          meta: { title: "场景" },
+        },
+        {
+          path: "campaigns/:id",
+          name: "campaign-detail",
+          component: () => import("@/views/Campaigns/CampaignDetail.vue"),
+          meta: { title: "场景详情" },
+        },
         {
           path: "leads",
           name: "leads",
@@ -56,18 +67,6 @@ const router = createRouter({
           name: "appointments",
           component: () => import("@/views/Appointments/AppointmentList.vue"),
           meta: { title: "预约管理" },
-        },
-        {
-          path: "config/ai-call",
-          name: "config-ai-call",
-          component: () => import("@/views/Config/AICallConfig.vue"),
-          meta: { title: "AI 外呼配置" },
-        },
-        {
-          path: "config/voice-channels",
-          name: "config-voice-channels",
-          component: () => import("@/views/Config/VoiceChannelConfig.vue"),
-          meta: { title: "ASR/TTS 通路" },
         },
         {
           path: "config/model-providers",
