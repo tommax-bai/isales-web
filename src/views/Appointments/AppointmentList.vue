@@ -2,9 +2,7 @@
   <section class="appointments">
     <PageHeader
       title="预约管理"
-      subtitle="到店预约的确认与跟进。"
-      :icon="Calendar"
-      icon-color="primary"
+      :subtitle="`即将到店 ${upcoming.length} · 历史 ${history.length}`"
     >
       <template #actions>
         <el-button @click="onRefresh">刷新</el-button>
@@ -52,7 +50,7 @@
 
 <script setup lang="ts">
 import { ElMessage } from "element-plus";
-import { Archive, Calendar, Clock } from "lucide-vue-next";
+import { Archive, Clock } from "lucide-vue-next";
 import { computed, onMounted, ref } from "vue";
 
 import { appointmentsApi } from "@/api/appointments";

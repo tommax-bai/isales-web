@@ -174,9 +174,14 @@ flex，内部按 `header / meta / actions` 分块，块间 `space-4`。hover 抬
 |---|---|---|
 | `PageHeader` | `components/Common/PageHeader.vue` | 页头 |
 | `StatusBadge` | `components/Common/StatusBadge.vue` | 状态徽标 |
+| `IconButton` | `components/Common/IconButton.vue` | 40×40 图标小方钮（次要操作） |
 | `PromptConfigList` | `components/Config/PromptConfigList.vue` | 并行 prompt 配置块 |
 
 状态映射工具：`composables/useStatusMeta.ts`。
+
+参考实现：`views/Leads/LeadList.vue`、`views/Calls/CallList.vue`、
+`components/Appointment/AppointmentCard.vue` 三处卡片均已符合本指南，可直接
+照抄结构。
 
 ---
 
@@ -184,10 +189,11 @@ flex，内部按 `header / meta / actions` 分块，块间 `space-4`。hover 抬
 
 迭代到对应 view 时按本指南顺手收敛，不必专门开 change：
 
-- `icon-btn`（40×40 图标小方钮）目前是 `LeadList.vue` 的局部 class；后续
-  若第二处用到，提取为共享组件 `components/Common/IconButton.vue`。
+- `meta-row` / `meta-row__label` / `meta-row__value` 这套「label 左 / value
+  右」样式目前在 LeadList / CallList / AppointmentCard 各写了一份等价的
+  scoped CSS；若再出现第四处，考虑抽成全局 utility 或 `<MetaRow>` 组件。
 - AI banner 目前是 `LeadList.vue` 局部实现；若其他 view 需要同款，提取为
   共享组件。
-- `CallList` / `AppointmentList` 的卡片仍保留头像圆圈、meta 未右对齐、操作区
-  为文字按钮 —— 与 §6 不一致，迭代时对齐。
+- 3 个配置 view（AICallConfig / VoiceChannelConfig / ModelProviderConfig）
+  已 token 化但卡片结构未完全套用 §6，迭代时对齐。
 - 运营 view（`/operations/*`）整体仍是旧 EP 风格，长期可选择性迁移。

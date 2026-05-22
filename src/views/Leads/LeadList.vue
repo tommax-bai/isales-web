@@ -118,24 +118,12 @@
             <Phone :size="16" style="margin-right: 6px" />
             外呼
           </el-button>
-          <button
-            type="button"
-            class="icon-btn"
-            title="编辑"
-            aria-label="编辑"
-            @click="onEdit(lead)"
-          >
+          <IconButton label="编辑" @click="onEdit(lead)">
             <Edit :size="16" />
-          </button>
-          <button
-            type="button"
-            class="icon-btn icon-btn--danger"
-            title="删除"
-            aria-label="删除"
-            @click="onDelete(lead)"
-          >
+          </IconButton>
+          <IconButton label="删除" variant="danger" @click="onDelete(lead)">
             <Trash2 :size="16" />
-          </button>
+          </IconButton>
         </div>
       </article>
     </div>
@@ -164,6 +152,7 @@ import { Clock, Edit, Phone, PhoneCall, Plus, Search, Trash2, Upload } from "luc
 import { computed, onMounted, ref } from "vue";
 
 import { leadsApi } from "@/api/leads";
+import IconButton from "@/components/Common/IconButton.vue";
 import PageHeader from "@/components/Common/PageHeader.vue";
 import StatusBadge from "@/components/Common/StatusBadge.vue";
 import LeadEditDialog from "@/components/Lead/LeadEditDialog.vue";
@@ -470,31 +459,5 @@ onMounted(onRefresh);
 }
 .lead-card__dial {
   flex: 1;
-}
-.icon-btn {
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  border: 1px solid var(--isales-border);
-  border-radius: var(--isales-radius-md);
-  background: var(--isales-card);
-  color: var(--isales-muted-foreground);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition:
-    background 0.15s,
-    color 0.15s,
-    border-color 0.15s;
-}
-.icon-btn:hover {
-  background: var(--isales-muted);
-  color: var(--isales-foreground);
-}
-.icon-btn--danger:hover {
-  background: var(--isales-status-red-100);
-  color: var(--isales-status-red-800);
-  border-color: var(--isales-status-red-100);
 }
 </style>

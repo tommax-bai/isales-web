@@ -1,48 +1,49 @@
 <template>
   <section class="calls">
-    <PageHeader
-      title="外呼记录"
-      subtitle="AI 通话记录及目标达成评估，可创建到店预约。"
-      :icon="Phone"
-      icon-color="primary"
-    >
+    <PageHeader title="外呼记录" :subtitle="`共 ${total ?? items.length} 条记录`">
       <template #actions>
         <el-button @click="onRefresh">刷新</el-button>
       </template>
     </PageHeader>
 
-    <div v-loading="loading" class="calls__list">
-      <el-empty v-if="items.length === 0" description="暂无通话记录" />
+    <el-empty
+      v-if="!loading && items.length === 0"
+      description="暂无通话记录"
+      class="calls__empty"
+    />
+    <div v-else v-loading="loading" class="calls__list">
       <article v-for="call in items" :key="call.id" class="call-card">
         <header class="call-card__head">
-          <div class="call-card__primary">
-            <span class="call-card__avatar">
-              <Phone :size="18" />
-            </span>
-            <div>
-              <h3 class="call-card__lead">线索 #{{ call.lead_id }}</h3>
-              <p class="call-card__phone">{{ call.caller_id || "未知主叫" }}</p>
-            </div>
+          <div class="call-card__identity">
+            <h3 class="call-card__name">线索 #{{ call.lead_id }}</h3>
+            <p class="call-card__phone">{{ call.caller_id || "未知主叫" }}</p>
           </div>
           <StatusBadge :color="callResultColor(call.status)">
             {{ callResultLabel(call.status) }}
           </StatusBadge>
         </header>
 
-        <dl class="call-card__meta">
-          <div>
-            <dt>开始时间</dt>
-            <dd>{{ call.started_at ? formatTime(call.started_at) : "—" }}</dd>
+        <div class="call-card__meta">
+          <div class="meta-row">
+            <span class="meta-row__label">开始时间</span>
+            <span class="meta-row__value">
+              {{ call.started_at ? formatTime(call.started_at) : "—" }}
+            </span>
           </div>
-          <div>
-            <dt>时长</dt>
-            <dd>{{ formatDuration(call.duration) }}</dd>
+          <div class="meta-row">
+            <span class="meta-row__label">通话时长</span>
+            <span class="meta-row__value">{{ formatDuration(call.duration) }}</span>
           </div>
-          <div v-if="call.transfer_status && call.transfer_status !== 'none'">
-            <dt>转人工</dt>
-            <dd>{{ call.transfer_status }} / {{ call.transfer_reason || "—" }}</dd>
+          <div
+            v-if="call.transfer_status && call.transfer_status !== 'none'"
+            class="meta-row"
+          >
+            <span class="meta-row__label">转人工</span>
+            <span class="meta-row__value">
+              {{ call.transfer_status }} / {{ call.transfer_reason || "—" }}
+            </span>
           </div>
-        </dl>
+        </div>
 
         <GoalAchievementPanel
           v-if="summaries[call.id]"
@@ -50,25 +51,26 @@
         />
 
         <div class="call-card__actions">
-          <el-button size="small" link type="primary" @click="onDetail(call)">
-            查看详情
+          <el-button
+            size="large"
+            class="call-card__toggle"
+            @click="onToggleTranscript(call.id)"
+          >
+            <MessageSquare :size="16" style="margin-right: 6px" />
+            {{ expanded[call.id] ? "收起对话" : "查看通话内容" }}
           </el-button>
           <el-button
             v-if="canCreateAppointment(call)"
-            size="small"
+            size="large"
             type="primary"
             @click="onCreateAppointment(call)"
           >
-            <Calendar :size="14" style="margin-right: 4px" />
+            <Calendar :size="16" style="margin-right: 6px" />
             创建预约
           </el-button>
-          <el-button
-            size="small"
-            @click="onToggleTranscript(call.id)"
-          >
-            <MessageSquare :size="14" style="margin-right: 4px" />
-            {{ expanded[call.id] ? "收起对话" : "查看通话内容" }}
-          </el-button>
+          <IconButton label="查看详情" @click="onDetail(call)">
+            <ArrowRight :size="16" />
+          </IconButton>
         </div>
 
         <transition name="fade">
@@ -110,7 +112,7 @@
 
 <script setup lang="ts">
 import { ElMessage } from "element-plus";
-import { Calendar, MessageSquare, Phone } from "lucide-vue-next";
+import { ArrowRight, Calendar, MessageSquare } from "lucide-vue-next";
 import { onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 
@@ -118,6 +120,7 @@ import { callsApi } from "@/api/calls";
 import CreateAppointmentDialog from "@/components/Calls/CreateAppointmentDialog.vue";
 import GoalAchievementPanel from "@/components/Calls/GoalAchievementPanel.vue";
 import TranscriptBubbles from "@/components/Calls/TranscriptBubbles.vue";
+import IconButton from "@/components/Common/IconButton.vue";
 import PageHeader from "@/components/Common/PageHeader.vue";
 import StatusBadge from "@/components/Common/StatusBadge.vue";
 import type { CallRecordDetail, CallRecordSummary, CallSummary } from "@/types/call";
@@ -158,7 +161,7 @@ async function onRefresh() {
 
 function formatTime(iso: string): string {
   const d = new Date(iso);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
 function formatDuration(d: number | null): string {
@@ -246,7 +249,13 @@ onMounted(onRefresh);
 .calls__list {
   display: flex;
   flex-direction: column;
-  gap: var(--isales-space-3);
+  gap: var(--isales-space-4);
+}
+.calls__empty {
+  padding: var(--isales-space-8) 0;
+  background: var(--isales-card);
+  border: 1px dashed var(--isales-border);
+  border-radius: var(--isales-radius);
 }
 .calls__pagination {
   display: flex;
@@ -254,77 +263,75 @@ onMounted(onRefresh);
   margin-top: var(--isales-space-6);
 }
 
+/* ---- card ---- */
 .call-card {
   background: var(--isales-card);
   border: 1px solid var(--isales-border);
-  border-radius: var(--isales-radius);
-  padding: var(--isales-space-4);
+  border-radius: var(--isales-radius-lg);
+  padding: var(--isales-space-5);
   display: flex;
   flex-direction: column;
-  gap: var(--isales-space-3);
+  gap: var(--isales-space-4);
   transition: box-shadow 0.15s;
 }
 .call-card:hover {
-  box-shadow: var(--isales-shadow-sm);
+  box-shadow: var(--isales-shadow-md);
 }
 .call-card__head {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: var(--isales-space-2);
-}
-.call-card__primary {
-  display: flex;
-  align-items: center;
   gap: var(--isales-space-3);
+}
+.call-card__identity {
   min-width: 0;
 }
-.call-card__avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--isales-status-blue-100);
-  color: var(--isales-status-blue-800);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-.call-card__lead {
-  font-size: var(--isales-font-size-title-3);
+.call-card__name {
+  font-size: var(--isales-font-size-title-2);
   font-weight: var(--isales-font-weight-semibold);
   line-height: var(--isales-line-height-tight);
+  letter-spacing: var(--isales-letter-spacing-tight);
 }
 .call-card__phone {
-  margin-top: 2px;
+  margin-top: 4px;
   font-size: var(--isales-font-size-sm);
   color: var(--isales-muted-foreground);
   font-variant-numeric: tabular-nums;
-  line-height: var(--isales-line-height-snug);
 }
+
+/* ---- meta ---- */
 .call-card__meta {
-  margin: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  display: flex;
+  flex-direction: column;
+  gap: var(--isales-space-2);
+}
+.meta-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
   gap: var(--isales-space-3);
   font-size: var(--isales-font-size-sm);
 }
-.call-card__meta dt {
+.meta-row__label {
   color: var(--isales-muted-foreground);
-  font-size: var(--isales-font-size-xs);
-  margin-bottom: 2px;
-  letter-spacing: var(--isales-letter-spacing-wide);
+  flex-shrink: 0;
 }
-.call-card__meta dd {
-  margin: 0;
-  line-height: var(--isales-line-height-snug);
+.meta-row__value {
+  color: var(--isales-foreground);
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+
+/* ---- actions ---- */
 .call-card__actions {
   display: flex;
   gap: var(--isales-space-2);
-  flex-wrap: wrap;
-  padding-top: var(--isales-space-3);
-  border-top: 1px solid var(--isales-border);
+  margin-top: auto;
+}
+.call-card__toggle {
+  flex: 1;
 }
 .call-card__transcript {
   border-top: 1px solid var(--isales-border);
