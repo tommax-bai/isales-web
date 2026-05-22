@@ -25,6 +25,8 @@ export interface Lead {
   follow_up_count: number;
   next_call_at: string | null;
   last_hangup_cause: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 /**

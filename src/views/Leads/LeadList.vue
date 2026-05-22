@@ -1,46 +1,40 @@
 <template>
   <section class="leads">
-    <PageHeader
-      title="线索管理"
-      subtitle="客户线索池，逐条点击外呼或批量导入。"
-      :icon="Users"
-      icon-color="primary"
-    >
+    <!-- AI 可用状态横幅 — 整圈描边卡片式 -->
+    <div class="ai-banner" :class="`ai-banner--${aiAvailable ? 'ok' : 'warn'}`">
+      <span class="ai-banner__icon">
+        <component :is="aiAvailable ? PhoneCall : Clock" :size="16" />
+      </span>
+      <p class="ai-banner__text">
+        <strong>{{ aiAvailable ? "AI 外呼可用" : "AI 外呼待命" }}</strong>
+        <span>
+          {{
+            aiAvailable
+              ? "— 当前在可拨时段内，可对线索发起外呼"
+              : "— 当前不在默认可拨时段（9:00–21:00），由所属 campaign 的 time-window 决定"
+          }}
+        </span>
+      </p>
+    </div>
+
+    <PageHeader title="线索列表" :subtitle="`共 ${leadCount} 条线索`">
       <template #actions>
         <el-button @click="onImport">
           <Upload :size="14" style="margin-right: 4px" />
           CSV 导入
         </el-button>
         <el-button type="primary" @click="onNew">
-          <UserPlus :size="14" style="margin-right: 4px" />
-          新增线索
+          <Plus :size="15" style="margin-right: 4px" />
+          添加线索
         </el-button>
       </template>
     </PageHeader>
-
-    <!-- AI 可用状态横幅 -->
-    <el-alert
-      :type="aiAvailable ? 'success' : 'warning'"
-      :closable="false"
-      show-icon
-      class="leads__alert"
-    >
-      <template #title>
-        <span v-if="aiAvailable">
-          AI 外呼通路就绪 — 当前在可拨时段内，可对线索发起外呼。
-        </span>
-        <span v-else>
-          当前不在默认可拨时段（9:00–21:00），AI 外呼按钮处于待命状态；具体时段由所属 campaign 的
-          time-window 决定。
-        </span>
-      </template>
-    </el-alert>
 
     <!-- 过滤栏 -->
     <div class="leads__filters">
       <el-input
         v-model="searchInput"
-        placeholder="按姓名 / 电话过滤（仅前端）"
+        placeholder="按姓名 / 电话过滤"
         clearable
         class="leads__search"
       >
@@ -71,66 +65,77 @@
       </el-select>
     </div>
 
-    <!-- 卡片网格；空态在网格外居中显示，避免被 grid 第一列约束在左上 -->
+    <!-- 卡片网格；空态在网格外居中显示 -->
     <el-empty
       v-if="!store.loading && filtered.length === 0"
       description="暂无线索"
       class="leads__empty"
     />
     <div v-else v-loading="store.loading" class="leads__grid">
-      <article
-        v-for="lead in filtered"
-        :key="lead.id"
-        class="lead-card"
-      >
-        <div class="lead-card__header">
-          <div class="lead-card__id">
-            <div class="lead-card__avatar">
-              <User :size="18" />
-            </div>
-            <div>
-              <h3 class="lead-card__name">{{ lead.name || "未命名客户" }}</h3>
-              <p class="lead-card__phone">{{ lead.phone }}</p>
-            </div>
+      <article v-for="lead in filtered" :key="lead.id" class="lead-card">
+        <header class="lead-card__header">
+          <div class="lead-card__identity">
+            <h3 class="lead-card__name">{{ lead.name || "未命名客户" }}</h3>
+            <p class="lead-card__phone">{{ lead.phone }}</p>
           </div>
           <StatusBadge :color="leadStatusMeta(lead.status).color">
             {{ leadStatusMeta(lead.status).label }}
           </StatusBadge>
-        </div>
+        </header>
 
-        <dl class="lead-card__meta">
-          <div v-if="lead.source">
-            <dt>来源</dt>
-            <dd>{{ lead.source }}</dd>
+        <div class="lead-card__meta">
+          <div class="meta-row">
+            <span class="meta-row__label">线索来源</span>
+            <span class="meta-row__value">{{ lead.source || "—" }}</span>
           </div>
-          <div v-if="lead.next_call_at">
-            <dt>下次外呼</dt>
-            <dd>{{ formatTime(lead.next_call_at) }}</dd>
+          <div class="meta-row">
+            <span class="meta-row__label">创建时间</span>
+            <span class="meta-row__value">{{ formatDate(lead.created_at) }}</span>
           </div>
-          <div v-if="lead.last_hangup_cause">
-            <dt>最近挂断</dt>
-            <dd>{{ lead.last_hangup_cause }}</dd>
+          <div v-if="lead.next_call_at" class="meta-row">
+            <span class="meta-row__label">下次外呼</span>
+            <span class="meta-row__value">{{ formatTime(lead.next_call_at) }}</span>
           </div>
-        </dl>
+          <div class="lead-card__note">
+            <span class="meta-row__label">备注</span>
+            <p
+              class="lead-card__note-text"
+              :class="{ 'lead-card__note-text--empty': !leadNote(lead) }"
+            >
+              {{ leadNote(lead) || "暂无备注" }}
+            </p>
+          </div>
+        </div>
 
         <div class="lead-card__actions">
           <el-button
             type="primary"
-            size="small"
+            size="large"
+            class="lead-card__dial"
             :disabled="!aiAvailable || lead.status === 'do_not_call'"
             @click="onDial(lead)"
           >
-            <Phone :size="14" style="margin-right: 4px" />
+            <Phone :size="16" style="margin-right: 6px" />
             外呼
           </el-button>
-          <el-button size="small" @click="onEdit(lead)">
-            <Edit :size="14" style="margin-right: 4px" />
-            编辑
-          </el-button>
-          <el-button size="small" type="danger" plain @click="onDelete(lead)">
-            <Trash2 :size="14" style="margin-right: 4px" />
-            删除
-          </el-button>
+          <button
+            type="button"
+            class="icon-btn"
+            title="编辑"
+            aria-label="编辑"
+            @click="onEdit(lead)"
+          >
+            <Edit :size="16" />
+          </button>
+          <button
+            type="button"
+            class="icon-btn icon-btn--danger"
+            title="删除"
+            aria-label="删除"
+            @click="onDelete(lead)"
+          >
+            <Trash2 :size="16" />
+          </button>
         </div>
       </article>
     </div>
@@ -149,26 +154,13 @@
     </div>
 
     <LeadImportDialog v-model="importVisible" @imported="onRefresh" />
-    <LeadEditDialog
-      v-model="editVisible"
-      :initial="editingLead"
-      @saved="onRefresh"
-    />
+    <LeadEditDialog v-model="editVisible" :initial="editingLead" @saved="onRefresh" />
   </section>
 </template>
 
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from "element-plus";
-import {
-  Edit,
-  Phone,
-  Search,
-  Trash2,
-  Upload,
-  User,
-  UserPlus,
-  Users,
-} from "lucide-vue-next";
+import { Clock, Edit, Phone, PhoneCall, Plus, Search, Trash2, Upload } from "lucide-vue-next";
 import { computed, onMounted, ref } from "vue";
 
 import { leadsApi } from "@/api/leads";
@@ -215,9 +207,10 @@ const pageSize = computed({
   },
 });
 
+const leadCount = computed(() => store.total ?? store.items.length);
+
 // 简化版"AI 可用"判定：默认 09:00 ≤ now ≤ 21:00 视为可拨。
-// 真正的逐 campaign time-window 评估在后端 scheduler 内做；这里仅是
-// 前端给操作者的一个软提示，不阻塞外呼动作（按钮本身仍可用）。
+// 真正的逐 campaign time-window 评估在后端 scheduler 内做。
 const aiAvailable = computed(() => {
   const hour = new Date().getHours();
   return hour >= 9 && hour < 21;
@@ -233,9 +226,26 @@ const filtered = computed(() => {
   );
 });
 
+// Lead 表无独立 notes 字段；备注按约定从 custom_data 取常见 key。
+const NOTE_KEYS = ["note", "remark", "notes", "备注"];
+function leadNote(lead: Lead): string {
+  const cd = lead.custom_data ?? {};
+  for (const k of NOTE_KEYS) {
+    const v = cd[k];
+    if (typeof v === "string" && v.trim()) return v.trim();
+  }
+  return "";
+}
+
+function formatDate(iso: string | null): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+}
+
 function formatTime(iso: string): string {
   const d = new Date(iso);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
 function onRefresh() {
@@ -281,7 +291,6 @@ async function onDial(row: Lead) {
       "外呼确认",
       { type: "info" },
     );
-    // 推进 lead 进入 queued；真正排队由 scheduler 处理。
     await leadsApi.update(row.id, { status: "queued" });
     ElMessage.success("外呼已加入队列");
     onRefresh();
@@ -298,10 +307,42 @@ onMounted(onRefresh);
   display: flex;
   flex-direction: column;
 }
-.leads__alert {
-  margin-bottom: var(--isales-space-4);
-  border-radius: var(--isales-radius-md);
+
+/* ---- AI banner ---- */
+.ai-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--isales-space-3);
+  padding: var(--isales-space-3) var(--isales-space-4);
+  border-radius: var(--isales-radius);
+  border: 1px solid;
+  margin-bottom: var(--isales-space-5);
+  font-size: var(--isales-font-size-sm);
 }
+.ai-banner--ok {
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: var(--isales-status-green-800);
+}
+.ai-banner--warn {
+  background: #fffbeb;
+  border-color: #fcd34d;
+  color: var(--isales-status-yellow-800);
+}
+.ai-banner__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.ai-banner__text {
+  margin: 0;
+  line-height: var(--isales-line-height-snug);
+}
+.ai-banner__text strong {
+  font-weight: var(--isales-font-weight-semibold);
+  margin-right: 2px;
+}
+
+/* ---- filters ---- */
 .leads__filters {
   display: flex;
   align-items: center;
@@ -316,9 +357,11 @@ onMounted(onRefresh);
 .leads__status-select {
   width: 160px;
 }
+
+/* ---- grid ---- */
 .leads__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   gap: var(--isales-space-4);
   align-items: stretch;
 }
@@ -334,47 +377,33 @@ onMounted(onRefresh);
   margin-top: var(--isales-space-6);
 }
 
+/* ---- card ---- */
 .lead-card {
   background: var(--isales-card);
   border: 1px solid var(--isales-border);
-  border-radius: var(--isales-radius);
-  padding: var(--isales-space-4);
+  border-radius: var(--isales-radius-lg);
+  padding: var(--isales-space-5);
   display: flex;
   flex-direction: column;
-  gap: var(--isales-space-3);
+  gap: var(--isales-space-4);
   transition:
     box-shadow 0.15s,
     border-color 0.15s;
 }
 .lead-card:hover {
   box-shadow: var(--isales-shadow-md);
-  border-color: var(--isales-status-gray-700);
 }
 .lead-card__header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: var(--isales-space-2);
-}
-.lead-card__id {
-  display: flex;
-  align-items: center;
   gap: var(--isales-space-3);
+}
+.lead-card__identity {
   min-width: 0;
 }
-.lead-card__avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--isales-status-blue-100);
-  color: var(--isales-status-blue-800);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
 .lead-card__name {
-  font-size: var(--isales-font-size-title-3);
+  font-size: var(--isales-font-size-title-2);
   font-weight: var(--isales-font-weight-semibold);
   line-height: var(--isales-line-height-tight);
   letter-spacing: var(--isales-letter-spacing-tight);
@@ -383,34 +412,89 @@ onMounted(onRefresh);
   text-overflow: ellipsis;
 }
 .lead-card__phone {
-  margin-top: 2px;
+  margin-top: 4px;
   font-size: var(--isales-font-size-sm);
   color: var(--isales-muted-foreground);
   font-variant-numeric: tabular-nums;
-  line-height: var(--isales-line-height-snug);
 }
+
+/* ---- meta ---- */
 .lead-card__meta {
-  margin: 0;
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  column-gap: var(--isales-space-3);
-  row-gap: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--isales-space-2);
+}
+.meta-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--isales-space-3);
   font-size: var(--isales-font-size-sm);
-  line-height: var(--isales-line-height-snug);
 }
-.lead-card__meta dt {
+.meta-row__label {
   color: var(--isales-muted-foreground);
-  font-size: var(--isales-font-size-xs);
+  flex-shrink: 0;
 }
-.lead-card__meta dd {
+.meta-row__value {
+  color: var(--isales-foreground);
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lead-card__note {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--isales-font-size-sm);
+}
+.lead-card__note .meta-row__label {
+  color: var(--isales-muted-foreground);
+}
+.lead-card__note-text {
   margin: 0;
   color: var(--isales-foreground);
+  line-height: var(--isales-line-height-snug);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
+.lead-card__note-text--empty {
+  color: var(--isales-muted-foreground);
+}
+
+/* ---- actions ---- */
 .lead-card__actions {
   display: flex;
   gap: var(--isales-space-2);
-  padding-top: var(--isales-space-3);
   margin-top: auto;
-  border-top: 1px solid var(--isales-border);
+}
+.lead-card__dial {
+  flex: 1;
+}
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border: 1px solid var(--isales-border);
+  border-radius: var(--isales-radius-md);
+  background: var(--isales-card);
+  color: var(--isales-muted-foreground);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+}
+.icon-btn:hover {
+  background: var(--isales-muted);
+  color: var(--isales-foreground);
+}
+.icon-btn--danger:hover {
+  background: var(--isales-status-red-100);
+  color: var(--isales-status-red-800);
+  border-color: var(--isales-status-red-100);
 }
 </style>

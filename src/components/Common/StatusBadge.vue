@@ -22,7 +22,6 @@ const props = withDefaults(
 
 const style = computed(() => ({
   background: `var(--isales-status-${props.color}-100)`,
-  borderColor: `var(--isales-status-${props.color}-700)`,
   color: `var(--isales-status-${props.color}-800)`,
 }));
 </script>
@@ -31,13 +30,11 @@ const style = computed(() => ({
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 1px 8px;
+  padding: 3px 10px;
   border-radius: 9999px;
-  border: 1px solid;
-  font-size: var(--isales-font-size-2xs);
+  font-size: var(--isales-font-size-xs);
   font-weight: var(--isales-font-weight-medium);
-  line-height: 1.6;
-  letter-spacing: var(--isales-letter-spacing-wide);
+  line-height: 1.4;
   white-space: nowrap;
 }
 </style>

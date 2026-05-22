@@ -19,6 +19,8 @@ function makeLead(): Lead {
     follow_up_count: 0,
     next_call_at: null,
     last_hangup_cause: null,
+    created_at: "2026-04-25T10:00:00Z",
+    updated_at: "2026-04-25T10:00:00Z",
   };
 }
 
