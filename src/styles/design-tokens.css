@@ -1,10 +1,13 @@
 /**
  * design-tokens.css — Figma Make 设计 token 落地
  *
+ * 这是 isales-web 视觉 token 的唯一事实来源（SSOT）：oklch 色板 + 圆角 +
+ * 字号 + 字重 + 行高 + 间距 + 语义化状态色。组件层的视觉规范（怎么用这些
+ * token、卡片 / 徽标 / 页头 / 操作区等模式）见仓库根目录 `STYLE_GUIDE.md`
+ * —— 新增 / 修改任何客户面 view 样式前必须先读它。
+ *
  * Spec: openspec/changes/web-admin-ui-redesign — capability `web-admin-ui`
- * § "设计 token 与主题". 暴露 oklch 色板 + 圆角 + 字号 + 字重 + 行高 +
- * 间距 + 语义化状态色，供 design-tokens 驱动的客户面 view 使用；
- * 运营 view 仍可读取这些变量。
+ * § "设计 token 与主题".
  *
  * `.dark` 变量保留但 v1.0 不激活（无主题切换 UI）。
  */
