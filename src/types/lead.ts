@@ -27,16 +27,29 @@ export interface Lead {
   last_hangup_cause: string | null;
 }
 
+/**
+ * 字段必须与 isales-common `schemas/lead.py` 对齐 —— 后端 schema 是
+ * `extra="forbid"`，多传一个字段就会 422。
+ *
+ * LeadCreate 不接受 `status`（新建固定为模型默认的 `new`）。
+ * LeadUpdate 不接受 `campaign_id`（线索归属的 campaign 不可改）。
+ */
 export interface LeadCreate {
   campaign_id: number;
   phone: string;
   name?: string | null;
   source?: string | null;
   custom_data?: Record<string, unknown>;
-  status?: LeadStatus;
 }
 
-export type LeadUpdate = Partial<LeadCreate>;
+export interface LeadUpdate {
+  phone?: string;
+  name?: string | null;
+  source?: string | null;
+  custom_data?: Record<string, unknown>;
+  status?: LeadStatus;
+  next_call_at?: string | null;
+}
 
 export interface LeadListParams {
   campaign_id?: number;

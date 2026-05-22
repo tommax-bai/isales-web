@@ -27,7 +27,7 @@
       <el-form-item label="来源">
         <el-input v-model="form.source" placeholder="例如 import / manual" />
       </el-form-item>
-      <el-form-item label="状态">
+      <el-form-item v-if="isEdit" label="状态">
         <el-select v-model="form.status">
           <el-option
             v-for="s in statuses"
@@ -79,11 +79,14 @@ const statuses: LeadStatus[] = [
   "calling",
   "retrying",
   "following_up",
+  "appointed",
+  "visited",
+  "transferred",
   "completed",
   "failed",
   "follow_up_exhausted",
   "do_not_call",
-  "transferred",
+  "lost",
 ];
 
 interface FormState {
@@ -154,28 +157,55 @@ async function onSubmit() {
   if (!valid) return;
   saving.value = true;
   try {
-    const body = {
-      campaign_id: form.campaign_id,
-      phone: form.phone,
-      name: form.name || null,
-      source: form.source || null,
-      status: form.status,
-      custom_data: customDataModel.value,
-    };
     if (props.initial) {
-      await store.update(props.initial.id, body);
+      // LeadUpdate — 不含 campaign_id（后端 schema 无此字段，extra=forbid）
+      await store.update(props.initial.id, {
+        phone: form.phone,
+        name: form.name || null,
+        source: form.source || null,
+        status: form.status,
+        custom_data: customDataModel.value,
+      });
       ElMessage.success("已更新");
     } else {
-      await store.create(body);
+      // LeadCreate — 不含 status（新建固定为模型默认 `new`）
+      await store.create({
+        campaign_id: form.campaign_id,
+        phone: form.phone,
+        name: form.name || null,
+        source: form.source || null,
+        custom_data: customDataModel.value,
+      });
       ElMessage.success("已创建");
     }
     emit("saved");
     emit("update:modelValue", false);
-  } catch {
-    ElMessage.error(isEdit.value ? "更新失败" : "创建失败");
+  } catch (err: unknown) {
+    ElMessage.error(`${isEdit.value ? "更新" : "创建"}失败：${extractError(err)}`);
   } finally {
     saving.value = false;
   }
+}
+
+function extractError(err: unknown): string {
+  if (typeof err === "object" && err !== null && "response" in err) {
+    const resp = (
+      err as { response?: { status?: number; data?: { detail?: unknown } } }
+    ).response;
+    const detail = resp?.data?.detail;
+    if (typeof detail === "string") return detail;
+    // FastAPI 422 把 detail 给成数组 [{loc, msg, type}, …]
+    if (Array.isArray(detail) && detail.length > 0) {
+      return detail
+        .map((d: { loc?: unknown[]; msg?: string }) => {
+          const field = Array.isArray(d.loc) ? d.loc[d.loc.length - 1] : "";
+          return field ? `${field}: ${d.msg}` : d.msg;
+        })
+        .join("；");
+    }
+    if (resp?.status) return `HTTP ${resp.status}`;
+  }
+  return "网络错误，请稍后重试";
 }
 
 function onCancel() {
