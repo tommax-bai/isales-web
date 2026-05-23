@@ -13,13 +13,15 @@
       show-icon
       class="mp__banner"
     >
-      <template #title>厂商列表对齐引擎实装</template>
+      <template #title>厂商列表（已对接 + 占位）</template>
       <template #default>
-        当前 isales-engine 已对接 <strong>volcengine</strong> (火山方舟 / 豆包) 与
-        <strong>openai</strong> 两家；anthropic / azure / google 暂未对接，故本视图
-        不再列出。Volcengine 的 app_key + app_token 同时供 LLM (ark) / ASR / TTS
-        三路使用。provider_credential 表与 HTTP CRUD 端点尚未实现，API key 当前
-        暂存浏览器；生产环境仍由 env 文件下发（见 design.md Open Q §2）。
+        <strong>已对接（isales-engine factory 实装）</strong>：volcengine
+        (火山方舟 / 豆包，app_key + app_token 同时供 LLM / ASR / TTS) +
+        openai (LLM)。<strong>占位（待 engine 对接）</strong>：dashscope
+        (阿里通义千问，DashScope OpenAI-兼容模式)。占位卡 API key 仅存浏览
+        器；要真正能跑需在 isales-engine 加 provider 并把 dashscope 进
+        KNOWN_LLM_PROVIDERS（走 OpenSpec）。provider_credential 表与 HTTP
+        CRUD 端点也未实现，生产 key 仍由 env 文件下发（design.md Open Q §2）。
       </template>
     </el-alert>
 
@@ -110,11 +112,11 @@ import PageHeader from "@/components/Common/PageHeader.vue";
 import StatusBadge from "@/components/Common/StatusBadge.vue";
 import { useLocalConfigStash } from "@/composables/useLocalConfigStash";
 
-// 厂商列表对齐 isales-engine factory.KNOWN_LLM_PROVIDERS — v1.0 实装的
-// 只有 `volcengine` (火山方舟 / 豆包) 和 `openai`；`mock` 走代码里的
-// stub provider，没有 API key 需要配置，所以本视图不暴露。
-// Anthropic / Azure / Google 暂未对接引擎，删掉避免误导。
-type ProviderId = "volcengine" | "openai";
+// 厂商列表：已对接 (factory.KNOWN_LLM_PROVIDERS = volcengine + openai) +
+// 占位 (dashscope = 阿里通义千问，待 engine 加 provider 后晋升为已对接)。
+// `mock` 走代码 stub 不需 API key 不列。Anthropic / Azure / Google 暂未
+// 对接也未占位。增减占位时同步更新 banner 文案。
+type ProviderId = "volcengine" | "openai" | "dashscope";
 
 interface ProviderData {
   enabled: boolean;
@@ -154,13 +156,23 @@ const PROVIDERS: {
     default_model: "gpt-4o-mini",
     docs: "https://platform.openai.com/api-keys",
   },
+  {
+    id: "dashscope",
+    name: "阿里通义（DashScope）",
+    short: "通义",
+    color: "#615ced",
+    hint: "Qwen 系列 / OpenAI 兼容模式 — 占位，engine 未对接",
+    default_endpoint: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    default_model: "qwen-plus",
+    docs: "https://bailian.console.aliyun.com/?apiKey=1",
+  },
 ];
 
-// `model-providers-v2` — v1 stash had openai/anthropic/azure/google; this
-// view now only ships providers actually wired into isales-engine
-// (volcengine + openai), so we bump the key so old data doesn't leak.
+// `model-providers-v3` — bump from v2 (volcengine + openai) to add
+// dashscope (Aliyun 通义) placeholder. v2 stash without dashscope key
+// would crash on `data.dashscope.enabled` after this change.
 const stash = useLocalConfigStash<Record<ProviderId, ProviderData>>(
-  "model-providers-v2",
+  "model-providers-v3",
   () => ({
     volcengine: {
       enabled: false,
@@ -175,6 +187,12 @@ const stash = useLocalConfigStash<Record<ProviderId, ProviderData>>(
       endpoint: "https://api.openai.com/v1",
       default_model: "gpt-4o-mini",
     },
+    dashscope: {
+      enabled: false,
+      api_key: "",
+      endpoint: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      default_model: "qwen-plus",
+    },
   }),
 );
 
@@ -182,6 +200,7 @@ const data = stash.value;
 const reveal = reactive<Record<ProviderId, boolean>>({
   volcengine: false,
   openai: false,
+  dashscope: false,
 });
 
 function maskedKey(k: string): string {
