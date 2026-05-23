@@ -28,10 +28,18 @@
         </el-button>
       </div>
       <div class="cfg__row cfg__row--inline">
-        <el-select v-model="row.provider" placeholder="provider">
-          <el-option v-for="p in PROVIDERS" :key="p" :label="p" :value="p" />
+        <el-select v-model="row.provider" placeholder="provider" @change="onProviderChange(i)">
+          <el-option
+            v-for="p in PROVIDERS"
+            :key="p"
+            :label="LLM_PROVIDER_LABEL[p]"
+            :value="p"
+          />
         </el-select>
-        <el-input v-model="row.model" placeholder="model（如 doubao-pro-32k）" />
+        <el-input
+          v-model="row.model"
+          :placeholder="`model（如 ${LLM_PROVIDER_DEFAULT_MODEL[row.provider as PromptTierProviderId] ?? 'doubao-pro-32k'}）`"
+        />
         <div class="cfg__slider">
           <span class="cfg__slider-label">temperature</span>
           <el-slider
@@ -86,6 +94,12 @@ import { promptVersionsApi } from "@/api/promptVersions";
 import { roleConfigsApi } from "@/api/roleConfigs";
 import StatusBadge from "@/components/Common/StatusBadge.vue";
 import type { RoleKind } from "@/types/campaign";
+import {
+  LLM_PROVIDER_DEFAULT_MODEL,
+  LLM_PROVIDER_LABEL,
+  PROVIDER_OPTIONS_WITH_MOCK,
+  type PromptTierProviderId,
+} from "@/types/llmProviders";
 
 const props = defineProps<{
   campaignId: number | null;
@@ -96,7 +110,10 @@ const props = defineProps<{
   badgeColor: "blue" | "green" | "yellow" | "purple" | "gray" | "red";
 }>();
 
-const PROVIDERS = ["volcengine", "openai", "mock"];
+// 对齐 SSOT @/types/llmProviders (volcengine + openai + dashscope + mock)；
+// 增减 provider 改 SSOT。mock 是 engine factory 合法 provider 但不在
+// 模型厂商配置 view 里出现（无 API key 需要配）。
+const PROVIDERS = PROVIDER_OPTIONS_WITH_MOCK;
 
 interface PromptRow {
   key: string;
@@ -234,6 +251,18 @@ async function saveRow(i: number) {
   } finally {
     row.saving = false;
   }
+}
+
+function onProviderChange(i: number) {
+  const row = rows.value[i];
+  // 切 provider 时如果 model 为空或还是某个已知默认，自动填新 provider
+  // 的默认 model；如果用户手填了自定义 model 则不覆盖。
+  const currentDefaults = Object.values(LLM_PROVIDER_DEFAULT_MODEL);
+  if (!row.model || currentDefaults.includes(row.model)) {
+    row.model =
+      LLM_PROVIDER_DEFAULT_MODEL[row.provider as PromptTierProviderId] ?? row.model;
+  }
+  row.dirty = true;
 }
 
 async function removeRow(i: number) {

@@ -111,12 +111,20 @@ import { computed, reactive } from "vue";
 import PageHeader from "@/components/Common/PageHeader.vue";
 import StatusBadge from "@/components/Common/StatusBadge.vue";
 import { useLocalConfigStash } from "@/composables/useLocalConfigStash";
+import {
+  BACKEND_IMPLEMENTED,
+  LLM_PROVIDER_DEFAULT_ENDPOINT,
+  LLM_PROVIDER_DEFAULT_MODEL,
+  LLM_PROVIDER_IDS,
+  LLM_PROVIDER_LABEL,
+  type LLMProviderId,
+} from "@/types/llmProviders";
 
-// 厂商列表：已对接 (factory.KNOWN_LLM_PROVIDERS = volcengine + openai) +
-// 占位 (dashscope = 阿里通义千问，待 engine 加 provider 后晋升为已对接)。
-// `mock` 走代码 stub 不需 API key 不列。Anthropic / Azure / Google 暂未
-// 对接也未占位。增减占位时同步更新 banner 文案。
-type ProviderId = "volcengine" | "openai" | "dashscope";
+// 厂商列表对齐 SSOT `@/types/llmProviders` (LLM_PROVIDER_IDS) — 已对接
+// (factory.KNOWN_LLM_PROVIDERS = volcengine + openai) + 占位 (dashscope =
+// 阿里通义千问，待 engine 加 provider 后晋升为已对接)。`mock` 走代码 stub
+// 不需 API key 不在此列。增减 provider 改 SSOT 而不是这里。
+type ProviderId = LLMProviderId;
 
 interface ProviderData {
   enabled: boolean;
@@ -126,82 +134,71 @@ interface ProviderData {
   default_model?: string;
 }
 
-const PROVIDERS: {
-  id: ProviderId;
-  name: string;
-  short: string;
-  color: string;
-  hint: string;
-  default_endpoint: string;
-  default_model: string;
-  docs: string;
-}[] = [
-  {
-    id: "volcengine",
-    name: "火山方舟（豆包）",
+// 仅本 view 用的「视觉 / 文案」扩展（logo 缩写 / 颜色 / hint / 外链）。
+// 共享元数据 (label / default_model / default_endpoint) 走 SSOT。
+const PROVIDER_PRESENTATION: Record<
+  ProviderId,
+  { short: string; color: string; hint: string; docs: string }
+> = {
+  volcengine: {
     short: "豆包",
     color: "#d33d3d",
     hint: "Doubao 系列 / 同时供 ASR + TTS（共用 app_key + app_token）",
-    default_endpoint: "https://ark.cn-beijing.volces.com/api/v3",
-    default_model: "doubao-pro-32k",
     docs: "https://console.volcengine.com/ark",
   },
-  {
-    id: "openai",
-    name: "OpenAI",
+  openai: {
     short: "OAI",
     color: "#10a37f",
     hint: "GPT-4o / o-series 等",
-    default_endpoint: "https://api.openai.com/v1",
-    default_model: "gpt-4o-mini",
     docs: "https://platform.openai.com/api-keys",
   },
-  {
-    id: "dashscope",
-    name: "阿里通义（DashScope）",
+  dashscope: {
     short: "通义",
     color: "#615ced",
     hint: "Qwen 系列 / OpenAI 兼容模式 — 占位，engine 未对接",
-    default_endpoint: "https://dashscope.aliyuncs.com/compatible-mode/v1",
-    default_model: "qwen-plus",
     docs: "https://bailian.console.aliyun.com/?apiKey=1",
   },
-];
+};
+
+const PROVIDERS = LLM_PROVIDER_IDS.map((id) => ({
+  id,
+  name: LLM_PROVIDER_LABEL[id],
+  short: PROVIDER_PRESENTATION[id].short,
+  color: PROVIDER_PRESENTATION[id].color,
+  hint: PROVIDER_PRESENTATION[id].hint,
+  default_endpoint: LLM_PROVIDER_DEFAULT_ENDPOINT[id],
+  default_model: LLM_PROVIDER_DEFAULT_MODEL[id],
+  docs: PROVIDER_PRESENTATION[id].docs,
+  implemented: BACKEND_IMPLEMENTED.has(id),
+}));
 
 // `model-providers-v3` — bump from v2 (volcengine + openai) to add
 // dashscope (Aliyun 通义) placeholder. v2 stash without dashscope key
 // would crash on `data.dashscope.enabled` after this change.
 const stash = useLocalConfigStash<Record<ProviderId, ProviderData>>(
   "model-providers-v3",
-  () => ({
-    volcengine: {
-      enabled: false,
-      api_key: "",
-      app_key: "",
-      endpoint: "https://ark.cn-beijing.volces.com/api/v3",
-      default_model: "doubao-pro-32k",
-    },
-    openai: {
-      enabled: false,
-      api_key: "",
-      endpoint: "https://api.openai.com/v1",
-      default_model: "gpt-4o-mini",
-    },
-    dashscope: {
-      enabled: false,
-      api_key: "",
-      endpoint: "https://dashscope.aliyuncs.com/compatible-mode/v1",
-      default_model: "qwen-plus",
-    },
-  }),
+  () =>
+    Object.fromEntries(
+      LLM_PROVIDER_IDS.map((id) => [
+        id,
+        {
+          enabled: false,
+          api_key: "",
+          ...(id === "volcengine" ? { app_key: "" } : {}),
+          endpoint: LLM_PROVIDER_DEFAULT_ENDPOINT[id],
+          default_model: LLM_PROVIDER_DEFAULT_MODEL[id],
+        },
+      ]),
+    ) as Record<ProviderId, ProviderData>,
 );
 
 const data = stash.value;
-const reveal = reactive<Record<ProviderId, boolean>>({
-  volcengine: false,
-  openai: false,
-  dashscope: false,
-});
+const reveal = reactive<Record<ProviderId, boolean>>(
+  Object.fromEntries(LLM_PROVIDER_IDS.map((id) => [id, false])) as Record<
+    ProviderId,
+    boolean
+  >,
+);
 
 function maskedKey(k: string): string {
   if (!k || k.length < 8) return "●●●●●●●●";
