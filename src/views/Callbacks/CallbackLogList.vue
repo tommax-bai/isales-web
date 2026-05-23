@@ -3,41 +3,29 @@
     <template #header>
       <div class="header">
         <span class="title">回调记录</span>
-        <el-button type="primary" @click="onRefresh">刷新</el-button>
       </div>
     </template>
-    <el-table v-loading="loading" :data="items" stripe empty-text="暂无记录">
-      <el-table-column prop="id" label="ID" width="80" />
-      <el-table-column prop="callback_config_id" label="config" width="100" />
-      <el-table-column prop="call_record_id" label="call" width="100" />
-      <el-table-column prop="status" label="状态" width="160" />
-      <el-table-column prop="retry_count" label="重试" width="80" />
-      <el-table-column prop="response_status" label="HTTP" width="80" />
-      <el-table-column prop="error_message" label="错误" />
-      <el-table-column prop="created_at" label="时间" width="180" />
-    </el-table>
+
+    <el-alert
+      :closable="false"
+      type="warning"
+      show-icon
+      class="explain"
+    >
+      <template #title>v1.0 暂未实装</template>
+      <template #default>
+        webhook callback_log 在 PG 里由 worker 写入，但 cloud 没暴露 admin
+        list 端点 (后端无 GET /api/callback-logs)。worker 的 webhook 重试
+        在 spec § "重试策略" 完整规定，落库行为没变；只是 cloud admin
+        list 待开 change 补。临时排错请 `psql -d isales -c "select * from
+        callback_log order by created_at desc limit 50;"`。
+      </template>
+    </el-alert>
   </el-card>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
-
-import { callbackLogsApi } from "@/api/callbacks";
-import type { CallbackLog } from "@/types/callback";
-
-const items = ref<CallbackLog[]>([]);
-const loading = ref(false);
-
-async function onRefresh() {
-  loading.value = true;
-  try {
-    items.value = await callbackLogsApi.list({ limit: 100 });
-  } finally {
-    loading.value = false;
-  }
-}
-
-onMounted(onRefresh);
+// banner-only view，v1.0 后端 admin list 未实装。
 </script>
 
 <style scoped>
@@ -49,5 +37,8 @@ onMounted(onRefresh);
 .title {
   font-size: 16px;
   font-weight: 600;
+}
+.explain {
+  margin-top: 8px;
 }
 </style>
