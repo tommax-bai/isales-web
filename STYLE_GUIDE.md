@@ -7,9 +7,10 @@
 设计 token 的唯一事实来源（SSOT）是 `src/styles/design-tokens.css` —— 本文档
 不重复 token 的具体数值，只规定**怎么用**。
 
-适用范围：6 个客户面 view（Leads / Calls / Appointments / 3 个 Config）+
-其共享组件 + TopNav / DefaultLayout。`/operations/*` 下的运营 view 沿用旧
-Element Plus 风格，不强制套用本规范（迁移时可逐步对齐）。
+适用范围：6 个客户面 view（Campaigns 列表 / Campaign 详情 / Leads / Calls /
+Appointments / ModelProviderConfig）+ 其共享组件 + TopNav / DefaultLayout。
+`/operations/*` 下的运营 view 沿用旧 Element Plus 风格，不强制套用本规范
+（迁移时可逐步对齐）。
 
 ---
 
@@ -194,6 +195,8 @@ flex，内部按 `header / meta / actions` 分块，块间 `space-4`。hover 抬
   scoped CSS；若再出现第四处，考虑抽成全局 utility 或 `<MetaRow>` 组件。
 - AI banner 目前是 `LeadList.vue` 局部实现；若其他 view 需要同款，提取为
   共享组件。
-- 3 个配置 view（AICallConfig / VoiceChannelConfig / ModelProviderConfig）
-  已 token 化但卡片结构未完全套用 §6，迭代时对齐。
+- 顶部配置入口已收敛为单个「模型厂商」圆按钮（AICallConfig /
+  VoiceChannelConfig 已删除，外呼策略迁入 campaign 详情页）；剩下的
+  `ModelProviderConfig.vue` 已 token 化但卡片结构尚未完全套用 §6，
+  下次迭代时对齐。
 - 运营 view（`/operations/*`）整体仍是旧 EP 风格，长期可选择性迁移。
