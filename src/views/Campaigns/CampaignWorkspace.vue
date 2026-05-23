@@ -121,7 +121,7 @@ function progressSummary(id: number): string {
 async function onRefresh() {
   loading.value = true;
   try {
-    campaigns.value = await campaignsApi.list({ page_size: 200 });
+    campaigns.value = await campaignsApi.list({ page_size: 100 });
     await Promise.all(
       campaigns.value.map(async (c) => {
         try {
