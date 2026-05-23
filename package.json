@@ -11,7 +11,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint src tests --ext .ts,.vue",
-    "typecheck": "vue-tsc --noEmit"
+    "typecheck": "vue-tsc --noEmit",
+    "check:routes": "node scripts/check_route_names.mjs",
+    "check:api": "node scripts/check_api_reachability.mjs"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.2",
