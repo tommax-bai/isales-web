@@ -40,8 +40,15 @@ const CALL_RX =
 const calls = new Map(); // key = `${METHOD} ${path}`, value = {sourceFiles:Set, method, path}
 let skipped = 0;
 
+let ignored = 0;
+let ignoredFiles = 0;
 for (const file of walk(SRC)) {
   const src = readFileSync(file, "utf8");
+  // file-level ignore: 顶端含 // @reachability-ignore-file: <reason>
+  if (src.slice(0, 600).includes("@reachability-ignore-file")) {
+    ignoredFiles++;
+    continue;
+  }
   for (const m of src.matchAll(CALL_RX)) {
     const method = m[1].toUpperCase();
     let path = m[3];
@@ -54,6 +61,14 @@ for (const file of walk(SRC)) {
       skipped++;
       continue;
     }
+    // 支持 // @reachability-ignore: <reason> —— 检查 match 起始前
+    // 400 chars 内是否含该 token (约 8-10 行 incl. jsdoc 多行注释)；
+    // 命中跳过本调用 (业务已 graceful 兜底)。
+    const before = src.slice(Math.max(0, m.index - 400), m.index);
+    if (before.includes("@reachability-ignore")) {
+      ignored++;
+      continue;
+    }
     const key = `${method} ${path}`;
     if (!calls.has(key)) {
       calls.set(key, { method, path, files: new Set() });
@@ -62,7 +77,7 @@ for (const file of walk(SRC)) {
   }
 }
 
-console.log(`扫到 ${calls.size} 个独立 (method, path) 调用，跳过 ${skipped} 个动态拼接\n`);
+console.log(`扫到 ${calls.size} 个独立 (method, path) 调用；动态拼接跳过 ${skipped} 个；@reachability-ignore 跳过 ${ignored} 个；整文件 ignore ${ignoredFiles} 个\n`);
 console.log(`探测端点: ${ENDPOINT} (未带 JWT — 401/422 算 mount OK; 404 = dead)\n`);
 
 const rows = [];

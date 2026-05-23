@@ -1,25 +1,16 @@
 <template>
-  <div class="voice-preview">
-    <el-input
-      v-model="text"
-      placeholder="试听文本"
-      size="small"
-      class="text"
-    />
-    <el-button
-      size="small"
-      type="primary"
-      :loading="busy"
-      :disabled="!text"
-      @click="onPlay"
-    >
-      试听
-    </el-button>
-  </div>
+  <el-button
+    size="small"
+    type="primary"
+    :loading="busy"
+    @click="onPlay"
+  >
+    {{ busy ? "播放中..." : "播放样本" }}
+  </el-button>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { onUnmounted, ref } from "vue";
 
 import { voiceApi } from "@/api/voice";
 
@@ -27,60 +18,35 @@ const props = defineProps<{
   voiceId: number;
 }>();
 
-const text = ref("您好，欢迎致电。");
 const busy = ref(false);
+let currentUrl: string | null = null;
 
-// engine TTS produces 8 kHz mono 16-bit little-endian PCM (per ai-pipeline
-// spec). Browsers don't decode raw PCM via decodeAudioData — we hand-build
-// an AudioBuffer instead, which works on every evergreen browser.
+// v1.0 后端只暴露预录样本 (GET /voice-models/{id}/sample)，没有动态 TTS
+// 合成端点。这里走 ArrayBuffer + Blob URL 给浏览器自己 decode (sample
+// 文件 codec 由入库决定，可能 mp3 / wav，不假设)。
 async function onPlay(): Promise<void> {
   if (busy.value) return;
   busy.value = true;
   try {
-    const buf = await voiceApi.preview(props.voiceId, text.value);
-    await playPcm16(buf);
+    const buf = await voiceApi.sample(props.voiceId);
+    if (currentUrl !== null) URL.revokeObjectURL(currentUrl);
+    currentUrl = URL.createObjectURL(new Blob([buf]));
+    const audio = new Audio(currentUrl);
+    await new Promise<void>((resolve, reject) => {
+      audio.onended = () => resolve();
+      audio.onerror = () => reject(new Error("audio decode failed"));
+      void audio.play();
+    });
   } catch {
-    // Surface failures via console only; the parent decides how loud to
-    // be (toast / banner).
-    console.warn("voice preview failed");
+    console.warn("voice sample failed");
   } finally {
     busy.value = false;
   }
 }
 
-async function playPcm16(buf: ArrayBuffer): Promise<void> {
-  const SAMPLE_RATE = 8000;
-  const ctx = new AudioContext({ sampleRate: SAMPLE_RATE });
-  const view = new DataView(buf);
-  const sampleCount = Math.floor(buf.byteLength / 2);
-  const audioBuffer = ctx.createBuffer(1, sampleCount, SAMPLE_RATE);
-  const channel = audioBuffer.getChannelData(0);
-  for (let i = 0; i < sampleCount; i++) {
-    const s = view.getInt16(i * 2, true); // little-endian
-    channel[i] = s / 0x8000;
-  }
-  const src = ctx.createBufferSource();
-  src.buffer = audioBuffer;
-  src.connect(ctx.destination);
-  src.start();
-  // Resolve when playback completes so the busy spinner stops at the
-  // right time.
-  await new Promise<void>((resolve) => {
-    src.onended = () => resolve();
-  });
-  await ctx.close();
-}
-
-defineExpose({ playPcm16 });
+onUnmounted(() => {
+  if (currentUrl !== null) URL.revokeObjectURL(currentUrl);
+});
 </script>
 
-<style scoped>
-.voice-preview {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.text {
-  width: 200px;
-}
-</style>
+<style scoped></style>

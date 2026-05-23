@@ -1,3 +1,7 @@
+// @reachability-ignore-file: v1.0 后端 callback_configs / callback_logs admin
+//   CRUD 未实装 (webhook-callback spec 完整 / isales-api 无 router)；3 个
+//   view 已 banner-only 不发请求。本模块保留作为未来 impl-callback-admin-api
+//   change 的 API 契约预案；该 change 落地后请删除本注释。
 import apiClient from "@/api/client";
 import type { CallbackConfig, CallbackLog } from "@/types/callback";
 

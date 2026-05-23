@@ -38,6 +38,8 @@ export const callsApi = {
   },
   get: (id: number) =>
     apiClient.get<CallRecordDetail>(`/calls/${id}`).then((r) => r.data),
+  // @reachability-ignore: deferred — pipeline_trace 端点 v1.0 未实装，
+  //   PipelineTracePanel.vue 已 graceful 兜底显示"后端未提供"提示
   /** Optional endpoint — backend may 404 in early deployments; callers
    * should swallow non-2xx and render a friendly empty state. */
   trace: (id: number) =>
