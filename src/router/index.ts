@@ -15,6 +15,9 @@ const OPERATIONS_REDIRECTS: Record<string, string> = {
   "/callback-logs": "/operations/callback-logs",
   "/handoff-tasks": "/operations/handoff-tasks",
   "/voice-models": "/operations/voice-models",
+  // 模型厂商页位于客户面 /config/model-providers (顶部圆按钮入口)，
+  // 但用户可能猜成 /operations/model-providers — 做一次性重定向兼容。
+  "/operations/model-providers": "/config/model-providers",
 };
 
 const router = createRouter({

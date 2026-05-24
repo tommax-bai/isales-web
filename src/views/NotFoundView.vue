@@ -2,7 +2,7 @@
   <div class="not-found">
     <h1>404</h1>
     <p class="message">页面找不到</p>
-    <router-link :to="{ name: 'dashboard' }">
+    <router-link :to="{ name: 'leads' }">
       <el-button type="primary">返回首页</el-button>
     </router-link>
   </div>
