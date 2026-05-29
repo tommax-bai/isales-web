@@ -137,6 +137,12 @@ function applyFieldErrors(detail: ApiValidationError[]): void {
 
 function buildPayload(): CampaignNestedUpdate {
   const payload: CampaignNestedUpdate = { ...form };
+  // Normalize empty / whitespace-only greeting to null so the engine
+  // explicitly takes the LLM-greeting path (NULL semantic in
+  // campaign-fixed-greeting design § 决策 1).
+  if (typeof payload.greeting === "string" && !payload.greeting.trim()) {
+    payload.greeting = null;
+  }
   payload.role_configs = roleConfigs.value.map(
     (r): RoleConfigNestedWrite => ({
       kind: r.kind,

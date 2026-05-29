@@ -29,6 +29,19 @@
       <el-input-number v-model="form.concurrency" :min="1" :max="64" />
     </el-form-item>
 
+    <el-form-item label="开场白文案" :error="fieldErrors?.greeting">
+      <el-input
+        v-model="form.greeting"
+        type="textarea"
+        :rows="3"
+        placeholder="留空则由 LLM 生成开场白"
+      />
+      <div class="hint">
+        通话接通后引擎播放的第一句话（ai-pipeline §
+        "开场白不走管线"）。留空 = 走 LLM 路径。
+      </div>
+    </el-form-item>
+
     <el-form-item label="默认回复" :error="fieldErrors?.default_replies">
       <el-input
         v-model="defaultRepliesText"
