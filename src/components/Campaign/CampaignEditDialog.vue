@@ -33,7 +33,7 @@
           placeholder="每行一句默认兜底回复"
         />
         <div class="hint">
-          全部裁判否决 / 全部候选解析失败时随机抽取一条作为兜底（按 ai-pipeline spec）
+          main LLM 流式回复失败 / 为空时随机抽取一条作为兜底（按 ai-pipeline spec）
         </div>
       </el-form-item>
     </el-form>

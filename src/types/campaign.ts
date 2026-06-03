@@ -21,7 +21,8 @@ export interface ExtractionField {
 
 export type ContinuousInterruptionStrategy = "short_reply" | "listen_only";
 
-export type RoleKind = "role" | "judge" | "polish";
+// pipeline-stream-and-referee: dual-LLM architecture slots.
+export type RoleKind = "main" | "referee" | "extractor";
 
 export interface RoleConfigRead {
   id: number;
@@ -115,6 +116,10 @@ export interface CampaignBase {
   // back to the LLM-generated greeting path.
   greeting: string | null;
 
+  // filler opt-in (pipeline-stream-and-referee). Off by default — the
+  // streaming main link reaches first audio in ~500ms.
+  filler_enabled: boolean;
+
   interruption_whitelist: string[];
   interruption_min_duration_ms: number;
   max_continuous_interruptions: number;
@@ -195,6 +200,7 @@ export const CAMPAIGN_DEFAULTS: CampaignBase = {
   wrap_up_max_seconds: 60,
   wrap_up_closing_phrases: [],
   greeting: null,
+  filler_enabled: false,
   interruption_whitelist: [],
   interruption_min_duration_ms: 400,
   max_continuous_interruptions: 3,

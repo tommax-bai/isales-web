@@ -38,9 +38,16 @@ describe("BasicTab", () => {
       props: { modelValue: form, fieldErrors: {} },
     });
     await nextTick();
-    const textareas = wrapper.findAll("textarea");
-    expect(textareas.length).toBeGreaterThan(0);
-    await textareas[0].setValue("好的\n再见\n");
+    // Target the default-replies textarea specifically (greeting + filler
+    // fields also render before it).
+    const defaultReplies = wrapper
+      .findAll("textarea")
+      .find(
+        (t) =>
+          (t.element as HTMLTextAreaElement).placeholder === "每行一句兜底回复",
+      );
+    expect(defaultReplies).toBeTruthy();
+    await defaultReplies!.setValue("好的\n再见\n");
     await nextTick();
     expect(form.default_replies).toEqual(["好的", "再见"]);
     wrapper.unmount();
@@ -59,7 +66,7 @@ describe("RoleConfigDialog", () => {
         initial: {
           id: 7,
           campaign_id: 3,
-          kind: "judge",
+          kind: "referee",
           model: "gpt-4o-mini",
           current_prompt_version_id: 42,
           temperature: 0.3,
@@ -73,13 +80,13 @@ describe("RoleConfigDialog", () => {
       attachTo: document.body,
     });
     await nextTick();
-    // The radio for "judge" should be selected, and the model input shows
+    // The radio for "referee" should be selected, and the model input shows
     // the initial model name. Query through document because el-dialog
     // teleports content to body.
     const labels = Array.from(document.querySelectorAll(".el-radio")).map(
       (n) => n.textContent?.trim(),
     );
-    expect(labels).toEqual(expect.arrayContaining(["角色", "裁判", "润色"]));
+    expect(labels).toEqual(expect.arrayContaining(["主对话", "决策", "抽取"]));
     wrapper.unmount();
   });
 

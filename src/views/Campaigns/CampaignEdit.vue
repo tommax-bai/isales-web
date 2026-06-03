@@ -24,7 +24,7 @@
       <el-tab-pane label="基础" name="basic">
         <BasicTab v-model="form" :field-errors="fieldErrors" />
       </el-tab-pane>
-      <el-tab-pane label="角色配置" name="role">
+      <el-tab-pane label="AI 配置" name="role">
         <RoleConfigTab v-model="roleConfigs" />
       </el-tab-pane>
       <el-tab-pane label="沉默激活" name="silence">

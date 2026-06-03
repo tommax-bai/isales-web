@@ -13,9 +13,9 @@
     >
       <el-form-item label="类型" prop="kind">
         <el-radio-group v-model="form.kind">
-          <el-radio value="role">角色</el-radio>
-          <el-radio value="judge">裁判</el-radio>
-          <el-radio value="polish">润色</el-radio>
+          <el-radio value="main">主对话</el-radio>
+          <el-radio value="referee">决策</el-radio>
+          <el-radio value="extractor">抽取</el-radio>
         </el-radio-group>
       </el-form-item>
       <el-form-item label="模型" prop="model">
@@ -94,7 +94,7 @@ interface FormState {
 }
 
 const form = reactive<FormState>({
-  kind: "role",
+  kind: "main",
   model: "doubao-pro",
   temperature: 0.7,
   top_p: 1.0,
@@ -123,7 +123,7 @@ watch(
       form.enabled = initial.enabled;
       form.current_prompt_version_id = initial.current_prompt_version_id;
     } else {
-      form.kind = "role";
+      form.kind = "main";
       form.model = "doubao-pro";
       form.temperature = 0.7;
       form.top_p = 1.0;

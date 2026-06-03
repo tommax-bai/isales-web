@@ -35,30 +35,22 @@ export interface CallRecordDetail extends CallRecordSummary {
   extracted_fields?: Record<string, unknown>;
 }
 
-export interface RoleCandidate {
-  parsed_json: unknown;
-  parse_failed: boolean;
-  raw_text: string;
-  tokens_used: number | null;
-  duration_ms: number | null;
-  role_config_id?: number;
-}
-
-export interface JudgeResult {
-  judge_id: number;
-  candidate_index: number;
-  passed: boolean;
-  reason: string | null;
-}
-
+// pipeline-stream-and-referee: dual-LLM trace fields (was role_candidates /
+// judge_results / polish_*).
 export interface PipelineTraceTurn {
   turn_id: number;
-  user_input: string;
-  role_candidates: RoleCandidate[];
-  judge_results: JudgeResult[];
-  polish_input: string | null;
-  polish_output: string | null;
-  final_selected_candidate_index: number | null;
+  user_input: string | null;
+  main_reply_text: string | null;
+  main_duration_ms: number | null;
+  main_tokens_in: number | null;
+  main_tokens_out: number | null;
+  main_fallback_used: boolean;
+  referee_decision: string | null;
+  referee_goal_type: string | null;
+  referee_confidence: number | null;
+  referee_duration_ms: number | null;
+  first_audio_ms: number | null;
+  error: string | null;
   ts: number | null;
 }
 

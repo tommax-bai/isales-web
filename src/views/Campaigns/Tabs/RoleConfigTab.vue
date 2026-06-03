@@ -1,9 +1,9 @@
 <template>
   <div>
     <div class="header">
-      <span class="title">角色 / 裁判 / 润色配置</span>
+      <span class="title">主对话 / 决策 / 抽取配置</span>
       <el-button type="primary" size="small" @click="onNew">
-        + 新增角色
+        + 新增配置
       </el-button>
     </div>
 
@@ -68,13 +68,13 @@ const dialogInitial = ref<RoleConfigRead | null>(null);
 const editingIndex = ref<number | null>(null);
 
 function kindLabel(kind: RoleKind): string {
-  return { role: "角色", judge: "裁判", polish: "润色" }[kind];
+  return { main: "主对话", referee: "决策", extractor: "抽取" }[kind];
 }
 
 function kindTagType(
   kind: RoleKind,
 ): "primary" | "success" | "warning" {
-  return ({ role: "primary", judge: "warning", polish: "success" } as const)[kind];
+  return ({ main: "primary", referee: "warning", extractor: "success" } as const)[kind];
 }
 
 function onNew(): void {

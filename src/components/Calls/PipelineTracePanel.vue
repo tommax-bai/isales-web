@@ -34,68 +34,41 @@
         </div>
 
         <div class="section">
-          <h5>候选 ({{ turn.role_candidates.length }})</h5>
-          <el-table :data="turn.role_candidates" size="small" stripe>
-            <el-table-column label="#" type="index" width="48" />
-            <el-table-column label="parsed">
-              <template #default="{ row }">
-                <el-tag v-if="row.parse_failed" type="danger" size="small">
-                  parse_failed
-                </el-tag>
-                <pre v-else class="code-inline">{{ formatJson(row.parsed_json) }}</pre>
-              </template>
-            </el-table-column>
-            <el-table-column prop="tokens_used" label="tokens" width="90" />
-            <el-table-column prop="duration_ms" label="ms" width="90" />
-            <el-table-column label="" width="60">
-              <template #default="{ row }">
-                <el-button
-                  size="small"
-                  link
-                  @click="copy(formatJson(row.parsed_json))"
-                >
-                  复制
-                </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </div>
-
-        <div class="section">
-          <h5>裁判结果 ({{ turn.judge_results.length }})</h5>
-          <el-table :data="turn.judge_results" size="small" stripe>
-            <el-table-column prop="judge_id" label="judge_id" width="100" />
-            <el-table-column prop="candidate_index" label="cand#" width="80" />
-            <el-table-column label="通过" width="80">
-              <template #default="{ row }">
-                <el-tag :type="row.passed ? 'success' : 'danger'" size="small">
-                  {{ row.passed ? "通过" : "否决" }}
-                </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="reason" label="原因" />
-          </el-table>
-        </div>
-
-        <div class="section" v-if="turn.polish_input || turn.polish_output">
-          <h5>润色</h5>
-          <div class="row">
-            <span class="lbl">input:</span>
-            <pre class="code-block">{{ turn.polish_input }}</pre>
-          </div>
-          <div class="row">
-            <span class="lbl">output:</span>
-            <pre class="code-block">{{ turn.polish_output }}</pre>
+          <h5>
+            main 回复
+            <el-tag v-if="turn.main_fallback_used" type="warning" size="small">
+              fallback
+            </el-tag>
+          </h5>
+          <pre class="code-block">{{ turn.main_reply_text }}</pre>
+          <div class="row metrics">
+            <span class="lbl">首音频:</span>
+            <span>{{ fmtMs(turn.first_audio_ms) }}</span>
+            <span class="lbl">main 耗时:</span>
+            <span>{{ fmtMs(turn.main_duration_ms) }}</span>
+            <span class="lbl">tokens:</span>
+            <span>{{ turn.main_tokens_in ?? "–" }} / {{ turn.main_tokens_out ?? "–" }}</span>
           </div>
         </div>
 
         <div class="section">
-          <h5>最终选中</h5>
-          <span>{{
-            turn.final_selected_candidate_index === null
-              ? "(default_reply)"
-              : `候选 #${turn.final_selected_candidate_index}`
-          }}</span>
+          <h5>referee 决策</h5>
+          <div class="row metrics">
+            <el-tag :type="decisionTag(turn.referee_decision)" size="small">
+              {{ turn.referee_decision ?? "–" }}
+            </el-tag>
+            <span class="lbl">goal_type:</span>
+            <span>{{ turn.referee_goal_type ?? "–" }}</span>
+            <span class="lbl">confidence:</span>
+            <span>{{ turn.referee_confidence ?? "–" }}</span>
+            <span class="lbl">耗时:</span>
+            <span>{{ fmtMs(turn.referee_duration_ms) }}</span>
+          </div>
+        </div>
+
+        <div class="section" v-if="turn.error">
+          <h5>错误</h5>
+          <pre class="code-block">{{ turn.error }}</pre>
         </div>
       </el-collapse-item>
     </el-collapse>
@@ -105,7 +78,6 @@
 </template>
 
 <script setup lang="ts">
-import { ElMessage } from "element-plus";
 import { ref } from "vue";
 
 import { callsApi } from "@/api/calls";
@@ -143,20 +115,24 @@ function truncate(s: string | null | undefined, n: number): string {
   return s.length <= n ? s : s.slice(0, n) + "…";
 }
 
-function formatJson(value: unknown): string {
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
+function fmtMs(ms: number | null): string {
+  return ms === null || ms === undefined ? "–" : `${ms}ms`;
 }
 
-async function copy(text: string): Promise<void> {
-  try {
-    await navigator.clipboard.writeText(text);
-    ElMessage.success("已复制");
-  } catch {
-    ElMessage.warning("复制失败");
+function decisionTag(
+  decision: string | null,
+): "primary" | "success" | "warning" | "danger" | "info" {
+  switch (decision) {
+    case "goal_achieved":
+      return "success";
+    case "transfer":
+      return "warning";
+    case "customer_decline":
+      return "danger";
+    case "continue":
+      return "primary";
+    default:
+      return "info";
   }
 }
 
@@ -214,6 +190,14 @@ defineExpose({ load: onLoad });
 }
 .row {
   margin-bottom: 6px;
+}
+.metrics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: 12px;
+  margin-top: 6px;
 }
 .lbl {
   font-size: 12px;

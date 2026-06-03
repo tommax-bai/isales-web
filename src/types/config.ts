@@ -42,7 +42,7 @@ export interface RoleConfigUpdate {
 
 // ---- prompt_version -------------------------------------------------------
 
-export type PromptScopeType = "role" | "judge" | "polish";
+export type PromptScopeType = "main" | "referee" | "extractor";
 
 export interface PromptVersion {
   id: number;

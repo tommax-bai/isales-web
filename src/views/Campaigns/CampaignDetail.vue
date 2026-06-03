@@ -119,25 +119,25 @@
       <div class="cd__tiers">
         <PromptTierEditor
           :campaign-id="id"
-          kind="role"
-          title="对话策略"
-          description="N 条对话 prompt 并行执行，由质量判别择优"
+          kind="main"
+          title="主对话 (main)"
+          description="纯文本流式回复，直喂 TTS。不要输出 JSON / markdown / emoji"
           :icon="MessageSquare"
           badge-color="blue"
         />
         <PromptTierEditor
           :campaign-id="id"
-          kind="judge"
-          title="质量判别"
-          description="对候选回复打分，择优出列"
+          kind="referee"
+          title="决策 (referee)"
+          description="旁路小模型，判定 goal_achieved / transfer / customer_decline"
           :icon="Target"
           badge-color="purple"
         />
         <PromptTierEditor
           :campaign-id="id"
-          kind="polish"
-          title="润色"
-          description="对入选回复做风格化打磨"
+          kind="extractor"
+          title="信息抽取 (extractor)"
+          description="通话结束后异步抽取客户字段（customer_name / intent / …）"
           :icon="Sparkles"
           badge-color="green"
         />
