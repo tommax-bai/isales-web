@@ -49,6 +49,23 @@
       </div>
     </el-form-item>
 
+    <el-form-item
+      v-if="form.filler_enabled"
+      label="垫词触发延迟 (ms)"
+      :error="fieldErrors?.filler_delay_ms"
+    >
+      <el-input-number
+        v-model="form.filler_delay_ms"
+        :min="0"
+        :step="100"
+        placeholder="留空默认 600ms"
+      />
+      <div class="hint">
+        首音频超过此时长还没出，才播一句垫词遮等待；快的轮次不会播。留空使用默认
+        600ms。
+      </div>
+    </el-form-item>
+
     <el-form-item label="默认回复" :error="fieldErrors?.default_replies">
       <el-input
         v-model="defaultRepliesText"

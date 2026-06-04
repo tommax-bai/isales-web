@@ -2,6 +2,7 @@ import { mount } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
 import { nextTick } from "vue";
 
+import BasicTab from "@/views/Campaigns/Tabs/BasicTab.vue";
 import InterruptionTab from "@/views/Campaigns/Tabs/InterruptionTab.vue";
 import RetryFollowUpTab from "@/views/Campaigns/Tabs/RetryFollowUpTab.vue";
 import SilenceTab from "@/views/Campaigns/Tabs/SilenceTab.vue";
@@ -21,6 +22,26 @@ describe("SilenceTab", () => {
     expect((numberInputs[0].element as HTMLInputElement).value).toBe(
       String(CAMPAIGN_DEFAULTS.silence_threshold_ms),
     );
+    wrapper.unmount();
+  });
+});
+
+describe("BasicTab", () => {
+  it("shows filler_delay_ms input + hint only when filler_enabled", async () => {
+    const form: CampaignBase = {
+      ...CAMPAIGN_DEFAULTS,
+      filler_enabled: true,
+      filler_delay_ms: 800,
+    };
+    const wrapper = mount(BasicTab, {
+      props: { modelValue: form, fieldErrors: {} },
+    });
+    await nextTick();
+    const values = wrapper
+      .findAll(".el-input-number input")
+      .map((n) => (n.element as HTMLInputElement).value);
+    expect(values).toContain("800");
+    expect(wrapper.text()).toContain("首音频超过此时长还没出");
     wrapper.unmount();
   });
 });

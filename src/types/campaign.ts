@@ -125,6 +125,10 @@ export interface CampaignBase {
   // streaming main link reaches first audio in ~500ms.
   filler_enabled: boolean;
 
+  // filler time-gate in ms (tts-cache-and-gated-filler). null → engine
+  // default 600ms: only play a filler when first audio is slow.
+  filler_delay_ms: number | null;
+
   interruption_whitelist: string[];
   interruption_min_duration_ms: number;
   max_continuous_interruptions: number;
@@ -207,6 +211,7 @@ export const CAMPAIGN_DEFAULTS: CampaignBase = {
   wrap_up_closing_phrases: [],
   greeting: null,
   filler_enabled: false,
+  filler_delay_ms: null,
   interruption_whitelist: [],
   interruption_min_duration_ms: 400,
   max_continuous_interruptions: 3,
