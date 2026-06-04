@@ -20,6 +20,22 @@
       <div class="hint">低于此时长的用户语音不视为打断。</div>
     </el-form-item>
     <el-form-item
+      label="ASR 端点静默 (ms)"
+      :error="fieldErrors?.asr_eos_silence_ms"
+    >
+      <el-input-number
+        v-model="form.asr_eos_silence_ms"
+        :min="0"
+        :step="50"
+        placeholder="留空走默认 400ms"
+      />
+      <div class="hint">
+        用户停顿多久判定为「说完」、AI 开口。越小开口越快；<strong
+          >太短会把停顿误判成说完打断客户</strong
+        >。留空使用默认 400ms。
+      </div>
+    </el-form-item>
+    <el-form-item
       label="最大连续打断"
       :error="fieldErrors?.max_continuous_interruptions"
     >

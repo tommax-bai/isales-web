@@ -2,6 +2,7 @@ import { mount } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
 import { nextTick } from "vue";
 
+import InterruptionTab from "@/views/Campaigns/Tabs/InterruptionTab.vue";
 import RetryFollowUpTab from "@/views/Campaigns/Tabs/RetryFollowUpTab.vue";
 import SilenceTab from "@/views/Campaigns/Tabs/SilenceTab.vue";
 import TimeWindowTab from "@/views/Campaigns/Tabs/TimeWindowTab.vue";
@@ -20,6 +21,25 @@ describe("SilenceTab", () => {
     expect((numberInputs[0].element as HTMLInputElement).value).toBe(
       String(CAMPAIGN_DEFAULTS.silence_threshold_ms),
     );
+    wrapper.unmount();
+  });
+});
+
+describe("InterruptionTab", () => {
+  it("renders the asr_eos_silence_ms input and emits edits", async () => {
+    const form: CampaignBase = { ...CAMPAIGN_DEFAULTS, asr_eos_silence_ms: 350 };
+    const wrapper = mount(InterruptionTab, {
+      props: { modelValue: form, fieldErrors: {} },
+    });
+    await nextTick();
+    // The endpoint input shows the bound value (350).
+    const numberInputs = wrapper.findAll(".el-input-number input");
+    const values = numberInputs.map(
+      (n) => (n.element as HTMLInputElement).value,
+    );
+    expect(values).toContain("350");
+    // The clip-the-caller warning hint is present.
+    expect(wrapper.text()).toContain("太短会把停顿误判成说完打断客户");
     wrapper.unmount();
   });
 });
