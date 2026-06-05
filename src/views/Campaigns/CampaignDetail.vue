@@ -87,6 +87,23 @@
               通话接通后引擎播放的第一句话。留空 = 走 LLM 路径。试听用上面填的音色现合成。
             </div>
           </el-form-item>
+          <el-form-item label="垫词 (filler)">
+            <el-switch v-model="form.filler_enabled" />
+            <div class="cd__hint">
+              streaming 主链路首音频 ~500ms，filler 仅在用慢模型时建议启用。默认关闭。
+            </div>
+          </el-form-item>
+          <el-form-item v-if="form.filler_enabled" label="垫词触发延迟 (ms)">
+            <el-input-number
+              v-model="form.filler_delay_ms"
+              :min="0"
+              :step="100"
+              placeholder="留空默认 600ms"
+            />
+            <div class="cd__hint">
+              首音频超过此时长还没出，才播一句垫词遮等待；快的轮次不会播。留空使用默认 600ms。
+            </div>
+          </el-form-item>
         </el-form>
       </section>
 
@@ -230,8 +247,18 @@ const form = reactive<{
   concurrency: number;
   voice_id: string | null;
   greeting: string | null;
+  filler_enabled: boolean;
+  filler_delay_ms: number | null;
   time_windows: TimeWindow[];
-}>({ name: "", concurrency: 1, voice_id: null, greeting: null, time_windows: [] });
+}>({
+  name: "",
+  concurrency: 1,
+  voice_id: null,
+  greeting: null,
+  filler_enabled: false,
+  filler_delay_ms: null,
+  time_windows: [],
+});
 
 // ── greeting 试听 (campaign-greeting-tts-preview § 4C) ────────────────────
 const greetingFilled = computed(() => Boolean(form.greeting?.trim()));
@@ -306,6 +333,8 @@ async function onRefresh() {
     form.concurrency = campaign.value.concurrency;
     form.voice_id = campaign.value.voice_id;
     form.greeting = campaign.value.greeting;
+    form.filler_enabled = campaign.value.filler_enabled;
+    form.filler_delay_ms = campaign.value.filler_delay_ms;
     form.time_windows = campaign.value.time_windows.map((w) => ({ ...w, days: [...w.days] }));
     await loadProgress();
   } catch (err: unknown) {
@@ -335,6 +364,8 @@ async function onSave() {
       concurrency: form.concurrency,
       voice_id: form.voice_id?.trim() || null,
       greeting: form.greeting?.trim() || null,
+      filler_enabled: form.filler_enabled,
+      filler_delay_ms: form.filler_delay_ms,
       time_windows: form.time_windows,
     });
     ElMessage.success("已保存");
