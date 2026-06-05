@@ -25,25 +25,6 @@
           <el-input v-model="row.phrase" size="small" />
         </template>
       </el-table-column>
-      <el-table-column label="音频 URL" width="220">
-        <template #default="{ row }">
-          <el-input
-            v-model="row.audio_url"
-            size="small"
-            placeholder="可空 — 由 TTS 异步生成"
-          />
-        </template>
-      </el-table-column>
-      <el-table-column label="状态" width="120">
-        <template #default="{ row }">
-          <el-select v-model="row.generation_status" size="small">
-            <el-option label="待生成" value="pending" />
-            <el-option label="生成中" value="running" />
-            <el-option label="成功" value="succeeded" />
-            <el-option label="失败" value="failed" />
-          </el-select>
-        </template>
-      </el-table-column>
       <el-table-column label="操作" width="80">
         <template #default="{ $index }">
           <el-button link type="danger" @click="removePhrase($index)">

@@ -33,9 +33,6 @@
 
       <div v-for="ph in set.phrases" :key="ph.key" class="phrase">
         <el-input v-model="ph.text" placeholder="一句垫词，如「好的，我看一下」" />
-        <StatusBadge :color="phraseColor(ph.status)">
-          {{ phraseLabel(ph.status) }}
-        </StatusBadge>
         <el-button
           size="small"
           type="primary"
@@ -63,8 +60,6 @@ import { Music, Plus, Save, Trash2 } from "lucide-vue-next";
 import { onMounted, ref, watch } from "vue";
 
 import { fillersApi } from "@/api/fillers";
-import StatusBadge from "@/components/Common/StatusBadge.vue";
-import type { GenerationStatus } from "@/types/config";
 
 const props = defineProps<{ campaignId: number | null }>();
 
@@ -72,7 +67,6 @@ interface PhraseRow {
   key: string;
   id: number | null;
   text: string;
-  status: GenerationStatus;
   saving: boolean;
 }
 interface SetRow {
@@ -86,16 +80,6 @@ const sets = ref<SetRow[]>([]);
 
 function rid(): string {
   return `f-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-}
-
-function phraseColor(s: GenerationStatus): "green" | "yellow" | "red" | "gray" {
-  if (s === "succeeded") return "green";
-  if (s === "failed") return "red";
-  if (s === "running") return "yellow";
-  return "gray";
-}
-function phraseLabel(s: GenerationStatus): string {
-  return { pending: "待生成", running: "生成中", succeeded: "就绪", failed: "失败" }[s];
 }
 
 async function load() {
@@ -113,7 +97,6 @@ async function load() {
         key: rid(),
         id: p.id,
         text: p.phrase,
-        status: p.generation_status,
         saving: false,
       })),
     });
@@ -153,7 +136,7 @@ async function removeSet(set: SetRow) {
 }
 
 function addPhrase(set: SetRow) {
-  set.phrases.push({ key: rid(), id: null, text: "", status: "pending", saving: false });
+  set.phrases.push({ key: rid(), id: null, text: "", saving: false });
 }
 
 async function savePhrase(set: SetRow, ph: PhraseRow) {
@@ -169,7 +152,6 @@ async function savePhrase(set: SetRow, ph: PhraseRow) {
         phrase: ph.text,
       });
       ph.id = created.id;
-      ph.status = created.generation_status;
     } else {
       await fillersApi.updatePhrase(ph.id, { phrase: ph.text });
     }
