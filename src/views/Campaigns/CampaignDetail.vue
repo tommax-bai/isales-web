@@ -63,6 +63,30 @@
               placeholder="例如：zh_female_xiaohe_uranus_bigtts（暂不指定则留空）"
             />
           </el-form-item>
+          <el-form-item label="开场白文案">
+            <el-input
+              v-model="form.greeting"
+              type="textarea"
+              :rows="3"
+              placeholder="留空则由 LLM 生成开场白"
+            />
+            <div class="cd__preview-row">
+              <el-button
+                size="small"
+                :loading="previewing"
+                :disabled="!greetingFilled || !form.voice_id"
+                @click="previewGreeting"
+              >
+                试听
+              </el-button>
+              <span v-if="!form.voice_id" class="cd__preview-hint">
+                填「音色 ID」后可试听
+              </span>
+            </div>
+            <div class="cd__hint">
+              通话接通后引擎播放的第一句话。留空 = 走 LLM 路径。试听用上面填的音色现合成。
+            </div>
+          </el-form-item>
         </el-form>
       </section>
 
@@ -172,7 +196,7 @@ import {
   Target,
   Trash2,
 } from "lucide-vue-next";
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { campaignsApi } from "@/api/campaigns";
@@ -205,8 +229,46 @@ const form = reactive<{
   name: string;
   concurrency: number;
   voice_id: string | null;
+  greeting: string | null;
   time_windows: TimeWindow[];
-}>({ name: "", concurrency: 1, voice_id: null, time_windows: [] });
+}>({ name: "", concurrency: 1, voice_id: null, greeting: null, time_windows: [] });
+
+// ── greeting 试听 (campaign-greeting-tts-preview § 4C) ────────────────────
+const greetingFilled = computed(() => Boolean(form.greeting?.trim()));
+const previewing = ref(false);
+let currentAudio: HTMLAudioElement | null = null;
+
+function stopPreview(): void {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+}
+
+async function previewGreeting(): Promise<void> {
+  const text = form.greeting?.trim();
+  const speaker = form.voice_id?.trim();
+  if (!text || !speaker) return;
+  stopPreview();
+  previewing.value = true;
+  try {
+    const blob = await campaignsApi.ttsPreview(text, speaker);
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    currentAudio = audio;
+    audio.onended = () => {
+      URL.revokeObjectURL(url);
+      if (currentAudio === audio) currentAudio = null;
+    };
+    await audio.play();
+  } catch {
+    ElMessage.error("试听失败，请检查音色凭据或稍后重试");
+  } finally {
+    previewing.value = false;
+  }
+}
+
+onBeforeUnmount(stopPreview);
 
 const WEEKDAYS: { value: WeekDay; label: string }[] = [
   { value: "mon", label: "一" },
@@ -243,6 +305,7 @@ async function onRefresh() {
     form.name = campaign.value.name;
     form.concurrency = campaign.value.concurrency;
     form.voice_id = campaign.value.voice_id;
+    form.greeting = campaign.value.greeting;
     form.time_windows = campaign.value.time_windows.map((w) => ({ ...w, days: [...w.days] }));
     await loadProgress();
   } catch (err: unknown) {
@@ -270,7 +333,8 @@ async function onSave() {
     await campaignsApi.update(id, {
       name: form.name,
       concurrency: form.concurrency,
-      voice_id: form.voice_id,
+      voice_id: form.voice_id?.trim() || null,
+      greeting: form.greeting?.trim() || null,
       time_windows: form.time_windows,
     });
     ElMessage.success("已保存");
@@ -371,7 +435,22 @@ onMounted(onRefresh);
   color: var(--isales-muted-foreground);
 }
 .cd__form {
-  max-width: 420px;
+  max-width: 520px;
+}
+.cd__preview-row {
+  display: flex;
+  align-items: center;
+  gap: var(--isales-space-2);
+  margin-top: var(--isales-space-2);
+}
+.cd__preview-hint,
+.cd__hint {
+  font-size: 12px;
+  color: var(--isales-text-secondary, #909399);
+  line-height: 1.6;
+}
+.cd__hint {
+  margin-top: 4px;
 }
 .window {
   display: flex;
