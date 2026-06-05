@@ -15,6 +15,12 @@
           </el-tag>
         </template>
       </el-table-column>
+      <el-table-column label="标识" width="120">
+        <template #default="{ row }">
+          <span v-if="row.label">{{ row.label }}</span>
+          <span v-else class="muted">—</span>
+        </template>
+      </el-table-column>
       <el-table-column prop="model" label="模型" />
       <el-table-column label="温度" width="100">
         <template #default="{ row }">{{ row.temperature.toFixed(2) }}</template>
@@ -68,13 +74,15 @@ const dialogInitial = ref<RoleConfigRead | null>(null);
 const editingIndex = ref<number | null>(null);
 
 function kindLabel(kind: RoleKind): string {
-  return { main: "主对话", referee: "决策", extractor: "抽取" }[kind];
+  return { main: "主对话", referee: "裁判", restructure: "重组", extractor: "抽取" }[kind];
 }
 
 function kindTagType(
   kind: RoleKind,
-): "primary" | "success" | "warning" {
-  return ({ main: "primary", referee: "warning", extractor: "success" } as const)[kind];
+): "primary" | "success" | "warning" | "danger" {
+  return (
+    { main: "primary", referee: "warning", restructure: "danger", extractor: "success" } as const
+  )[kind];
 }
 
 function onNew(): void {
@@ -118,5 +126,8 @@ function onDialogSave(value: RoleConfigRead): void {
 .title {
   font-size: 14px;
   font-weight: 600;
+}
+.muted {
+  color: #c0c4cc;
 }
 </style>

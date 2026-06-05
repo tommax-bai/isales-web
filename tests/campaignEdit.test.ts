@@ -67,6 +67,7 @@ describe("RoleConfigDialog", () => {
           id: 7,
           campaign_id: 3,
           kind: "referee",
+          label: "main_judge",
           model: "gpt-4o-mini",
           current_prompt_version_id: 42,
           temperature: 0.3,
@@ -86,7 +87,9 @@ describe("RoleConfigDialog", () => {
     const labels = Array.from(document.querySelectorAll(".el-radio")).map(
       (n) => n.textContent?.trim(),
     );
-    expect(labels).toEqual(expect.arrayContaining(["主对话", "决策", "抽取"]));
+    expect(labels).toEqual(
+      expect.arrayContaining(["主对话", "裁判", "重组", "抽取"]),
+    );
     wrapper.unmount();
   });
 

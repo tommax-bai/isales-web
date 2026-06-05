@@ -21,13 +21,16 @@ export interface ExtractionField {
 
 export type ContinuousInterruptionStrategy = "short_reply" | "listen_only";
 
-// pipeline-stream-and-referee: dual-LLM architecture slots.
-export type RoleKind = "main" | "referee" | "extractor";
+// engine-multi-referee-and-restructure: N parallel referees + a restructure
+// (re-voice) slot, on top of the dual-LLM main / referee / extractor slots.
+export type RoleKind = "main" | "referee" | "extractor" | "restructure";
 
 export interface RoleConfigRead {
   id: number;
   campaign_id: number;
   kind: RoleKind;
+  // Routing label for referee/restructure rows (referenced by routing_rules).
+  label: string | null;
   model: string;
   current_prompt_version_id: number | null;
   temperature: number;
@@ -40,12 +43,37 @@ export interface RoleConfigRead {
 
 export interface RoleConfigNestedWrite {
   kind: RoleKind;
+  label?: string | null;
   model: string;
   current_prompt_version_id?: number | null;
   temperature?: number;
   top_p?: number;
   ext_params?: Record<string, unknown>;
   enabled?: boolean;
+}
+
+// ── multi-referee routing (engine-multi-referee-and-restructure) ─────────────
+
+export type TransitionTarget = "goal_achieved" | "transfer" | "customer_decline";
+export type RestructureSource = "last_reply" | "interrupt_remaining";
+
+export interface TransitionAction {
+  type: "transition";
+  to: TransitionTarget;
+  goal_type?: string | null; // required iff to === "goal_achieved"
+}
+
+export interface RestructureAction {
+  type: "restructure";
+  source: RestructureSource;
+}
+
+export type RoutingAction = TransitionAction | RestructureAction;
+
+export interface RoutingRule {
+  referee: string; // referee role_config.label
+  match: string[]; // category values that fire this rule
+  action: RoutingAction;
 }
 
 export type GenerationStatus = "pending" | "running" | "succeeded" | "failed";
@@ -101,6 +129,11 @@ export interface CampaignBase {
   concurrency: number;
   time_windows: TimeWindow[];
   extraction_fields: ExtractionField[];
+
+  // multi-referee routing (engine-multi-referee-and-restructure).
+  routing_rules: RoutingRule[];
+  max_continuous_restructure: number;
+  primary_referee_label: string | null;
 
   max_silence_activations: number;
   silence_threshold_ms: number;
@@ -200,6 +233,9 @@ export const CAMPAIGN_DEFAULTS: CampaignBase = {
   concurrency: 1,
   time_windows: [],
   extraction_fields: [],
+  routing_rules: [],
+  max_continuous_restructure: 2,
+  primary_referee_label: null,
   max_silence_activations: 2,
   silence_threshold_ms: 3000,
   silence_phrases: [],

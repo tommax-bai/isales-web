@@ -27,6 +27,9 @@
       <el-tab-pane label="AI 配置" name="role">
         <RoleConfigTab v-model="roleConfigs" />
       </el-tab-pane>
+      <el-tab-pane label="多流路由" name="routing">
+        <RoutingRulesTab v-model="form" :role-configs="roleConfigs" />
+      </el-tab-pane>
       <el-tab-pane label="沉默激活" name="silence">
         <SilenceTab v-model="form" :field-errors="fieldErrors" />
       </el-tab-pane>
@@ -71,6 +74,7 @@ import FillerTab from "@/views/Campaigns/Tabs/FillerTab.vue";
 import InterruptionTab from "@/views/Campaigns/Tabs/InterruptionTab.vue";
 import RetryFollowUpTab from "@/views/Campaigns/Tabs/RetryFollowUpTab.vue";
 import RoleConfigTab from "@/views/Campaigns/Tabs/RoleConfigTab.vue";
+import RoutingRulesTab from "@/views/Campaigns/Tabs/RoutingRulesTab.vue";
 import SilenceTab from "@/views/Campaigns/Tabs/SilenceTab.vue";
 import TimeWindowTab from "@/views/Campaigns/Tabs/TimeWindowTab.vue";
 import TransferTab from "@/views/Campaigns/Tabs/TransferTab.vue";
@@ -146,6 +150,7 @@ function buildPayload(): CampaignNestedUpdate {
   payload.role_configs = roleConfigs.value.map(
     (r): RoleConfigNestedWrite => ({
       kind: r.kind,
+      label: r.label,
       model: r.model,
       current_prompt_version_id: r.current_prompt_version_id,
       temperature: r.temperature,
@@ -154,6 +159,8 @@ function buildPayload(): CampaignNestedUpdate {
       enabled: r.enabled,
     }),
   );
+  // routing_rules / max_continuous_restructure / primary_referee_label ride
+  // along in { ...form } above (CampaignBase fields).
   payload.filler_sets = fillerSets.value.map(
     (fs): FillerSetNestedWrite => ({
       name: fs.name,

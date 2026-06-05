@@ -14,9 +14,19 @@
       <el-form-item label="类型" prop="kind">
         <el-radio-group v-model="form.kind">
           <el-radio value="main">主对话</el-radio>
-          <el-radio value="referee">决策</el-radio>
+          <el-radio value="referee">裁判</el-radio>
+          <el-radio value="restructure">重组</el-radio>
           <el-radio value="extractor">抽取</el-radio>
         </el-radio-group>
+      </el-form-item>
+      <el-form-item v-if="needsLabel" label="标识 (label)" prop="label">
+        <el-input
+          v-model="form.label"
+          placeholder="路由规则按此标识引用，如 main_judge / reject"
+        />
+        <div class="hint">
+          裁判 / 重组流必填，同一任务内唯一；路由规则通过 label 绑定裁判。
+        </div>
       </el-form-item>
       <el-form-item label="模型" prop="model">
         <el-select v-model="form.model" filterable allow-create>
@@ -86,6 +96,7 @@ const formRef = ref<FormInstance | null>(null);
 
 interface FormState {
   kind: RoleKind;
+  label: string;
   model: string;
   temperature: number;
   top_p: number;
@@ -95,6 +106,7 @@ interface FormState {
 
 const form = reactive<FormState>({
   kind: "main",
+  label: "",
   model: "doubao-pro",
   temperature: 0.7,
   top_p: 1.0,
@@ -103,12 +115,27 @@ const form = reactive<FormState>({
 });
 
 const isEdit = computed(() => Boolean(props.initial));
+const needsLabel = computed(
+  () => form.kind === "referee" || form.kind === "restructure",
+);
 
 const rules: FormRules = {
   kind: [{ required: true, message: "请选择类型" }],
   model: [{ required: true, message: "请输入模型名" }],
   temperature: [{ type: "number", required: true, message: "请输入温度" }],
   top_p: [{ type: "number", required: true, message: "请输入 top_p" }],
+  label: [
+    {
+      validator: (_rule, value: string, cb) => {
+        if (needsLabel.value && !String(value ?? "").trim()) {
+          cb(new Error("裁判 / 重组流必须填写标识"));
+        } else {
+          cb();
+        }
+      },
+      trigger: "blur",
+    },
+  ],
 };
 
 watch(
@@ -117,6 +144,7 @@ watch(
     if (!open) return;
     if (initial) {
       form.kind = initial.kind;
+      form.label = initial.label ?? "";
       form.model = initial.model;
       form.temperature = initial.temperature;
       form.top_p = initial.top_p;
@@ -124,6 +152,7 @@ watch(
       form.current_prompt_version_id = initial.current_prompt_version_id;
     } else {
       form.kind = "main";
+      form.label = "";
       form.model = "doubao-pro";
       form.temperature = 0.7;
       form.top_p = 1.0;
@@ -144,6 +173,7 @@ async function onSubmit() {
     id: props.initial?.id ?? 0,
     campaign_id: props.initial?.campaign_id ?? 0,
     kind: form.kind,
+    label: needsLabel.value ? form.label.trim() : null,
     model: form.model,
     current_prompt_version_id: form.current_prompt_version_id,
     temperature: form.temperature,
