@@ -128,6 +128,6 @@ function onDialogSave(value: RoleConfigRead): void {
   font-weight: 600;
 }
 .muted {
-  color: #c0c4cc;
+  color: var(--isales-muted-foreground);
 }
 </style>
