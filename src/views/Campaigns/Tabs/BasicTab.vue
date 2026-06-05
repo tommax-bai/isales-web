@@ -8,21 +8,17 @@
       <el-input v-model="form.name" placeholder="例如：1 月新客回访" />
     </el-form-item>
 
-    <el-form-item label="音色" :error="fieldErrors?.voice_id">
-      <el-select
+    <el-form-item label="音色 ID" :error="fieldErrors?.voice_id">
+      <el-input
         v-model="form.voice_id"
         clearable
-        :loading="voiceLoading"
-        placeholder="选择音色"
-        style="width: 320px"
-      >
-        <el-option
-          v-for="v in voices"
-          :key="v.id"
-          :label="`${v.name} (${v.id})`"
-          :value="v.id"
-        />
-      </el-select>
+        placeholder="例如：zh_female_xiaohe_uranus_bigtts"
+        style="width: 420px"
+      />
+      <div class="hint">
+        填火山豆包 TTS 的音色 ID（vendor speaker，如
+        <code>zh_female_xiaohe_uranus_bigtts</code>）。留空走默认音色。
+      </div>
     </el-form-item>
 
     <el-form-item label="并发上限" :error="fieldErrors?.concurrency" required>
@@ -45,11 +41,11 @@
         >
           试听
         </el-button>
-        <span v-if="!form.voice_id" class="preview-hint">选好「音色」后可试听</span>
+        <span v-if="!form.voice_id" class="preview-hint">填入「音色 ID」后可试听</span>
       </div>
       <div class="hint">
         通话接通后引擎播放的第一句话（ai-pipeline §
-        "开场白不走管线"）。留空 = 走 LLM 路径。试听用所选音色现合成，确认发音 /
+        "开场白不走管线"）。留空 = 走 LLM 路径。试听用填入的音色现合成，确认发音 /
         语气。
       </div>
     </el-form-item>
@@ -138,12 +134,10 @@
 
 <script setup lang="ts">
 import { ElMessage } from "element-plus";
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUnmount, ref, watch } from "vue";
 
 import { campaignsApi } from "@/api/campaigns";
-import { voiceApi } from "@/api/voice";
 import type { CampaignBase, ExtractionField } from "@/types/campaign";
-import type { VoiceModel } from "@/types/voice";
 
 const props = defineProps<{
   modelValue: CampaignBase;
@@ -157,20 +151,6 @@ const emit = defineEmits<{
 const form = computed({
   get: () => props.modelValue,
   set: (v) => emit("update:modelValue", v),
-});
-
-const voices = ref<VoiceModel[]>([]);
-const voiceLoading = ref(false);
-
-onMounted(async () => {
-  voiceLoading.value = true;
-  try {
-    voices.value = await voiceApi.list();
-  } catch {
-    // Voice list is non-fatal — user can still type a numeric voice_id.
-  } finally {
-    voiceLoading.value = false;
-  }
 });
 
 // ── greeting 试听 (campaign-greeting-tts-preview) ─────────────────────────
@@ -187,14 +167,9 @@ function stopPreview(): void {
 
 async function previewGreeting(): Promise<void> {
   const text = form.value.greeting?.trim();
-  if (!text || !form.value.voice_id) return;
-  // form.voice_id is the VoiceModel DB id; the TTS endpoint wants the vendor
-  // speaker string — resolve it from the already-loaded voices list.
-  const speaker = voices.value.find((v) => v.id === form.value.voice_id)?.voice_id;
-  if (!speaker) {
-    ElMessage.error("找不到所选音色，请重新选择");
-    return;
-  }
+  const speaker = form.value.voice_id?.trim();
+  if (!text || !speaker) return;
+  // voice_id is the vendor speaker string typed by the admin — send verbatim.
   stopPreview();
   previewing.value = true;
   try {

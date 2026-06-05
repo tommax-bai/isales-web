@@ -96,7 +96,7 @@ export interface CallbackConfigNestedWrite {
 
 export interface CampaignBase {
   name: string;
-  voice_id: number | null;
+  voice_id: string | null;
   default_replies: string[];
   concurrency: number;
   time_windows: TimeWindow[];

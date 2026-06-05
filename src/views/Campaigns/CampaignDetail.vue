@@ -56,15 +56,12 @@
           <el-form-item label="并发上限">
             <el-input-number v-model="form.concurrency" :min="1" :max="100" />
           </el-form-item>
-          <el-form-item label="选用音色">
-            <el-select v-model="form.voice_id" placeholder="（暂不指定）" clearable>
-              <el-option
-                v-for="v in voiceModels"
-                :key="v.id"
-                :label="`${v.name}（${v.vendor}）`"
-                :value="v.id"
-              />
-            </el-select>
+          <el-form-item label="音色 ID">
+            <el-input
+              v-model="form.voice_id"
+              clearable
+              placeholder="例如：zh_female_xiaohe_uranus_bigtts（暂不指定则留空）"
+            />
           </el-form-item>
         </el-form>
       </section>
@@ -179,7 +176,6 @@ import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { campaignsApi } from "@/api/campaigns";
-import { voiceApi } from "@/api/voice";
 import FillerEditor from "@/components/Campaign/FillerEditor.vue";
 import PromptTierEditor from "@/components/Campaign/PromptTierEditor.vue";
 import PageHeader from "@/components/Common/PageHeader.vue";
@@ -187,7 +183,6 @@ import StatusBadge from "@/components/Common/StatusBadge.vue";
 import { leadStatusMeta } from "@/composables/useStatusMeta";
 import type { CampaignDetail, CampaignProgress, TimeWindow, WeekDay } from "@/types/campaign";
 import type { LeadStatus } from "@/types/lead";
-import type { VoiceModel } from "@/types/voice";
 
 const route = useRoute();
 const router = useRouter();
@@ -209,11 +204,9 @@ const progress = ref<CampaignProgress>(EMPTY_PROGRESS);
 const form = reactive<{
   name: string;
   concurrency: number;
-  voice_id: number | null;
+  voice_id: string | null;
   time_windows: TimeWindow[];
 }>({ name: "", concurrency: 1, voice_id: null, time_windows: [] });
-
-const voiceModels = ref<VoiceModel[]>([]);
 
 const WEEKDAYS: { value: WeekDay; label: string }[] = [
   { value: "mon", label: "一" },
@@ -243,18 +236,6 @@ async function loadProgress() {
   }
 }
 
-async function loadVoiceModels() {
-  try {
-    const r = (await voiceApi.list()) as unknown;
-    // 容忍后端 Page<VoiceModel> 或裸数组两种返回形态。
-    voiceModels.value = Array.isArray(r)
-      ? (r as VoiceModel[])
-      : ((r as { items?: VoiceModel[] }).items ?? []);
-  } catch {
-    voiceModels.value = [];
-  }
-}
-
 async function onRefresh() {
   loading.value = true;
   try {
@@ -263,7 +244,7 @@ async function onRefresh() {
     form.concurrency = campaign.value.concurrency;
     form.voice_id = campaign.value.voice_id;
     form.time_windows = campaign.value.time_windows.map((w) => ({ ...w, days: [...w.days] }));
-    await Promise.all([loadProgress(), loadVoiceModels()]);
+    await loadProgress();
   } catch (err: unknown) {
     ElMessage.error(err instanceof Error ? err.message : "加载场景失败");
   } finally {
