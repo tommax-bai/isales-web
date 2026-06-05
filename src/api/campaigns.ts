@@ -57,3 +57,14 @@ export const campaignsApi = {
       )
       .then((r) => r.data),
 };
+
+/** Map a /campaigns/tts-preview failure to a user-readable 试听 error message. */
+export function ttsPreviewError(e: unknown): string {
+  const status = (e as { response?: { status?: number } } | null)?.response?.status;
+  if (status === 400) {
+    // 400 = invalid voice id / over-long text (tts_invalid_voice_or_text /
+    // tts_credential_not_configured) — the input is the likely culprit.
+    return "音色 ID 无效或文案过长，请确认音色 ID（如 zh_female_xiaohe_uranus_bigtts）";
+  }
+  return "试听失败，请稍后重试";
+}

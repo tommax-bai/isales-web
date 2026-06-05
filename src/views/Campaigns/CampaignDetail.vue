@@ -199,7 +199,7 @@ import {
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { campaignsApi } from "@/api/campaigns";
+import { campaignsApi, ttsPreviewError } from "@/api/campaigns";
 import FillerEditor from "@/components/Campaign/FillerEditor.vue";
 import PromptTierEditor from "@/components/Campaign/PromptTierEditor.vue";
 import PageHeader from "@/components/Common/PageHeader.vue";
@@ -261,8 +261,8 @@ async function previewGreeting(): Promise<void> {
       if (currentAudio === audio) currentAudio = null;
     };
     await audio.play();
-  } catch {
-    ElMessage.error("试听失败，请检查音色凭据或稍后重试");
+  } catch (e) {
+    ElMessage.error(ttsPreviewError(e));
   } finally {
     previewing.value = false;
   }

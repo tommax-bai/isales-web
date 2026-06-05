@@ -136,7 +136,7 @@
 import { ElMessage } from "element-plus";
 import { computed, onBeforeUnmount, ref, watch } from "vue";
 
-import { campaignsApi } from "@/api/campaigns";
+import { campaignsApi, ttsPreviewError } from "@/api/campaigns";
 import type { CampaignBase, ExtractionField } from "@/types/campaign";
 
 const props = defineProps<{
@@ -182,8 +182,8 @@ async function previewGreeting(): Promise<void> {
       if (currentAudio === audio) currentAudio = null;
     };
     await audio.play();
-  } catch {
-    ElMessage.error("试听失败，请检查音色凭据或稍后重试");
+  } catch (e) {
+    ElMessage.error(ttsPreviewError(e));
   } finally {
     previewing.value = false;
   }
