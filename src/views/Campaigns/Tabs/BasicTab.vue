@@ -36,9 +36,21 @@
         :rows="3"
         placeholder="留空则由 LLM 生成开场白"
       />
+      <div class="preview-row">
+        <el-button
+          size="small"
+          :loading="previewing"
+          :disabled="!greetingFilled || !form.voice_id"
+          @click="previewGreeting"
+        >
+          试听
+        </el-button>
+        <span v-if="!form.voice_id" class="preview-hint">选好「音色」后可试听</span>
+      </div>
       <div class="hint">
         通话接通后引擎播放的第一句话（ai-pipeline §
-        "开场白不走管线"）。留空 = 走 LLM 路径。
+        "开场白不走管线"）。留空 = 走 LLM 路径。试听用所选音色现合成，确认发音 /
+        语气。
       </div>
     </el-form-item>
 
@@ -125,8 +137,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { ElMessage } from "element-plus";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
+import { campaignsApi } from "@/api/campaigns";
 import { voiceApi } from "@/api/voice";
 import type { CampaignBase, ExtractionField } from "@/types/campaign";
 import type { VoiceModel } from "@/types/voice";
@@ -158,6 +172,49 @@ onMounted(async () => {
     voiceLoading.value = false;
   }
 });
+
+// ── greeting 试听 (campaign-greeting-tts-preview) ─────────────────────────
+const greetingFilled = computed(() => Boolean(form.value.greeting?.trim()));
+const previewing = ref(false);
+let currentAudio: HTMLAudioElement | null = null;
+
+function stopPreview(): void {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+}
+
+async function previewGreeting(): Promise<void> {
+  const text = form.value.greeting?.trim();
+  if (!text || !form.value.voice_id) return;
+  // form.voice_id is the VoiceModel DB id; the TTS endpoint wants the vendor
+  // speaker string — resolve it from the already-loaded voices list.
+  const speaker = voices.value.find((v) => v.id === form.value.voice_id)?.voice_id;
+  if (!speaker) {
+    ElMessage.error("找不到所选音色，请重新选择");
+    return;
+  }
+  stopPreview();
+  previewing.value = true;
+  try {
+    const blob = await campaignsApi.ttsPreview(text, speaker);
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    currentAudio = audio;
+    audio.onended = () => {
+      URL.revokeObjectURL(url);
+      if (currentAudio === audio) currentAudio = null;
+    };
+    await audio.play();
+  } catch {
+    ElMessage.error("试听失败，请检查音色凭据或稍后重试");
+  } finally {
+    previewing.value = false;
+  }
+}
+
+onBeforeUnmount(stopPreview);
 
 const defaultRepliesText = ref(form.value.default_replies.join("\n"));
 watch(
@@ -195,6 +252,16 @@ function removeField(idx: number): void {
   color: #909399;
   line-height: 1.6;
   margin-top: 4px;
+}
+.preview-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.preview-hint {
+  font-size: 12px;
+  color: #909399;
 }
 .add-btn {
   margin-top: 8px;

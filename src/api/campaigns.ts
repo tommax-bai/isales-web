@@ -45,4 +45,15 @@ export const campaignsApi = {
     apiClient
       .get<CampaignProgress>(`/campaigns/${id}/progress`)
       .then((r) => r.data),
+  // Greeting 试听: synthesize the current (possibly unsaved) greeting text +
+  // voice on demand and return a browser-playable WAV blob
+  // (campaign-greeting-tts-preview). Stateless — no campaign_id.
+  ttsPreview: (text: string, voiceId: string) =>
+    apiClient
+      .post<Blob>(
+        "/campaigns/tts-preview",
+        { text, voice_id: voiceId },
+        { responseType: "blob" },
+      )
+      .then((r) => r.data),
 };
