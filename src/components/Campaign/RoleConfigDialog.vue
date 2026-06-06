@@ -194,7 +194,7 @@ function onCancel() {
 <style scoped>
 .hint {
   font-size: 12px;
-  color: #909399;
+  color: var(--isales-muted-foreground);
   line-height: 1.6;
 }
 </style>
