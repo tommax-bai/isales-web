@@ -73,20 +73,46 @@
           />
         </template>
       </el-table-column>
-      <el-table-column label="动作" width="320">
+      <el-table-column label="动作" width="420">
         <template #default="{ row }">
           <div class="action-cell">
             <el-select
               :model-value="row.action.type"
               size="small"
-              style="width: 96px"
+              style="width: 110px"
               @change="(t: string) => onActionTypeChange(row, t)"
             >
-              <el-option label="转移" value="transition" />
-              <el-option label="重组" value="restructure" />
+              <el-option label="路由到角色" value="route" />
+              <el-option label="工具" value="tool" />
+              <el-option label="转移(旧)" value="transition" />
+              <el-option label="重组(旧)" value="restructure" />
             </el-select>
-            <template v-if="row.action.type === 'transition'">
-              <el-select v-model="row.action.to" size="small" style="width: 130px">
+            <template v-if="row.action.type === 'route'">
+              <el-select v-model="row.action.to" size="small" style="width: 140px" placeholder="角色/内置">
+                <el-option v-for="p in personaLabels" :key="p" :label="p" :value="p" />
+                <el-option label="收尾(closing)" value="closing" />
+                <el-option label="挽留(recovery)" value="recovery" />
+                <el-option label="重组(restructure)" value="restructure" />
+              </el-select>
+              <el-select v-model="row.action.then_state" size="small" clearable style="width: 130px" placeholder="then_state">
+                <el-option v-for="s in thenStates" :key="s" :label="s" :value="s" />
+              </el-select>
+            </template>
+            <template v-else-if="row.action.type === 'tool'">
+              <el-select v-model="row.action.tool" size="small" style="width: 140px" placeholder="工具 alias">
+                <el-option v-for="a in toolAliases" :key="a" :label="a" :value="a" />
+              </el-select>
+              <el-select v-model="row.action.then_state" size="small" clearable style="width: 130px" placeholder="then_state">
+                <el-option v-for="s in thenStates" :key="s" :label="s" :value="s" />
+              </el-select>
+            </template>
+            <template v-else-if="row.action.type === 'transition'">
+              <el-select
+                v-model="row.action.to"
+                size="small"
+                style="width: 130px"
+                @change="(t: string) => onTransitionTargetChange(row, t)"
+              >
                 <el-option label="目标达成" value="goal_achieved" />
                 <el-option label="转人工" value="transfer" />
                 <el-option label="客户拒绝" value="customer_decline" />
@@ -127,7 +153,16 @@ import type {
   RoleConfigRead,
   RoutingAction,
   RoutingRule,
+  ThenState,
 } from "@/types/campaign";
+
+const thenStates: ThenState[] = [
+  "LISTENING",
+  "WRAPPING_UP",
+  "ACTIVATING",
+  "TRANSFERRING",
+  "END",
+];
 
 const props = defineProps<{
   modelValue: CampaignBase;
@@ -148,6 +183,14 @@ const refereeLabels = computed(() =>
     .filter((rc) => rc.kind === "referee" && rc.label)
     .map((rc) => rc.label as string),
 );
+
+const personaLabels = computed(() =>
+  props.roleConfigs
+    .filter((rc) => rc.kind === "persona" && rc.label)
+    .map((rc) => rc.label as string),
+);
+
+const toolAliases = computed(() => Object.keys(props.modelValue.tools ?? {}));
 
 function addRule(): void {
   const rule: RoutingRule = {
@@ -171,16 +214,35 @@ function move(idx: number, delta: number): void {
 }
 
 function onActionTypeChange(row: RoutingRule, type: string): void {
-  const action: RoutingAction =
-    type === "restructure"
-      ? { type: "restructure", source: "last_reply" }
-      : { type: "transition", to: "goal_achieved", goal_type: "appointment" };
+  let action: RoutingAction;
+  if (type === "route") {
+    action = { type: "route", to: personaLabels.value[0] ?? "closing", then_state: null };
+  } else if (type === "tool") {
+    action = { type: "tool", tool: toolAliases.value[0] ?? "", then_state: null };
+  } else if (type === "restructure") {
+    action = { type: "restructure", source: "last_reply" };
+  } else {
+    action = { type: "transition", to: "goal_achieved", goal_type: "appointment" };
+  }
   row.action = action;
+}
+
+// Clear the stale goal_type when a transition target switches away from
+// goal_achieved — otherwise the payload carries goal_type on a non-goal target
+// and the backend rejects it (422). Set a default when switching TO goal_achieved.
+// (cherry-forward fix from the superseded referee-hangup-action change.)
+function onTransitionTargetChange(row: RoutingRule, to: string): void {
+  if (row.action.type !== "transition") return;
+  if (to === "goal_achieved") {
+    row.action.goal_type = row.action.goal_type || "appointment";
+  } else {
+    row.action.goal_type = null;
+  }
 }
 
 // Exposed for unit tests (the rule-editing logic is the testable surface; the
 // Element Plus selects are awkward to drive in jsdom).
-defineExpose({ addRule, removeRule, move, onActionTypeChange });
+defineExpose({ addRule, removeRule, move, onActionTypeChange, onTransitionTargetChange });
 </script>
 
 <style scoped>

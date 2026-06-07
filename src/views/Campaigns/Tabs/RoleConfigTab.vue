@@ -74,14 +74,26 @@ const dialogInitial = ref<RoleConfigRead | null>(null);
 const editingIndex = ref<number | null>(null);
 
 function kindLabel(kind: RoleKind): string {
-  return { main: "主对话", referee: "裁判", restructure: "重组", extractor: "抽取" }[kind];
+  return {
+    main: "主对话",
+    referee: "裁判",
+    restructure: "重组",
+    extractor: "抽取",
+    persona: "人设",
+  }[kind];
 }
 
 function kindTagType(
   kind: RoleKind,
-): "primary" | "success" | "warning" | "danger" {
+): "primary" | "success" | "warning" | "danger" | "info" {
   return (
-    { main: "primary", referee: "warning", restructure: "danger", extractor: "success" } as const
+    {
+      main: "primary",
+      referee: "warning",
+      restructure: "danger",
+      extractor: "success",
+      persona: "info",
+    } as const
   )[kind];
 }
 

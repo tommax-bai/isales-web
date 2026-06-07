@@ -30,6 +30,9 @@
       <el-tab-pane label="多流路由" name="routing">
         <RoutingRulesTab v-model="form" :role-configs="roleConfigs" />
       </el-tab-pane>
+      <el-tab-pane label="工具" name="tools">
+        <ToolsTab v-model="form" />
+      </el-tab-pane>
       <el-tab-pane label="沉默激活" name="silence">
         <SilenceTab v-model="form" :field-errors="fieldErrors" />
       </el-tab-pane>
@@ -75,6 +78,7 @@ import InterruptionTab from "@/views/Campaigns/Tabs/InterruptionTab.vue";
 import RetryFollowUpTab from "@/views/Campaigns/Tabs/RetryFollowUpTab.vue";
 import RoleConfigTab from "@/views/Campaigns/Tabs/RoleConfigTab.vue";
 import RoutingRulesTab from "@/views/Campaigns/Tabs/RoutingRulesTab.vue";
+import ToolsTab from "@/views/Campaigns/Tabs/ToolsTab.vue";
 import SilenceTab from "@/views/Campaigns/Tabs/SilenceTab.vue";
 import TimeWindowTab from "@/views/Campaigns/Tabs/TimeWindowTab.vue";
 import TransferTab from "@/views/Campaigns/Tabs/TransferTab.vue";

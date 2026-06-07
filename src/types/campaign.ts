@@ -23,7 +23,8 @@ export type ContinuousInterruptionStrategy = "short_reply" | "listen_only";
 
 // engine-multi-referee-and-restructure: N parallel referees + a restructure
 // (re-voice) slot, on top of the dual-LLM main / referee / extractor slots.
-export type RoleKind = "main" | "referee" | "extractor" | "restructure";
+// engine-tools-multidialogue-gating: persona = opt-in speculative dialogue role.
+export type RoleKind = "main" | "referee" | "extractor" | "restructure" | "persona";
 
 export interface RoleConfigRead {
   id: number;
@@ -68,13 +69,57 @@ export interface RestructureAction {
   source: RestructureSource;
 }
 
-export type RoutingAction = TransitionAction | RestructureAction;
+// ── engine-tools-multidialogue-gating: route / tool actions + then_state ──────
+
+// Side-effect the StatusProjector projects after a route fires.
+export type ThenState =
+  | "LISTENING"
+  | "WRAPPING_UP"
+  | "ACTIVATING"
+  | "TRANSFERRING"
+  | "END";
+
+// Route to a persona label or a builtin dialogue route (closing/recovery/restructure).
+export interface RoutePersonaAction {
+  type: "route";
+  to: string;
+  then_state?: ThenState | null;
+}
+
+// Route to a lazy tool (hangup/transfer) by campaign.tools alias.
+export interface RouteToolAction {
+  type: "tool";
+  tool: string;
+  then_state?: ThenState | null;
+}
+
+// Legacy transition/restructure kept (removal-tracked shim); route/tool added.
+export type RoutingAction =
+  | TransitionAction
+  | RestructureAction
+  | RoutePersonaAction
+  | RouteToolAction;
 
 export interface RoutingRule {
   referee: string; // referee role_config.label
   match: string[]; // category values that fire this rule
   action: RoutingAction;
 }
+
+// ── campaign.tools (alias → tool config) ─────────────────────────────────────
+
+export interface HangupToolConfig {
+  type: "hangup";
+  closing_phrase?: string | null;
+  interrupt?: boolean;
+}
+
+// transfer carries no phrase field — single-source campaign.transfer_phrases.
+export interface TransferToolConfig {
+  type: "transfer";
+}
+
+export type ToolConfig = HangupToolConfig | TransferToolConfig;
 
 export type GenerationStatus = "pending" | "running" | "succeeded" | "failed";
 
@@ -134,6 +179,12 @@ export interface CampaignBase {
   routing_rules: RoutingRule[];
   max_continuous_restructure: number;
   primary_referee_label: string | null;
+
+  // gating + multi-persona (engine-tools-multidialogue-gating).
+  tools: Record<string, ToolConfig>;
+  persona_fanout_cap: number; // total speculative routes incl main, [1,3]
+  referee_timeout_ms: number;
+  referee_fail_open_route: string;
 
   max_silence_activations: number;
   silence_threshold_ms: number;
@@ -236,6 +287,10 @@ export const CAMPAIGN_DEFAULTS: CampaignBase = {
   routing_rules: [],
   max_continuous_restructure: 2,
   primary_referee_label: null,
+  tools: {},
+  persona_fanout_cap: 1,
+  referee_timeout_ms: 600,
+  referee_fail_open_route: "main",
   max_silence_activations: 2,
   silence_threshold_ms: 3000,
   silence_phrases: [],

@@ -42,7 +42,12 @@ export interface RoleConfigUpdate {
 
 // ---- prompt_version -------------------------------------------------------
 
-export type PromptScopeType = "main" | "referee" | "extractor" | "restructure";
+export type PromptScopeType =
+  | "main"
+  | "referee"
+  | "extractor"
+  | "restructure"
+  | "persona";
 
 export interface PromptVersion {
   id: number;

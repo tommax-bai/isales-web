@@ -15,6 +15,7 @@
         <el-radio-group v-model="form.kind">
           <el-radio value="main">主对话</el-radio>
           <el-radio value="referee">裁判</el-radio>
+          <el-radio value="persona">人设</el-radio>
           <el-radio value="restructure">重组</el-radio>
           <el-radio value="extractor">抽取</el-radio>
         </el-radio-group>
@@ -22,10 +23,10 @@
       <el-form-item v-if="needsLabel" label="标识 (label)" prop="label">
         <el-input
           v-model="form.label"
-          placeholder="路由规则按此标识引用，如 main_judge / reject"
+          placeholder="路由规则按此标识引用，如 main_judge / warm"
         />
         <div class="hint">
-          裁判 / 重组流必填，同一任务内唯一；路由规则通过 label 绑定裁判。
+          裁判 / 重组 / 人设必填，同一任务内唯一（人设与裁判标识互不冲突）；路由规则通过 label 绑定。人设为投机并行，启用总数（含主对话）上限 3。
         </div>
       </el-form-item>
       <el-form-item label="模型" prop="model">
@@ -116,7 +117,10 @@ const form = reactive<FormState>({
 
 const isEdit = computed(() => Boolean(props.initial));
 const needsLabel = computed(
-  () => form.kind === "referee" || form.kind === "restructure",
+  () =>
+    form.kind === "referee" ||
+    form.kind === "restructure" ||
+    form.kind === "persona",
 );
 
 const rules: FormRules = {
@@ -128,7 +132,7 @@ const rules: FormRules = {
     {
       validator: (_rule, value: string, cb) => {
         if (needsLabel.value && !String(value ?? "").trim()) {
-          cb(new Error("裁判 / 重组流必须填写标识"));
+          cb(new Error("裁判 / 重组 / 人设必须填写标识"));
         } else {
           cb();
         }
