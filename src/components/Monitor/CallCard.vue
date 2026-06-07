@@ -3,7 +3,7 @@
     <div class="row top">
       <span class="cid">#{{ snapshot.call_record_id }}</span>
       <el-tag :type="statusTag(snapshot.status)" size="small">
-        {{ snapshot.status }}
+        {{ statusLabel(snapshot.status) }}
       </el-tag>
     </div>
     <div class="row text-row">
@@ -22,11 +22,29 @@ import type { CallSnapshot } from "@/stores/monitoring";
 
 defineProps<{ snapshot: CallSnapshot }>();
 
+// CallStatus collapsed to 4 values (isales-common): init | in_call |
+// transferring | end. The fine-grained in-call phases (speaking / listening /
+// wrapping_up / …) all fold into in_call.
 function statusTag(status: string): "success" | "warning" | "info" | "danger" | "" {
   if (status === "end") return "info";
-  if (status === "speaking" || status === "wrapping_up") return "success";
+  if (status === "in_call") return "success";
   if (status === "transferring") return "warning";
-  return "warning";
+  return "info";
+}
+
+function statusLabel(status: string): string {
+  switch (status) {
+    case "init":
+      return "准备中";
+    case "in_call":
+      return "通话中";
+    case "transferring":
+      return "转接中";
+    case "end":
+      return "已结束";
+    default:
+      return status;
+  }
 }
 </script>
 

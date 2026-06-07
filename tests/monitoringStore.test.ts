@@ -33,14 +33,14 @@ describe("monitoring store", () => {
     const ev2: EngineEvent = {
       ...base(1),
       type: "status_changed",
-      status: "speaking",
+      status: "in_call",
       reason: null,
     };
     store.handleEvent(ev1);
     store.handleEvent(ev2);
     const snap = store.calls.get(1) as CallSnapshot;
     expect(snap.started_at).toBe("2026-05-08T00:00:01Z");
-    expect(snap.status).toBe("speaking");
+    expect(snap.status).toBe("in_call");
   });
 
   it("routes asr_partial / asr_final correctly", () => {

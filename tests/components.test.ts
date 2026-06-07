@@ -40,12 +40,12 @@ describe("TranscriptTimeline", () => {
 });
 
 describe("CallCard", () => {
-  it("applies the success tag for the speaking status", () => {
+  it("applies the success tag for the in_call status", () => {
     const wrapper = mount(CallCard, {
       props: {
         snapshot: {
           call_record_id: 7,
-          status: "speaking",
+          status: "in_call",
           started_at: "2026-05-08T00:00:00Z",
           ended_at: null,
           hangup_cause: null,
@@ -56,7 +56,7 @@ describe("CallCard", () => {
       },
     });
     expect(wrapper.find(".el-tag--success").exists()).toBe(true);
-    expect(wrapper.text()).toContain("speaking");
+    expect(wrapper.text()).toContain("通话中");
     expect(wrapper.text()).toContain("你好");
   });
 
