@@ -91,6 +91,10 @@ export interface RouteToolAction {
   type: "tool";
   tool: string;
   then_state?: ThenState | null;
+  // Per-rule hangup closing phrase: overrides HangupToolConfig.closing_phrase so
+  // one hangup tool serves many keywords with different farewells. Empty/omitted
+  // → fall back to the tool's phrase; both empty → direct hangup. (§11)
+  closing_phrase?: string | null;
 }
 
 // Legacy transition/restructure kept (removal-tracked shim); route/tool added.

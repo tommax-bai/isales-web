@@ -141,4 +141,31 @@ describe("RoutingRulesTab", () => {
     expect(rule.action).toEqual({ type: "tool", tool: "bye", then_state: null });
     wrapper.unmount();
   });
+
+  it("isHangupTool gates the per-rule closing phrase to hangup tools (§11)", async () => {
+    const form: CampaignBase = {
+      ...CAMPAIGN_DEFAULTS,
+      tools: { bye: { type: "hangup" }, op: { type: "transfer" } },
+      routing_rules: [
+        {
+          referee: "a",
+          match: ["OFFENSIVE"],
+          action: { type: "tool", tool: "bye", closing_phrase: "不打扰了，再见" },
+        },
+      ],
+    };
+    const wrapper = mount(RoutingRulesTab, {
+      props: { modelValue: form, roleConfigs: [_referee("a", 1)] },
+    });
+    await nextTick();
+    const vm = wrapper.vm as unknown as { isHangupTool: (a: string) => boolean };
+    expect(vm.isHangupTool("bye")).toBe(true); // hangup → phrase input shows
+    expect(vm.isHangupTool("op")).toBe(false); // transfer → no phrase
+    expect(vm.isHangupTool("missing")).toBe(false);
+    // the per-rule closing_phrase rides on the tool action
+    expect(
+      (form.routing_rules[0].action as { closing_phrase?: string }).closing_phrase,
+    ).toBe("不打扰了，再见");
+    wrapper.unmount();
+  });
 });

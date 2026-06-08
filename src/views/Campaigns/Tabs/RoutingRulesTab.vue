@@ -126,6 +126,14 @@
               <el-select v-model="row.action.tool" size="small" style="width: 140px" placeholder="工具 alias">
                 <el-option v-for="a in toolAliases" :key="a" :label="a" :value="a" />
               </el-select>
+              <el-input
+                v-if="isHangupTool(row.action.tool)"
+                v-model="row.action.closing_phrase"
+                size="small"
+                clearable
+                style="width: 190px"
+                placeholder="结束语 (留空=直接挂断)"
+              />
               <el-select v-model="row.action.then_state" size="small" clearable style="width: 130px" placeholder="then_state">
                 <el-option v-for="s in thenStates" :key="s" :label="s" :value="s" />
               </el-select>
@@ -216,6 +224,12 @@ const personaLabels = computed(() =>
 
 const toolAliases = computed(() => Object.keys(props.modelValue.tools ?? {}));
 
+// A per-rule closing_phrase only applies to hangup tools (transfer carries no
+// phrase — single-source campaign.transfer_phrases). §11.
+function isHangupTool(alias: string): boolean {
+  return props.modelValue.tools?.[alias]?.type === "hangup";
+}
+
 // fail-open route options: main (the main persona) + configured personas + the
 // builtin closing/recovery/restructure routes — the same target space the engine
 // can resolve referee_fail_open_route to.
@@ -277,7 +291,7 @@ function onTransitionTargetChange(row: RoutingRule, to: string): void {
 
 // Exposed for unit tests (the rule-editing logic is the testable surface; the
 // Element Plus selects are awkward to drive in jsdom).
-defineExpose({ addRule, removeRule, move, onActionTypeChange, onTransitionTargetChange });
+defineExpose({ addRule, removeRule, move, onActionTypeChange, onTransitionTargetChange, isHangupTool });
 </script>
 
 <style scoped>
