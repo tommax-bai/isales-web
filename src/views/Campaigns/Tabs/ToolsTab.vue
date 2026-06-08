@@ -128,12 +128,7 @@ function initRows(): FlatRule[] {
 
 function initReferee(): string {
   const existing = (props.modelValue.routing_rules ?? []).find(isHangupRule);
-  return (
-    existing?.referee ||
-    props.modelValue.primary_referee_label ||
-    refereeLabels.value[0] ||
-    ""
-  );
+  return existing?.referee || refereeLabels.value[0] || "";
 }
 
 const rows = ref<FlatRule[]>(initRows());

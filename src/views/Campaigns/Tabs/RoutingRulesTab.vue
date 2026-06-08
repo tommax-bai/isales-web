@@ -10,24 +10,6 @@
     />
 
     <el-form label-width="160px" class="form">
-      <el-form-item label="主裁判 (低置信兜底)">
-        <el-select
-          v-model="form.primary_referee_label"
-          clearable
-          placeholder="选择一个裁判作为主裁判"
-          style="width: 280px"
-        >
-          <el-option
-            v-for="label in refereeLabels"
-            :key="label"
-            :label="label"
-            :value="label"
-          />
-        </el-select>
-        <div class="hint">
-          主裁判置信度低于阈值且无规则命中时，切重组流复述上一句拖一轮（需配置重组流）。
-        </div>
-      </el-form-item>
       <el-form-item label="连续重组上限">
         <el-input-number v-model="form.max_continuous_restructure" :min="0" />
         <div class="hint">连续重组达到该次数后停止重组、改播兜底语，避免 AI 复读。</div>

@@ -182,7 +182,6 @@ export interface CampaignBase {
   // multi-referee routing (engine-multi-referee-and-restructure).
   routing_rules: RoutingRule[];
   max_continuous_restructure: number;
-  primary_referee_label: string | null;
 
   // gating + multi-persona (engine-tools-multidialogue-gating).
   tools: Record<string, ToolConfig>;
@@ -290,7 +289,6 @@ export const CAMPAIGN_DEFAULTS: CampaignBase = {
   extraction_fields: [],
   routing_rules: [],
   max_continuous_restructure: 2,
-  primary_referee_label: null,
   tools: {},
   persona_fanout_cap: 1,
   referee_timeout_ms: 600,
