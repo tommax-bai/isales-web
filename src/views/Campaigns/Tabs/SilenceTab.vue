@@ -24,6 +24,7 @@
         type="textarea"
         :rows="3"
         placeholder="用分号(；)分隔多句，如：请问您还在吗？；您好，能听到吗？"
+        @change="commitSilencePhrases"
       />
       <div class="hint">沉默达阈值时按顺序播一句尝试唤醒客户；用分号分隔。</div>
     </el-form-item>
@@ -69,13 +70,13 @@ watch(
     if (j !== silencePhrasesText.value) silencePhrasesText.value = j;
   },
 );
-watch(silencePhrasesText, (text) => {
-  // 分号分隔（兼容半角 ; / 全角 ； / 换行旧数据）。
-  form.value.silence_phrases = text
-    .split(/[;；\n]/)
+// 失焦时才解析（输入中不动 array，否则 split+filter+rejoin 会把刚敲的分号吃掉）。
+function commitSilencePhrases(): void {
+  form.value.silence_phrases = silencePhrasesText.value
+    .split(/[;；\n]/) // 兼容半角 ; / 全角 ； / 换行旧数据
     .map((s) => s.trim())
     .filter(Boolean);
-});
+}
 </script>
 
 <style scoped>

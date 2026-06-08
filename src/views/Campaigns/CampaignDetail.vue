@@ -501,17 +501,19 @@ function applyFieldErrors(detail: ApiValidationError[]): void {
 }
 
 function buildPayload(): CampaignNestedUpdate {
-  const payload: CampaignNestedUpdate = { ...form };
+  // 白名单：只发 CampaignBase 字段（CAMPAIGN_DEFAULTS 的 key 集）。这同时排除了
+  //  ① onRefresh 的 Object.assign 灌进 form 的只读字段（id/created_at/updated_at/
+  //     status 等——后端 extra=forbid 会拒）；
+  //  ② role_configs/filler_sets/callback_configs（自包含编辑器各自存，不在
+  //     CampaignBase 里），避免 children-replace 清空。
+  const src = form as unknown as Record<string, unknown>;
+  const payload: Record<string, unknown> = {};
+  for (const k of Object.keys(CAMPAIGN_DEFAULTS)) payload[k] = src[k];
   // 空/纯空白 greeting 归一为 null（走 LLM 开场白路径，campaign-fixed-greeting § 决策 1）。
-  if (typeof payload.greeting === "string" && !payload.greeting.trim()) {
+  if (typeof payload.greeting === "string" && !(payload.greeting as string).trim()) {
     payload.greeting = null;
   }
-  // role_configs / filler_sets / callback_configs 由各自自包含编辑器管理
-  // （PromptTier 卡 / FillerEditor / 回调独立页），omit 以免 children-replace 清空。
-  delete payload.role_configs;
-  delete payload.filler_sets;
-  delete payload.callback_configs;
-  return payload;
+  return payload as CampaignNestedUpdate;
 }
 
 async function onSave() {

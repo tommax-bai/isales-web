@@ -6,6 +6,7 @@
         type="textarea"
         :rows="3"
         placeholder="用分号(；)分隔 — 用户说出这些短语时不计入打断"
+        @change="commitWhitelist"
       />
     </el-form-item>
     <el-form-item
@@ -77,13 +78,13 @@ watch(
     if (j !== whitelistText.value) whitelistText.value = j;
   },
 );
-watch(whitelistText, (text) => {
-  // 分号分隔（兼容半角 ; / 全角 ； / 换行旧数据）。
-  form.value.interruption_whitelist = text
-    .split(/[;；\n]/)
+// 失焦时才解析（输入中不动 array，否则刚敲的分号被吃掉）。
+function commitWhitelist(): void {
+  form.value.interruption_whitelist = whitelistText.value
+    .split(/[;；\n]/) // 兼容半角 ; / 全角 ； / 换行旧数据
     .map((s) => s.trim())
     .filter(Boolean);
-});
+}
 </script>
 
 <style scoped>

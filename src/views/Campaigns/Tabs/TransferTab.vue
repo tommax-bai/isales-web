@@ -11,6 +11,7 @@
         :rows="3"
         placeholder="用分号(；)分隔 — 用户说出即触发转人工"
         :disabled="!form.transfer_keyword_enabled"
+        @change="commitKeywords"
       />
     </el-form-item>
 
@@ -94,13 +95,13 @@ watch(
     if (j !== keywordsText.value) keywordsText.value = j;
   },
 );
-watch(keywordsText, (text) => {
-  // 分号分隔（兼容半角 ; / 全角 ； / 换行旧数据）。
-  form.value.transfer_keywords = text
-    .split(/[;；\n]/)
+// 失焦时才解析（输入中不动 array，否则刚敲的分号被吃掉）。
+function commitKeywords(): void {
+  form.value.transfer_keywords = keywordsText.value
+    .split(/[;；\n]/) // 兼容半角 ; / 全角 ； / 换行旧数据
     .map((s) => s.trim())
     .filter(Boolean);
-});
+}
 
 const phrasesText = ref(form.value.transfer_phrases.join("\n"));
 watch(
