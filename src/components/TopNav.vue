@@ -66,6 +66,7 @@
 import {
   Calendar,
   Key,
+  LayoutDashboard,
   LayoutGrid,
   Megaphone,
   Phone,
@@ -89,6 +90,7 @@ const businessEntries = [
   { name: "leads", label: "线索管理", icon: Users },
   { name: "calls", label: "外呼记录", icon: Phone },
   { name: "appointments", label: "预约管理", icon: Calendar },
+  { name: "dashboard", label: "数据看板", icon: LayoutDashboard },
 ] as const;
 
 const configEntries = [

@@ -7,7 +7,7 @@ import DefaultLayout from "@/components/Layout/DefaultLayout.vue";
  * Spec: capability `web-admin-ui` § "运营面 view 收纳" 第 2 个 scenario.
  */
 const OPERATIONS_REDIRECTS: Record<string, string> = {
-  "/dashboard": "/operations/dashboard",
+  // /dashboard 已升为正式客户路由（one-role IA §1.2），不再重定向到运营区。
   "/devices": "/operations/devices",
   "/sim-cards": "/operations/sim-cards",
   "/holidays": "/operations/holidays",
@@ -70,6 +70,14 @@ const router = createRouter({
           name: "appointments",
           component: () => import("@/views/Appointments/AppointmentList.vue"),
           meta: { title: "预约管理" },
+        },
+        {
+          // 数据看板由运营区升为客户顶级入口（web-admin-one-role-ia-consolidation §1.2）。
+          // 复用 DashboardView 组件；旧 /operations/dashboard 路由在 Batch 3 删除。
+          path: "dashboard",
+          name: "dashboard",
+          component: () => import("@/views/DashboardView.vue"),
+          meta: { title: "数据看板" },
         },
         {
           path: "config/model-providers",

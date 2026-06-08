@@ -61,11 +61,25 @@
             <el-input-number v-model="form.concurrency" :min="1" :max="100" />
           </el-form-item>
           <el-form-item label="音色 ID">
-            <el-input
+            <el-select
               v-model="form.voice_id"
+              filterable
+              allow-create
               clearable
-              placeholder="例如：zh_female_xiaohe_uranus_bigtts（暂不指定则留空）"
-            />
+              default-first-option
+              placeholder="从音色目录选择，或手填 vendor voice id"
+              style="width: 100%"
+            >
+              <el-option
+                v-for="v in voiceModels"
+                :key="v.id"
+                :label="`${v.name}（${v.voice_id}）`"
+                :value="v.voice_id"
+              />
+            </el-select>
+            <div class="cd__hint">
+              从音色目录选择，或手填 vendor voice id（如 zh_female_xiaohe_uranus_bigtts）；留空走默认。
+            </div>
           </el-form-item>
           <el-form-item label="开场白文案">
             <el-input
@@ -221,6 +235,8 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { campaignsApi, ttsPreviewError } from "@/api/campaigns";
+import { voiceApi } from "@/api/voice";
+import type { VoiceModel } from "@/types/voice";
 import FillerEditor from "@/components/Campaign/FillerEditor.vue";
 import PromptTierEditor from "@/components/Campaign/PromptTierEditor.vue";
 import PageHeader from "@/components/Common/PageHeader.vue";
@@ -237,6 +253,7 @@ const campaign = ref<CampaignDetail | null>(null);
 const loading = ref(false);
 const saving = ref(false);
 const toggling = ref(false);
+const voiceModels = ref<VoiceModel[]>([]);
 
 const EMPTY_PROGRESS: CampaignProgress = {
   campaign_id: id,
@@ -329,8 +346,19 @@ async function loadProgress() {
   }
 }
 
+// 音色目录（one-role IA §1.4）—— voice_id 从手填字符串升级为可选目录。
+// 拉取失败不阻塞：el-select allow-create 仍可手填 vendor voice id。
+async function loadVoiceModels() {
+  try {
+    voiceModels.value = await voiceApi.list();
+  } catch {
+    voiceModels.value = [];
+  }
+}
+
 async function onRefresh() {
   loading.value = true;
+  void loadVoiceModels();
   try {
     campaign.value = await campaignsApi.get(id);
     form.name = campaign.value.name;

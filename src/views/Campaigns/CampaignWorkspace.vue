@@ -26,9 +26,20 @@
             <h3 class="camp-card__name">{{ c.name }}</h3>
             <p class="camp-card__sub">并发上限 {{ c.concurrency }}</p>
           </div>
-          <StatusBadge :color="progressOf(c.id).is_active ? 'green' : 'gray'">
-            {{ progressOf(c.id).is_active ? "运行中" : "已停止" }}
-          </StatusBadge>
+          <div class="camp-card__head-right">
+            <StatusBadge :color="progressOf(c.id).is_active ? 'green' : 'gray'">
+              {{ progressOf(c.id).is_active ? "运行中" : "已停止" }}
+            </StatusBadge>
+            <el-button
+              link
+              type="danger"
+              class="camp-card__del"
+              title="删除场景"
+              @click.stop="onDelete(c)"
+            >
+              <Trash2 :size="15" />
+            </el-button>
+          </div>
         </header>
 
         <div class="camp-card__meta">
@@ -72,8 +83,8 @@
 
 <script setup lang="ts">
 import type { FormInstance, FormRules } from "element-plus";
-import { ElMessage } from "element-plus";
-import { ArrowRight, Plus } from "lucide-vue-next";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { ArrowRight, Plus, Trash2 } from "lucide-vue-next";
 import { onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 
@@ -148,6 +159,31 @@ function onOpen(id: number) {
   void router.push({ name: "campaign-detail", params: { id } });
 }
 
+// 删除场景（one-role IA §1.1）—— 客户面唯一删除入口，删 CampaignList 的硬前置。
+async function onDelete(c: CampaignDetail) {
+  try {
+    await ElMessageBox.confirm(
+      `确定删除场景「${c.name}」？此操作不可撤销，将一并移除其角色/路由/时段等配置。`,
+      "删除场景",
+      {
+        type: "warning",
+        confirmButtonText: "删除",
+        cancelButtonText: "取消",
+        confirmButtonClass: "el-button--danger",
+      },
+    );
+  } catch {
+    return; // 用户取消
+  }
+  try {
+    await campaignsApi.remove(c.id);
+    ElMessage.success(`已删除「${c.name}」`);
+    await onRefresh();
+  } catch (err: unknown) {
+    ElMessage.error(err instanceof Error ? err.message : "删除失败");
+  }
+}
+
 async function onCreate() {
   if (!formRef.value) return;
   const valid = await formRef.value.validate().catch(() => false);
@@ -215,6 +251,20 @@ onMounted(onRefresh);
 }
 .camp-card__identity {
   min-width: 0;
+}
+.camp-card__head-right {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--isales-space-2);
+  flex-shrink: 0;
+}
+.camp-card__del {
+  padding: 0;
+  height: auto;
+  color: var(--isales-muted-foreground);
+}
+.camp-card__del:hover {
+  color: var(--isales-status-red-700);
 }
 .camp-card__name {
   font-size: var(--isales-font-size-title-2);
