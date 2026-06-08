@@ -56,14 +56,21 @@
 </template>
 
 <script setup lang="ts">
+import { ElMessage } from "element-plus";
 import { ref } from "vue";
 
 import RoleConfigDialog from "@/components/Campaign/RoleConfigDialog.vue";
 import type { RoleConfigRead, RoleKind } from "@/types/campaign";
 
-const props = defineProps<{
-  modelValue: RoleConfigRead[];
-}>();
+const props = withDefaults(
+  defineProps<{
+    modelValue: RoleConfigRead[];
+    // engine-tools-multidialogue-gating: total speculative routes incl main,
+    // [1,3]. Enabled personas + main MUST NOT exceed it (hard cap below).
+    personaFanoutCap?: number;
+  }>(),
+  { personaFanoutCap: 1 },
+);
 
 const emit = defineEmits<{
   (e: "update:modelValue", v: RoleConfigRead[]): void;
@@ -117,13 +124,31 @@ function onRemove(idx: number): void {
 }
 
 function onDialogSave(value: RoleConfigRead): void {
-  if (editingIndex.value !== null) {
-    const next = [...props.modelValue];
-    next[editingIndex.value] = value;
-    emit("update:modelValue", next);
-  } else {
-    emit("update:modelValue", [...props.modelValue, value]);
+  const next =
+    editingIndex.value !== null
+      ? props.modelValue.map((rc, i) => (i === editingIndex.value ? value : rc))
+      : [...props.modelValue, value];
+
+  // Hard-cap over-cap persona enabling (spec §5.4): main(1) + enabled personas
+  // must not exceed persona_fanout_cap. The vendor bills cancelled speculative
+  // tokens, so this is a block — not a hint. Keep the dialog open on reject so
+  // the operator can disable the switch or raise the cap in 「多流路由」.
+  const enabledPersonas = next.filter(
+    (rc) => rc.kind === "persona" && rc.enabled,
+  ).length;
+  if (
+    value.kind === "persona" &&
+    value.enabled &&
+    1 + enabledPersonas > props.personaFanoutCap
+  ) {
+    ElMessage.error(
+      `启用人设总数（含主对话）不能超过并发上限 ${props.personaFanoutCap}；` +
+        `请先在「多流路由」提高上限，或停用其它人设。`,
+    );
+    return;
   }
+
+  emit("update:modelValue", next);
   dialogVisible.value = false;
 }
 </script>

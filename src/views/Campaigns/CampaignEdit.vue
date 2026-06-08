@@ -25,7 +25,10 @@
         <BasicTab v-model="form" :field-errors="fieldErrors" />
       </el-tab-pane>
       <el-tab-pane label="AI 配置" name="role">
-        <RoleConfigTab v-model="roleConfigs" />
+        <RoleConfigTab
+          v-model="roleConfigs"
+          :persona-fanout-cap="form.persona_fanout_cap"
+        />
       </el-tab-pane>
       <el-tab-pane label="多流路由" name="routing">
         <RoutingRulesTab v-model="form" :role-configs="roleConfigs" />

@@ -94,7 +94,7 @@ function onNew() {
 }
 
 function onEdit(row: CampaignSummary) {
-  void router.push({ name: "campaign-edit", params: { id: row.id } });
+  void router.push({ name: "operations-campaign-edit", params: { id: row.id } });
 }
 
 async function onStart(row: CampaignSummary) {

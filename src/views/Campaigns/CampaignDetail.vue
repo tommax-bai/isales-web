@@ -6,6 +6,10 @@
           <ArrowLeft :size="14" style="margin-right: 4px" />
           返回场景列表
         </el-button>
+        <el-button @click="goAdvanced">
+          <Settings :size="14" style="margin-right: 4px" />
+          高级配置
+        </el-button>
         <el-button
           v-if="!progress.is_active"
           type="primary"
@@ -346,6 +350,12 @@ async function onRefresh() {
 
 function goBack() {
   void router.push({ name: "campaigns" });
+}
+
+// Jump to the full tab editor for the advanced config this simplified
+// customer-facing page omits: 多流路由 / 工具 / 人设 / 开口前门控 / 重组.
+function goAdvanced() {
+  void router.push({ name: "operations-campaign-edit", params: { id } });
 }
 
 function addWindow() {
