@@ -33,8 +33,8 @@
       <el-tab-pane label="多流路由" name="routing">
         <RoutingRulesTab v-model="form" :role-configs="roleConfigs" />
       </el-tab-pane>
-      <el-tab-pane label="工具" name="tools">
-        <ToolsTab v-model="form" />
+      <el-tab-pane label="工具触发" name="tools">
+        <ToolsTab v-model="form" :role-configs="roleConfigs" />
       </el-tab-pane>
       <el-tab-pane label="沉默激活" name="silence">
         <SilenceTab v-model="form" :field-errors="fieldErrors" />

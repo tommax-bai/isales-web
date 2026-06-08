@@ -5,157 +5,187 @@
       :closable="false"
       show-icon
       class="intro"
-      title="工具（挂断 / 转人工）"
-      description="为路由规则的「工具」动作提供可引用的工具。挂断：裁判判定后主动结束本通电话（可选先播一句告别语）。转人工：转接坐席，衔接话术复用「转人工」页的配置，此处不重复填写。"
+      title="工具触发"
+      description="客户说了某类话时（关键词由裁判判定），AI 触发对应工具。挂断：主动结束本通电话；结束语为挂断前说的一句话，留空则直接挂断不播话术。同一种工具可被不同关键词复用、各说不同的结束语。"
     />
 
-    <div class="header">
-      <span class="title">工具列表（alias 唯一）</span>
-      <el-button type="primary" size="small" @click="addTool">+ 新增工具</el-button>
-    </div>
-
     <el-alert
-      v-if="duplicateAliases.length > 0"
-      type="error"
+      v-if="refereeLabels.length === 0"
+      type="warning"
       :closable="false"
       show-icon
-      :title="`alias 重复：${duplicateAliases.join('、')}`"
-      description="每个工具的 alias 必须唯一，否则保存会被后端拒绝 (422 tool_alias_duplicate)。"
+      title="尚无裁判"
+      description="请先在「AI 配置」添加 referee 角色——工具触发需要由裁判输出关键词来匹配。"
       class="intro"
     />
 
-    <el-table v-if="entries.length > 0" :data="entries" border>
-      <el-table-column label="alias" width="180">
+    <el-form v-if="refereeLabels.length > 1" label-width="100px" class="form">
+      <el-form-item label="判定裁判">
+        <el-select v-model="flatReferee" style="width: 240px" @change="rebuild">
+          <el-option v-for="l in refereeLabels" :key="l" :label="l" :value="l" />
+        </el-select>
+        <span class="hint">这些关键词由哪个裁判输出（整表共用）</span>
+      </el-form-item>
+    </el-form>
+
+    <div class="header">
+      <span class="title">工具触发规则</span>
+      <el-button
+        type="primary"
+        size="small"
+        :disabled="refereeLabels.length === 0"
+        @click="addRule"
+      >
+        + 添加规则
+      </el-button>
+    </div>
+
+    <el-table v-if="rows.length > 0" :data="rows" border>
+      <el-table-column label="#" type="index" width="48" />
+      <el-table-column label="关键词 (裁判输出)" width="220">
         <template #default="{ row }">
           <el-input
-            v-model="row.alias"
+            v-model="row.keyword"
             size="small"
-            placeholder="如 bye / agent"
+            placeholder="如 OFFENSIVE / HANGUP"
             @input="rebuild"
           />
         </template>
       </el-table-column>
-      <el-table-column label="类型" width="140">
+      <el-table-column label="处理" width="110">
+        <template #default>
+          <el-tag size="small" type="danger" disable-transitions>挂断</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="结束语 (留空=直接挂断)">
         <template #default="{ row }">
-          <el-select
-            :model-value="row.config.type"
+          <el-input
+            v-model="row.phrase"
             size="small"
-            @change="(t: string) => onTypeChange(row, t)"
-          >
-            <el-option label="挂断" value="hangup" />
-            <el-option label="转人工" value="transfer" />
-          </el-select>
+            clearable
+            placeholder="挂断前说的一句话；留空则直接挂断"
+            @input="rebuild"
+          />
         </template>
       </el-table-column>
-      <el-table-column label="配置">
-        <template #default="{ row }">
-          <div v-if="row.config.type === 'hangup'" class="hangup-cfg">
-            <el-input
-              v-model="row.config.closing_phrase"
-              size="small"
-              placeholder="挂断前话术（可空则立即挂断）"
-              style="width: 280px"
-              @input="rebuild"
-            />
-            <el-checkbox v-model="row.config.interrupt" size="small" @change="rebuild">
-              可打断当前回复
-            </el-checkbox>
-          </div>
-          <span v-else class="hint">衔接话术取自「转人工」页（transfer_phrases），无需在此填写。</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="90" fixed="right">
+      <el-table-column label="操作" width="80" fixed="right">
         <template #default="{ $index }">
-          <el-button link type="danger" @click="removeTool($index)">删除</el-button>
+          <el-button link type="danger" @click="removeRule($index)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
-    <el-empty v-else description="暂无工具" :image-size="64" />
+    <el-empty v-else description="暂无工具触发规则" :image-size="64" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 
-import type { CampaignBase, ToolConfig } from "@/types/campaign";
+import type {
+  CampaignBase,
+  RoleConfigRead,
+  RouteToolAction,
+  RoutingRule,
+} from "@/types/campaign";
 
-interface ToolEntry {
-  alias: string;
-  config: ToolConfig;
+// The single shared hangup tool alias the flat surface auto-manages. Operators
+// never see it — each flat row carries its own per-rule closing_phrase. (§11 /
+// customer-facing 工具触发.)
+const HANGUP_ALIAS = "hangup";
+
+interface FlatRule {
+  keyword: string;
+  phrase: string;
 }
 
 const props = defineProps<{
   modelValue: CampaignBase;
+  roleConfigs: RoleConfigRead[];
 }>();
 
-function toEntries(tools: Record<string, ToolConfig>): ToolEntry[] {
-  return Object.entries(tools ?? {}).map(([alias, config]) => ({
-    alias,
-    // clone so edits don't mutate the source map until rebuild()
-    config: { ...config } as ToolConfig,
-  }));
+const refereeLabels = computed(() =>
+  props.roleConfigs
+    .filter((rc) => rc.kind === "referee" && rc.label)
+    .map((rc) => rc.label as string),
+);
+
+// A rule belongs to this surface iff its action is a tool pointing at a hangup
+// tool. Persona / transition / restructure rules stay in 「多流路由」 untouched.
+function isHangupRule(r: RoutingRule): boolean {
+  if (r.action.type !== "tool") return false;
+  const alias = (r.action as RouteToolAction).tool;
+  return props.modelValue.tools?.[alias]?.type === "hangup";
 }
 
-const entries = ref<ToolEntry[]>(toEntries(props.modelValue.tools));
-
-const duplicateAliases = ref<string[]>([]);
-
-function computeDuplicates(): void {
-  const seen = new Set<string>();
-  const dups = new Set<string>();
-  for (const e of entries.value) {
-    const a = e.alias.trim();
-    if (!a) continue;
-    if (seen.has(a)) dups.add(a);
-    seen.add(a);
-  }
-  duplicateAliases.value = [...dups];
+function initRows(): FlatRule[] {
+  return (props.modelValue.routing_rules ?? [])
+    .filter(isHangupRule)
+    .map((r) => ({
+      keyword: r.match[0] ?? "",
+      phrase: (r.action as RouteToolAction).closing_phrase ?? "",
+    }));
 }
 
-// Rebuild the shared modelValue.tools record IN PLACE (same mutate-by-reference
-// style as RoutingRulesTab) from the editable entries. Skips empty / duplicate
-// aliases; duplicates are surfaced via duplicateAliases for the warning banner.
+function initReferee(): string {
+  const existing = (props.modelValue.routing_rules ?? []).find(isHangupRule);
+  return (
+    existing?.referee ||
+    props.modelValue.primary_referee_label ||
+    refereeLabels.value[0] ||
+    ""
+  );
+}
+
+const rows = ref<FlatRule[]>(initRows());
+const flatReferee = ref<string>(initReferee());
+
+// Rewrite the hangup-rule subset of modelValue.routing_rules from the editable
+// rows IN PLACE (splice, so the array ref other tabs hold stays stable), keeping
+// every non-hangup rule. Ensures the shared hangup tool exists while ≥1 rule.
 function rebuild(): void {
-  const t = props.modelValue.tools;
-  for (const k of Object.keys(t)) delete t[k];
-  const seen = new Set<string>();
-  for (const e of entries.value) {
-    const a = e.alias.trim();
-    if (!a || seen.has(a)) continue;
-    seen.add(a);
-    t[a] = { ...e.config } as ToolConfig;
+  const m = props.modelValue;
+  const kept = (m.routing_rules ?? []).filter((r) => !isHangupRule(r));
+  const fresh: RoutingRule[] = [];
+  for (const row of rows.value) {
+    const kw = row.keyword.trim();
+    if (!kw) continue;
+    fresh.push({
+      referee: flatReferee.value,
+      match: [kw],
+      action: {
+        type: "tool",
+        tool: HANGUP_ALIAS,
+        then_state: "END",
+        closing_phrase: row.phrase.trim() || null,
+      },
+    });
   }
-  computeDuplicates();
+  m.routing_rules.splice(0, m.routing_rules.length, ...kept, ...fresh);
+  if (fresh.length > 0 && m.tools[HANGUP_ALIAS]?.type !== "hangup") {
+    m.tools[HANGUP_ALIAS] = { type: "hangup" };
+  }
 }
 
-function addTool(): void {
-  entries.value.push({
-    alias: "",
-    config: { type: "hangup", closing_phrase: "", interrupt: false },
-  });
+function addRule(): void {
+  rows.value.push({ keyword: "", phrase: "" });
   rebuild();
 }
 
-function removeTool(idx: number): void {
-  entries.value.splice(idx, 1);
+function removeRule(idx: number): void {
+  rows.value.splice(idx, 1);
   rebuild();
 }
 
-function onTypeChange(row: ToolEntry, type: string): void {
-  row.config =
-    type === "transfer"
-      ? { type: "transfer" }
-      : { type: "hangup", closing_phrase: "", interrupt: false };
-  rebuild();
-}
-
-// Exposed for unit tests (the editing logic is the testable surface).
-defineExpose({ entries, addTool, removeTool, onTypeChange, rebuild, duplicateAliases });
+// Exposed for unit tests (the rule-editing logic is the testable surface).
+defineExpose({ rows, flatReferee, addRule, removeRule, rebuild, isHangupRule });
 </script>
 
 <style scoped>
 .intro {
   margin-bottom: 16px;
+}
+.form {
+  margin-bottom: 8px;
 }
 .header {
   display: flex;
@@ -167,13 +197,9 @@ defineExpose({ entries, addTool, removeTool, onTypeChange, rebuild, duplicateAli
   font-size: 14px;
   font-weight: 600;
 }
-.hangup-cfg {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
 .hint {
   font-size: 12px;
   color: var(--isales-muted-foreground);
+  margin-left: 12px;
 }
 </style>
