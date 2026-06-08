@@ -105,14 +105,6 @@ const router = createRouter({
           component: () => import("@/views/Callbacks/CallbackConfigEdit.vue"),
           meta: { title: "回调编辑" },
         },
-        // CampaignEdit 全字段高级编辑：引擎重设计期临时保留（design D6），
-        // 从场景详情「高级配置」进入；待引擎定型后另起 change 折叠重做。
-        {
-          path: "operations/campaigns/:id/edit",
-          name: "operations-campaign-edit",
-          component: () => import("@/views/Campaigns/CampaignEdit.vue"),
-          meta: { title: "高级配置" },
-        },
       ],
     },
     {

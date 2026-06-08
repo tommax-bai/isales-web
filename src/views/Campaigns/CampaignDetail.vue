@@ -6,10 +6,6 @@
           <ArrowLeft :size="14" style="margin-right: 4px" />
           返回场景列表
         </el-button>
-        <el-button @click="goAdvanced">
-          <Settings :size="14" style="margin-right: 4px" />
-          高级配置
-        </el-button>
         <el-button @click="goMonitor">
           <Activity :size="14" style="margin-right: 4px" />
           实时监控
@@ -31,6 +27,15 @@
     </PageHeader>
 
     <template v-if="campaign">
+      <el-alert
+        v-if="errorBanner"
+        :title="errorBanner"
+        type="error"
+        show-icon
+        :closable="false"
+        class="cd__banner"
+      />
+
       <!-- 启停 + 进度概览 -->
       <section class="card">
         <header class="card__head">
@@ -175,8 +180,8 @@
         </article>
       </section>
 
-      <!-- AI 外呼配置（per-campaign）：双 LLM 流式 —— 主对话 / 决策 / 信息抽取。
-           「4-tier / 三层」是旧术语（engine-spec-terminology-purge 已废）。 -->
+      <!-- AI 角色（per-campaign）：双 LLM 门控架构 —— 主对话(main) / 决策(referee) /
+           信息抽取(extractor)。各卡按 campaign-id 独立即时保存。 -->
       <div class="cd__tiers">
         <PromptTierEditor
           :campaign-id="id"
@@ -205,11 +210,85 @@
         <FillerEditor :campaign-id="id" />
       </div>
 
+      <!-- ── 以下为 form-driven 高级配置小节（统一经底部保存条提交）── -->
+
+      <section class="card">
+        <header class="card__head">
+          <Settings :size="16" />
+          <h3 class="card__title">多流路由</h3>
+        </header>
+        <RoutingRulesTab v-model="form" :role-configs="roleConfigs" />
+      </section>
+
+      <section class="card">
+        <header class="card__head">
+          <Settings :size="16" />
+          <h3 class="card__title">工具触发</h3>
+        </header>
+        <ToolsTab v-model="form" :role-configs="roleConfigs" />
+      </section>
+
+      <section class="card">
+        <header class="card__head">
+          <Settings :size="16" />
+          <h3 class="card__title">沉默激活</h3>
+        </header>
+        <SilenceTab v-model="form" :field-errors="fieldErrors" />
+      </section>
+
+      <section class="card">
+        <header class="card__head">
+          <Settings :size="16" />
+          <h3 class="card__title">打断保护</h3>
+        </header>
+        <InterruptionTab v-model="form" :field-errors="fieldErrors" />
+      </section>
+
+      <section class="card">
+        <header class="card__head">
+          <Settings :size="16" />
+          <h3 class="card__title">转人工</h3>
+        </header>
+        <TransferTab v-model="form" :field-errors="fieldErrors" />
+      </section>
+
+      <section class="card">
+        <header class="card__head">
+          <Settings :size="16" />
+          <h3 class="card__title">收尾</h3>
+        </header>
+        <WrapUpTab v-model="form" :field-errors="fieldErrors" />
+      </section>
+
+      <section class="card">
+        <header class="card__head">
+          <Settings :size="16" />
+          <h3 class="card__title">重试 / 跟进</h3>
+        </header>
+        <RetryFollowUpTab v-model="form" :field-errors="fieldErrors" />
+      </section>
+
+      <section class="card">
+        <header class="card__head">
+          <Settings :size="16" />
+          <h3 class="card__title">勿打</h3>
+        </header>
+        <DoNotCallTab v-model="form" />
+      </section>
+
+      <section class="card">
+        <header class="card__head">
+          <Settings :size="16" />
+          <h3 class="card__title">回调</h3>
+        </header>
+        <CallbacksTab :model-value="callbackConfigs" :campaign-id="id" />
+      </section>
+
       <!-- sticky 保存条 -->
       <div class="save-bar">
         <span class="save-bar__hint">
           <Save :size="14" />
-          基本信息与可拨时段的改动需保存后生效。
+          基本信息 / 路由 / 工具 / 沉默 / 转人工 / 收尾 / 调度 等改动需点保存后生效；AI 角色与垫词各自即时保存。
         </span>
         <el-button type="primary" :loading="saving" @click="onSave">
           <Save :size="14" style="margin-right: 4px" />
@@ -246,8 +325,26 @@ import FillerEditor from "@/components/Campaign/FillerEditor.vue";
 import PromptTierEditor from "@/components/Campaign/PromptTierEditor.vue";
 import PageHeader from "@/components/Common/PageHeader.vue";
 import StatusBadge from "@/components/Common/StatusBadge.vue";
+// form-driven 高级配置小节（折叠进单页，原 CampaignEdit 的 tab 组件复用为内联小节）
+import RoutingRulesTab from "@/views/Campaigns/Tabs/RoutingRulesTab.vue";
+import ToolsTab from "@/views/Campaigns/Tabs/ToolsTab.vue";
+import SilenceTab from "@/views/Campaigns/Tabs/SilenceTab.vue";
+import InterruptionTab from "@/views/Campaigns/Tabs/InterruptionTab.vue";
+import TransferTab from "@/views/Campaigns/Tabs/TransferTab.vue";
+import WrapUpTab from "@/views/Campaigns/Tabs/WrapUpTab.vue";
+import RetryFollowUpTab from "@/views/Campaigns/Tabs/RetryFollowUpTab.vue";
+import DoNotCallTab from "@/views/Campaigns/Tabs/DoNotCallTab.vue";
+import CallbacksTab from "@/views/Campaigns/Tabs/CallbacksTab.vue";
 import { leadStatusMeta } from "@/composables/useStatusMeta";
-import type { CampaignDetail, CampaignProgress, TimeWindow, WeekDay } from "@/types/campaign";
+import {
+  CAMPAIGN_DEFAULTS,
+  type CampaignBase,
+  type CampaignDetail,
+  type CampaignNestedUpdate,
+  type CampaignProgress,
+  type RoleConfigRead,
+  type WeekDay,
+} from "@/types/campaign";
 import type { LeadStatus } from "@/types/lead";
 
 const route = useRoute();
@@ -268,23 +365,16 @@ const EMPTY_PROGRESS: CampaignProgress = {
 };
 const progress = ref<CampaignProgress>(EMPTY_PROGRESS);
 
-const form = reactive<{
-  name: string;
-  concurrency: number;
-  voice_id: string | null;
-  greeting: string | null;
-  filler_enabled: boolean;
-  filler_delay_ms: number | null;
-  time_windows: TimeWindow[];
-}>({
-  name: "",
-  concurrency: 1,
-  voice_id: null,
-  greeting: null,
-  filler_enabled: false,
-  filler_delay_ms: null,
-  time_windows: [],
-});
+// 完整 CampaignBase —— 单页承载全部 per-campaign 字段（路由/工具/沉默/打断/
+// 转人工/收尾/重试/勿打 等 form-driven 小节直接 v-model 本对象）。
+const form = reactive<CampaignBase>({ ...CAMPAIGN_DEFAULTS });
+// 只读：供「多流路由 / 工具触发」小节取 referee label。角色本身由 3 个
+// PromptTier 卡按 campaign-id 自存，不经本页 form/buildPayload。
+const roleConfigs = ref<RoleConfigRead[]>([]);
+// 回调列表（只读，CallbacksTab 跳独立页编辑）；不参与 buildPayload。
+const callbackConfigs = ref<unknown[]>([]);
+const errorBanner = ref<string | null>(null);
+const fieldErrors = reactive<Record<string, string>>({});
 
 // ── greeting 试听 (campaign-greeting-tts-preview § 4C) ────────────────────
 const greetingFilled = computed(() => Boolean(form.greeting?.trim()));
@@ -366,13 +456,11 @@ async function onRefresh() {
   void loadVoiceModels();
   try {
     campaign.value = await campaignsApi.get(id);
-    form.name = campaign.value.name;
-    form.concurrency = campaign.value.concurrency;
-    form.voice_id = campaign.value.voice_id;
-    form.greeting = campaign.value.greeting;
-    form.filler_enabled = campaign.value.filler_enabled;
-    form.filler_delay_ms = campaign.value.filler_delay_ms;
+    // 全量灌入完整 CampaignBase；time_windows 深拷贝避免改动 campaign ref。
+    Object.assign(form, campaign.value);
     form.time_windows = campaign.value.time_windows.map((w) => ({ ...w, days: [...w.days] }));
+    roleConfigs.value = campaign.value.role_configs ?? [];
+    callbackConfigs.value = campaign.value.callback_configs ?? [];
     await loadProgress();
   } catch (err: unknown) {
     ElMessage.error(err instanceof Error ? err.message : "加载场景失败");
@@ -385,14 +473,7 @@ function goBack() {
   void router.push({ name: "campaigns" });
 }
 
-// Jump to the full tab editor for the advanced config this simplified
-// customer-facing page omits: 多流路由 / 工具 / 人设 / 开口前门控 / 重组.
-function goAdvanced() {
-  void router.push({ name: "operations-campaign-edit", params: { id } });
-}
-
-// 实时监控就近入口（one-role IA §2.3）—— 监控需 campaign_id，从场景详情进，
-// 替代原运营区那个 campaign_id 占位入口。
+// 实时监控就近入口（one-role IA §2.3）—— 监控需 campaign_id，从场景详情进入。
 function goMonitor() {
   void router.push({ name: "monitor", params: { campaign_id: id } });
 }
@@ -405,22 +486,53 @@ function removeWindow(i: number) {
   form.time_windows.splice(i, 1);
 }
 
+interface ApiValidationError {
+  loc: (string | number)[];
+  msg: string;
+}
+
+function applyFieldErrors(detail: ApiValidationError[]): void {
+  Object.keys(fieldErrors).forEach((k) => delete fieldErrors[k]);
+  for (const item of detail) {
+    // FastAPI 422 detail loc 形如 ["body", "field"] 或 ["body","field",idx]，取第二段。
+    const path = item.loc.slice(1).join(".");
+    if (path) fieldErrors[path] = item.msg;
+  }
+}
+
+function buildPayload(): CampaignNestedUpdate {
+  const payload: CampaignNestedUpdate = { ...form };
+  // 空/纯空白 greeting 归一为 null（走 LLM 开场白路径，campaign-fixed-greeting § 决策 1）。
+  if (typeof payload.greeting === "string" && !payload.greeting.trim()) {
+    payload.greeting = null;
+  }
+  // role_configs / filler_sets / callback_configs 由各自自包含编辑器管理
+  // （PromptTier 卡 / FillerEditor / 回调独立页），omit 以免 children-replace 清空。
+  delete payload.role_configs;
+  delete payload.filler_sets;
+  delete payload.callback_configs;
+  return payload;
+}
+
 async function onSave() {
   saving.value = true;
+  errorBanner.value = null;
   try {
-    await campaignsApi.update(id, {
-      name: form.name,
-      concurrency: form.concurrency,
-      voice_id: form.voice_id?.trim() || null,
-      greeting: form.greeting?.trim() || null,
-      filler_enabled: form.filler_enabled,
-      filler_delay_ms: form.filler_delay_ms,
-      time_windows: form.time_windows,
-    });
+    await campaignsApi.update(id, buildPayload());
     ElMessage.success("已保存");
     void onRefresh();
   } catch (err: unknown) {
-    ElMessage.error(err instanceof Error ? err.message : "保存失败");
+    type AxiosLikeError = {
+      response?: { status?: number; data?: { detail?: ApiValidationError[] } };
+    };
+    const error = err as AxiosLikeError;
+    if (error?.response?.status === 422 && Array.isArray(error.response.data?.detail)) {
+      applyFieldErrors(error.response.data.detail);
+      errorBanner.value = "存在字段校验错误，请检查标红字段";
+      ElMessage.error("字段校验错误");
+    } else {
+      ElMessage.error(err instanceof Error ? err.message : "保存失败");
+    }
   } finally {
     saving.value = false;
   }
@@ -453,6 +565,10 @@ async function onStop() {
 }
 
 onMounted(onRefresh);
+
+// Exposed for unit tests (buildPayload's omit-children contract is the testable
+// surface; the api calls are mocked in tests).
+defineExpose({ form, roleConfigs, callbackConfigs, buildPayload, onSave, fieldErrors });
 </script>
 
 <style scoped>

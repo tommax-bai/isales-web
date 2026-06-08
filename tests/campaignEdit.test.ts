@@ -67,7 +67,7 @@ describe("RoleConfigDialog", () => {
           id: 7,
           campaign_id: 3,
           kind: "referee",
-          label: "main_judge",
+          label: "main_referee",
           model: "gpt-4o-mini",
           current_prompt_version_id: 42,
           temperature: 0.3,

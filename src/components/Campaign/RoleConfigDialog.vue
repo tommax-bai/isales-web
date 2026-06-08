@@ -23,7 +23,7 @@
       <el-form-item v-if="needsLabel" label="标识 (label)" prop="label">
         <el-input
           v-model="form.label"
-          placeholder="路由规则按此标识引用，如 main_judge / warm"
+          placeholder="路由规则按此标识引用，如 main_referee / warm"
         />
         <div class="hint">
           裁判 / 重组 / 人设必填，同一任务内唯一（人设与裁判标识互不冲突）；路由规则通过 label 绑定。人设为投机并行，启用总数（含主对话）上限 3。
