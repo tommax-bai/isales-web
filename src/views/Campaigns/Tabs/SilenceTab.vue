@@ -23,8 +23,9 @@
         v-model="silencePhrasesText"
         type="textarea"
         :rows="3"
-        placeholder="每行一句"
+        placeholder="用分号(；)分隔多句，如：请问您还在吗？；您好，能听到吗？"
       />
+      <div class="hint">沉默达阈值时按顺序播一句尝试唤醒客户；用分号分隔。</div>
     </el-form-item>
     <el-form-item label="挂断兜底语">
       <el-input
@@ -60,17 +61,18 @@ const form = computed({
   set: (v) => emit("update:modelValue", v),
 });
 
-const silencePhrasesText = ref(form.value.silence_phrases.join("\n"));
+const silencePhrasesText = ref(form.value.silence_phrases.join("；"));
 watch(
   () => form.value.silence_phrases,
   (next) => {
-    const j = next.join("\n");
+    const j = next.join("；");
     if (j !== silencePhrasesText.value) silencePhrasesText.value = j;
   },
 );
 watch(silencePhrasesText, (text) => {
+  // 分号分隔（兼容半角 ; / 全角 ； / 换行旧数据）。
   form.value.silence_phrases = text
-    .split("\n")
+    .split(/[;；\n]/)
     .map((s) => s.trim())
     .filter(Boolean);
 });

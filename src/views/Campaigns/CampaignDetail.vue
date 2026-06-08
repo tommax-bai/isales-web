@@ -528,8 +528,14 @@ async function onSave() {
     const error = err as AxiosLikeError;
     if (error?.response?.status === 422 && Array.isArray(error.response.data?.detail)) {
       applyFieldErrors(error.response.data.detail);
-      errorBanner.value = "存在字段校验错误，请检查标红字段";
-      ElMessage.error("字段校验错误");
+      // 列出具体失败字段 + 原因——nested 字段（如 routing_rules）/ 基本信息无
+      // 行内标红，banner 兜底显示，避免"提示了却看不出哪错"。
+      const lines = error.response.data.detail.map((d) => {
+        const path = d.loc.slice(1).join(".");
+        return path ? `${path}：${d.msg}` : d.msg;
+      });
+      errorBanner.value = `保存失败 — 字段校验错误：${lines.join("；")}`;
+      ElMessage.error("字段校验错误，详见顶部红条");
     } else {
       ElMessage.error(err instanceof Error ? err.message : "保存失败");
     }

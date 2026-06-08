@@ -5,7 +5,7 @@
         v-model="whitelistText"
         type="textarea"
         :rows="3"
-        placeholder="每行一个短语 — 用户说出这些时不计入打断"
+        placeholder="用分号(；)分隔 — 用户说出这些短语时不计入打断"
       />
     </el-form-item>
     <el-form-item
@@ -69,17 +69,18 @@ const form = computed({
   set: (v) => emit("update:modelValue", v),
 });
 
-const whitelistText = ref(form.value.interruption_whitelist.join("\n"));
+const whitelistText = ref(form.value.interruption_whitelist.join("；"));
 watch(
   () => form.value.interruption_whitelist,
   (next) => {
-    const j = next.join("\n");
+    const j = next.join("；");
     if (j !== whitelistText.value) whitelistText.value = j;
   },
 );
 watch(whitelistText, (text) => {
+  // 分号分隔（兼容半角 ; / 全角 ； / 换行旧数据）。
   form.value.interruption_whitelist = text
-    .split("\n")
+    .split(/[;；\n]/)
     .map((s) => s.trim())
     .filter(Boolean);
 });

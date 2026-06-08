@@ -9,7 +9,7 @@
         v-model="keywordsText"
         type="textarea"
         :rows="3"
-        placeholder="每行一个 — 用户说出即触发转人工"
+        placeholder="用分号(；)分隔 — 用户说出即触发转人工"
         :disabled="!form.transfer_keyword_enabled"
       />
     </el-form-item>
@@ -86,17 +86,18 @@ const form = computed({
   set: (v) => emit("update:modelValue", v),
 });
 
-const keywordsText = ref(form.value.transfer_keywords.join("\n"));
+const keywordsText = ref(form.value.transfer_keywords.join("；"));
 watch(
   () => form.value.transfer_keywords,
   (next) => {
-    const j = next.join("\n");
+    const j = next.join("；");
     if (j !== keywordsText.value) keywordsText.value = j;
   },
 );
 watch(keywordsText, (text) => {
+  // 分号分隔（兼容半角 ; / 全角 ； / 换行旧数据）。
   form.value.transfer_keywords = text
-    .split("\n")
+    .split(/[;；\n]/)
     .map((s) => s.trim())
     .filter(Boolean);
 });
