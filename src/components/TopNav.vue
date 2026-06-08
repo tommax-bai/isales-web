@@ -105,14 +105,13 @@ const configEntries = [
   { name: "config-model-providers", label: "模型厂商", icon: Key },
 ] as const;
 
-// 更多/设置 折叠区 —— 低频但后端已实装的 view（one-role IA §2）。
+// 更多/设置 折叠区 —— 低频但后端已实装的 view（one-role IA §2/§3）。
 // 通话监控需 campaign_id，改由场景详情就近进入，不放这里。
-// 路由名暂用 operations-* （clean path 在 §3 重命名）。
 const moreEntries = [
-  { name: "operations-handoff-tasks", label: "转人工任务", icon: Headset },
-  { name: "operations-holidays", label: "节假日", icon: CalendarOff },
-  { name: "operations-devices", label: "设备在线", icon: HardDrive },
-  { name: "operations-voice-models", label: "音色目录", icon: Music },
+  { name: "handoff-tasks", label: "转人工任务", icon: Headset },
+  { name: "holidays", label: "节假日", icon: CalendarOff },
+  { name: "devices", label: "设备在线", icon: HardDrive },
+  { name: "voice-models", label: "音色目录", icon: Music },
 ] as const;
 
 function isActive(name: string): boolean {

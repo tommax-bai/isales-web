@@ -393,7 +393,7 @@ function goAdvanced() {
 // 实时监控就近入口（one-role IA §2.3）—— 监控需 campaign_id，从场景详情进，
 // 替代原运营区那个 campaign_id 占位入口。
 function goMonitor() {
-  void router.push({ name: "operations-monitor", params: { campaign_id: id } });
+  void router.push({ name: "monitor", params: { campaign_id: id } });
 }
 
 function addWindow() {

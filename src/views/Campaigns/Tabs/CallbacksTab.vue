@@ -63,14 +63,14 @@ const rows = computed<CallbackRow[]>(
 
 function onAddNew(): void {
   void router.push({
-    name: "operations-callback-config-edit",
+    name: "callback-config-edit",
     params: { id: "new" },
     query: { campaign_id: String(props.campaignId) },
   });
 }
 
 function onEditExisting(row: CallbackRow): void {
-  void router.push({ name: "operations-callback-config-edit", params: { id: row.id } });
+  void router.push({ name: "callback-config-edit", params: { id: row.id } });
 }
 </script>
 

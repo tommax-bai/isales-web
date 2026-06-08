@@ -2,24 +2,6 @@ import { createRouter, createWebHistory, type RouteLocationNormalized } from "vu
 
 import DefaultLayout from "@/components/Layout/DefaultLayout.vue";
 
-/**
- * 旧顶级路径 → /operations 下的新路径，beforeEach 中做客户端 301 等价重定向。
- * Spec: capability `web-admin-ui` § "运营面 view 收纳" 第 2 个 scenario.
- */
-const OPERATIONS_REDIRECTS: Record<string, string> = {
-  // /dashboard 已升为正式客户路由（one-role IA §1.2），不再重定向到运营区。
-  "/devices": "/operations/devices",
-  "/sim-cards": "/operations/sim-cards",
-  "/holidays": "/operations/holidays",
-  "/callback-configs": "/operations/callback-configs",
-  "/callback-logs": "/operations/callback-logs",
-  "/handoff-tasks": "/operations/handoff-tasks",
-  "/voice-models": "/operations/voice-models",
-  // 模型厂商页位于客户面 /config/model-providers (顶部圆按钮入口)，
-  // 但用户可能猜成 /operations/model-providers — 做一次性重定向兼容。
-  "/operations/model-providers": "/config/model-providers",
-};
-
 const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -86,84 +68,50 @@ const router = createRouter({
           meta: { title: "模型厂商" },
         },
 
-        // ---- /operations/* 9 个运营 view（view 文件不动） ---------------
+        // ---- 低频/折叠区 view（one-role IA §3：运营区解散，移到干净路径）-----
         {
-          path: "operations",
-          name: "operations-index",
-          component: () => import("@/views/Operations/OperationsIndex.vue"),
-          meta: { title: "运营管理" },
-        },
-        {
-          path: "operations/dashboard",
-          name: "operations-dashboard",
-          component: () => import("@/views/DashboardView.vue"),
-          meta: { title: "数据看板" },
-        },
-        {
-          path: "operations/campaigns",
-          name: "operations-campaigns",
-          component: () => import("@/views/Campaigns/CampaignList.vue"),
-          meta: { title: "任务管理" },
-        },
-        {
-          path: "operations/campaigns/:id/edit",
-          name: "operations-campaign-edit",
-          component: () => import("@/views/Campaigns/CampaignEdit.vue"),
-          meta: { title: "编辑任务" },
-        },
-        {
-          path: "operations/monitor/:campaign_id",
-          name: "operations-monitor",
+          path: "monitor/:campaign_id",
+          name: "monitor",
           component: () => import("@/views/Monitor/MonitorView.vue"),
           meta: { title: "通话监控" },
         },
         {
-          path: "operations/callback-configs",
-          name: "operations-callback-configs",
-          component: () => import("@/views/Callbacks/CallbackConfigList.vue"),
-          meta: { title: "回调配置" },
-        },
-        {
-          path: "operations/callback-configs/:id",
-          name: "operations-callback-config-edit",
-          component: () => import("@/views/Callbacks/CallbackConfigEdit.vue"),
-          meta: { title: "回调编辑" },
-        },
-        {
-          path: "operations/callback-logs",
-          name: "operations-callback-logs",
-          component: () => import("@/views/Callbacks/CallbackLogList.vue"),
-          meta: { title: "回调记录" },
-        },
-        {
-          path: "operations/handoff-tasks",
-          name: "operations-handoff-tasks",
+          path: "handoff-tasks",
+          name: "handoff-tasks",
           component: () => import("@/views/HandoffTasks/HandoffTaskList.vue"),
           meta: { title: "转人工任务" },
         },
         {
-          path: "operations/holidays",
-          name: "operations-holidays",
+          path: "holidays",
+          name: "holidays",
           component: () => import("@/views/Holidays/HolidayList.vue"),
           meta: { title: "节假日" },
         },
         {
-          path: "operations/devices",
-          name: "operations-devices",
+          path: "devices",
+          name: "devices",
           component: () => import("@/views/Devices/DeviceList.vue"),
-          meta: { title: "设备管理" },
+          meta: { title: "设备在线" },
         },
         {
-          path: "operations/sim-cards",
-          name: "operations-sim-cards",
-          component: () => import("@/views/SimCards/SimCardList.vue"),
-          meta: { title: "SIM 卡" },
-        },
-        {
-          path: "operations/voice-models",
-          name: "operations-voice-models",
+          path: "voice-models",
+          name: "voice-models",
           component: () => import("@/views/VoiceModels/VoiceModelList.vue"),
-          meta: { title: "音色管理" },
+          meta: { title: "音色目录" },
+        },
+        {
+          path: "callback-configs/:id",
+          name: "callback-config-edit",
+          component: () => import("@/views/Callbacks/CallbackConfigEdit.vue"),
+          meta: { title: "回调编辑" },
+        },
+        // CampaignEdit 全字段高级编辑：引擎重设计期临时保留（design D6），
+        // 从场景详情「高级配置」进入；待引擎定型后另起 change 折叠重做。
+        {
+          path: "operations/campaigns/:id/edit",
+          name: "operations-campaign-edit",
+          component: () => import("@/views/Campaigns/CampaignEdit.vue"),
+          meta: { title: "高级配置" },
         },
       ],
     },
@@ -177,26 +125,8 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to: RouteLocationNormalized) => {
-  // 1. 旧顶级运营路径 → /operations/* 客户端永久重定向。
-  //    仅当请求路径正好是某个旧路径或其下子段（如 /campaigns/123/edit）才转发，
-  //    /monitor/:campaign_id 之类带参数的旧路径同样命中。
-  for (const [oldPrefix, newPrefix] of Object.entries(OPERATIONS_REDIRECTS)) {
-    if (to.path === oldPrefix || to.path.startsWith(`${oldPrefix}/`)) {
-      const rewritten = to.path.replace(oldPrefix, newPrefix);
-      return { path: rewritten, query: to.query, hash: to.hash, replace: true };
-    }
-  }
-  // 旧 monitor 路径单独处理（带 campaign_id）
-  if (to.path.startsWith("/monitor/")) {
-    return {
-      path: to.path.replace(/^\/monitor\//, "/operations/monitor/"),
-      query: to.query,
-      hash: to.hash,
-      replace: true,
-    };
-  }
-
-  // 2. 鉴权守卫（不变）
+  // 鉴权守卫。运营区已解散（one-role IA §3）：旧 /operations/* 链接不再重定向，
+  // 直接走 not-found；保留的低频 view 已在干净路径（/handoff-tasks 等）。
   const { useAuthStore } = await import("@/stores/auth");
   const auth = useAuthStore();
   const isPublic = to.meta.public === true;
