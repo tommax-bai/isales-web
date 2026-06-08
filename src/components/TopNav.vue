@@ -49,9 +49,14 @@
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item disabled>{{ username }}</el-dropdown-item>
-              <el-dropdown-item @click="goOperations">
-                <LayoutGrid :size="14" style="margin-right: 6px" />
-                运营管理
+              <el-dropdown-item divided disabled>更多 / 设置</el-dropdown-item>
+              <el-dropdown-item
+                v-for="m in moreEntries"
+                :key="m.name"
+                @click="goTo(m.name)"
+              >
+                <component :is="m.icon" :size="14" style="margin-right: 6px" />
+                {{ m.label }}
               </el-dropdown-item>
               <el-dropdown-item divided @click="onLogout">注销</el-dropdown-item>
             </el-dropdown-menu>
@@ -65,10 +70,13 @@
 <script setup lang="ts">
 import {
   Calendar,
+  CalendarOff,
+  HardDrive,
+  Headset,
   Key,
   LayoutDashboard,
-  LayoutGrid,
   Megaphone,
+  Music,
   Phone,
   PhoneCall,
   UserCircle,
@@ -97,6 +105,16 @@ const configEntries = [
   { name: "config-model-providers", label: "模型厂商", icon: Key },
 ] as const;
 
+// 更多/设置 折叠区 —— 低频但后端已实装的 view（one-role IA §2）。
+// 通话监控需 campaign_id，改由场景详情就近进入，不放这里。
+// 路由名暂用 operations-* （clean path 在 §3 重命名）。
+const moreEntries = [
+  { name: "operations-handoff-tasks", label: "转人工任务", icon: Headset },
+  { name: "operations-holidays", label: "节假日", icon: CalendarOff },
+  { name: "operations-devices", label: "设备在线", icon: HardDrive },
+  { name: "operations-voice-models", label: "音色目录", icon: Music },
+] as const;
+
 function isActive(name: string): boolean {
   const current = route.name?.toString() ?? "";
   if (current === name) return true;
@@ -106,8 +124,8 @@ function isActive(name: string): boolean {
   return false;
 }
 
-function goOperations() {
-  void router.push({ name: "operations-index" });
+function goTo(name: string) {
+  void router.push({ name });
 }
 
 function onLogout() {

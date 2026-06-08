@@ -27,7 +27,8 @@ import { useRouter } from "vue-router";
 
 const router = useRouter();
 function onBack() {
-  void router.push({ name: "operations-callback-configs" });
+  // 回上一页（多由 campaign 回调 tab 进入）；独立的回调配置列表页在 one-role IA §3 删除。
+  router.back();
 }
 </script>
 

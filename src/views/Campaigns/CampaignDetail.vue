@@ -10,6 +10,10 @@
           <Settings :size="14" style="margin-right: 4px" />
           高级配置
         </el-button>
+        <el-button @click="goMonitor">
+          <Activity :size="14" style="margin-right: 4px" />
+          实时监控
+        </el-button>
         <el-button
           v-if="!progress.is_active"
           type="primary"
@@ -384,6 +388,12 @@ function goBack() {
 // customer-facing page omits: 多流路由 / 工具 / 人设 / 开口前门控 / 重组.
 function goAdvanced() {
   void router.push({ name: "operations-campaign-edit", params: { id } });
+}
+
+// 实时监控就近入口（one-role IA §2.3）—— 监控需 campaign_id，从场景详情进，
+// 替代原运营区那个 campaign_id 占位入口。
+function goMonitor() {
+  void router.push({ name: "operations-monitor", params: { campaign_id: id } });
 }
 
 function addWindow() {
