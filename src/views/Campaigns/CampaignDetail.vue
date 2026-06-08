@@ -175,7 +175,8 @@
         </article>
       </section>
 
-      <!-- AI 外呼策略：4-tier 并行配置（per-campaign） -->
+      <!-- AI 外呼配置（per-campaign）：双 LLM 流式 —— 主对话 / 决策 / 信息抽取。
+           「4-tier / 三层」是旧术语（engine-spec-terminology-purge 已废）。 -->
       <div class="cd__tiers">
         <PromptTierEditor
           :campaign-id="id"
