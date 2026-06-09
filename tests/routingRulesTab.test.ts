@@ -38,7 +38,7 @@ describe("RoutingRulesTab", () => {
       props: { modelValue: form, roleConfigs: [] },
     });
     await nextTick();
-    expect(wrapper.text()).toContain("尚无裁判");
+    expect(wrapper.text()).toContain("尚无旁路监管");
     wrapper.unmount();
   });
 

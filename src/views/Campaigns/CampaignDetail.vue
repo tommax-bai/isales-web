@@ -210,22 +210,22 @@
         <ToolsTab v-model="form" :role-configs="roleConfigs" />
       </section>
 
-      <!-- 决策 (referee) — 即时保存 -->
+      <!-- 旁路监管 (referee) — 即时保存 -->
       <PromptTierEditor
         :campaign-id="id"
         kind="referee"
-        title="决策 (referee)"
-        description="旁路小模型，判定 goal_achieved / transfer / customer_decline"
+        title="旁路监管 (referee)"
+        description="与主对话并行的旁路小模型，实时给每轮对话打类别标签，由「多流路由」据此决策动作"
         :icon="Target"
         badge-color="purple"
       />
 
-      <!-- 信息抽取 (extractor) — 即时保存 -->
+      <!-- 话后信息提取 (extractor) — 即时保存 -->
       <PromptTierEditor
         :campaign-id="id"
         kind="extractor"
-        title="信息抽取 (extractor)"
-        description="通话结束后异步抽取客户字段（customer_name / intent / …）"
+        title="话后信息提取 (extractor)"
+        description="通话结束后异步从对话全文提取结构化字段（customer_name / intent / …）"
         :icon="Sparkles"
         badge-color="green"
       />

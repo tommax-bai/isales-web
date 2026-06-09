@@ -52,7 +52,7 @@
         </div>
 
         <div class="section">
-          <h5>referee 决策</h5>
+          <h5>旁路监管 (referee)</h5>
           <div class="row metrics">
             <el-tag :type="decisionTag(turn.referee_decision)" size="small">
               {{ turn.referee_decision ?? "–" }}
