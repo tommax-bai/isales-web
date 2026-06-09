@@ -633,6 +633,8 @@ defineExpose({ form, roleConfigs, callbackConfigs, buildPayload, onSave, fieldEr
      nowrap), so the content column needs the card's full width to fit them. */
 }
 .cd__preview-row {
+  /* el-form-item__content 是 flex-wrap：占满整行以落到输入框「下面」而非右侧。 */
+  flex-basis: 100%;
   display: flex;
   align-items: center;
   gap: var(--isales-space-2);
@@ -645,6 +647,8 @@ defineExpose({ form, roleConfigs, callbackConfigs, buildPayload, onSave, fieldEr
   line-height: 1.6;
 }
 .cd__hint {
+  /* 占满整行：说明落到输入框「下面」而非被 flex 挤到右侧。 */
+  flex-basis: 100%;
   margin-top: 4px;
   white-space: nowrap;
 }
