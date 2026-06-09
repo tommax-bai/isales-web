@@ -180,37 +180,19 @@
         </article>
       </section>
 
-      <!-- AI 角色（per-campaign）：双 LLM 门控架构 —— 主对话(main) / 决策(referee) /
-           信息抽取(extractor)。各卡按 campaign-id 独立即时保存。 -->
-      <div class="cd__tiers">
-        <PromptTierEditor
-          :campaign-id="id"
-          kind="main"
-          title="主对话 (main)"
-          description="纯文本流式回复，直喂 TTS。不要输出 JSON / markdown / emoji"
-          :icon="MessageSquare"
-          badge-color="blue"
-        />
-        <PromptTierEditor
-          :campaign-id="id"
-          kind="referee"
-          title="决策 (referee)"
-          description="旁路小模型，判定 goal_achieved / transfer / customer_decline"
-          :icon="Target"
-          badge-color="purple"
-        />
-        <PromptTierEditor
-          :campaign-id="id"
-          kind="extractor"
-          title="信息抽取 (extractor)"
-          description="通话结束后异步抽取客户字段（customer_name / intent / …）"
-          :icon="Sparkles"
-          badge-color="green"
-        />
-        <FillerEditor :campaign-id="id" />
-      </div>
+      <!-- 模块顺序按外呼运行链路排布。AI 角色卡（main/referee/extractor）与垫词各自
+           按 campaign-id 即时保存；其余 form-driven 小节统一经底部保存条提交。原
+           .cd__tiers 分组已拆散，三角色卡随链路嵌在 form-driven 小节之间。 -->
 
-      <!-- ── 以下为 form-driven 高级配置小节（统一经底部保存条提交）── -->
+      <!-- 主对话 (main) — 即时保存 -->
+      <PromptTierEditor
+        :campaign-id="id"
+        kind="main"
+        title="主对话 (main)"
+        description="纯文本流式回复，直喂 TTS。不要输出 JSON / markdown / emoji"
+        :icon="MessageSquare"
+        badge-color="blue"
+      />
 
       <section class="card">
         <header class="card__head">
@@ -228,13 +210,28 @@
         <ToolsTab v-model="form" :role-configs="roleConfigs" />
       </section>
 
-      <section class="card">
-        <header class="card__head">
-          <Settings :size="16" />
-          <h3 class="card__title">沉默激活</h3>
-        </header>
-        <SilenceTab v-model="form" :field-errors="fieldErrors" />
-      </section>
+      <!-- 决策 (referee) — 即时保存 -->
+      <PromptTierEditor
+        :campaign-id="id"
+        kind="referee"
+        title="决策 (referee)"
+        description="旁路小模型，判定 goal_achieved / transfer / customer_decline"
+        :icon="Target"
+        badge-color="purple"
+      />
+
+      <!-- 信息抽取 (extractor) — 即时保存 -->
+      <PromptTierEditor
+        :campaign-id="id"
+        kind="extractor"
+        title="信息抽取 (extractor)"
+        description="通话结束后异步抽取客户字段（customer_name / intent / …）"
+        :icon="Sparkles"
+        badge-color="green"
+      />
+
+      <!-- 垫词 (filler) — 即时保存 -->
+      <FillerEditor :campaign-id="id" />
 
       <section class="card">
         <header class="card__head">
@@ -242,6 +239,14 @@
           <h3 class="card__title">打断保护</h3>
         </header>
         <InterruptionTab v-model="form" :field-errors="fieldErrors" />
+      </section>
+
+      <section class="card">
+        <header class="card__head">
+          <Settings :size="16" />
+          <h3 class="card__title">沉默激活</h3>
+        </header>
+        <SilenceTab v-model="form" :field-errors="fieldErrors" />
       </section>
 
       <section class="card">
@@ -585,11 +590,6 @@ defineExpose({ form, roleConfigs, callbackConfigs, buildPayload, onSave, fieldEr
   flex-direction: column;
   gap: var(--isales-space-4);
   padding-bottom: 80px;
-}
-.cd__tiers {
-  display: flex;
-  flex-direction: column;
-  gap: var(--isales-space-4);
 }
 .card {
   background: var(--isales-card);
