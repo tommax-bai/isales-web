@@ -69,14 +69,11 @@
 
 <script setup lang="ts">
 import {
-  Calendar,
   CalendarOff,
   HardDrive,
-  Headset,
   Key,
   LayoutDashboard,
   Megaphone,
-  Music,
   Phone,
   PhoneCall,
   UserCircle,
@@ -97,7 +94,6 @@ const businessEntries = [
   { name: "campaigns", label: "场景", icon: Megaphone },
   { name: "leads", label: "线索管理", icon: Users },
   { name: "calls", label: "外呼记录", icon: Phone },
-  { name: "appointments", label: "预约管理", icon: Calendar },
   { name: "dashboard", label: "数据看板", icon: LayoutDashboard },
 ] as const;
 
@@ -108,10 +104,8 @@ const configEntries = [
 // 更多/设置 折叠区 —— 低频但后端已实装的 view（one-role IA §2/§3）。
 // 通话监控需 campaign_id，改由场景详情就近进入，不放这里。
 const moreEntries = [
-  { name: "handoff-tasks", label: "转人工任务", icon: Headset },
   { name: "holidays", label: "节假日", icon: CalendarOff },
   { name: "devices", label: "设备在线", icon: HardDrive },
-  { name: "voice-models", label: "音色目录", icon: Music },
 ] as const;
 
 function isActive(name: string): boolean {

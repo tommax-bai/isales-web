@@ -48,12 +48,6 @@ const router = createRouter({
           meta: { title: "通话详情" },
         },
         {
-          path: "appointments",
-          name: "appointments",
-          component: () => import("@/views/Appointments/AppointmentList.vue"),
-          meta: { title: "预约管理" },
-        },
-        {
           // 数据看板由运营区升为客户顶级入口（web-admin-one-role-ia-consolidation §1.2）。
           // 复用 DashboardView 组件；旧 /operations/dashboard 路由在 Batch 3 删除。
           path: "dashboard",
@@ -76,12 +70,6 @@ const router = createRouter({
           meta: { title: "通话监控" },
         },
         {
-          path: "handoff-tasks",
-          name: "handoff-tasks",
-          component: () => import("@/views/HandoffTasks/HandoffTaskList.vue"),
-          meta: { title: "转人工任务" },
-        },
-        {
           path: "holidays",
           name: "holidays",
           component: () => import("@/views/Holidays/HolidayList.vue"),
@@ -92,12 +80,6 @@ const router = createRouter({
           name: "devices",
           component: () => import("@/views/Devices/DeviceList.vue"),
           meta: { title: "设备在线" },
-        },
-        {
-          path: "voice-models",
-          name: "voice-models",
-          component: () => import("@/views/VoiceModels/VoiceModelList.vue"),
-          meta: { title: "音色目录" },
         },
         {
           path: "callback-configs/:id",

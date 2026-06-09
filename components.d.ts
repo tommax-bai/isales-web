@@ -7,10 +7,8 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    AppointmentCard: typeof import('./src/components/Appointment/AppointmentCard.vue')['default']
     CallCard: typeof import('./src/components/Monitor/CallCard.vue')['default']
     CodeEditor: typeof import('./src/components/Common/CodeEditor.vue')['default']
-    CreateAppointmentDialog: typeof import('./src/components/Calls/CreateAppointmentDialog.vue')['default']
     DefaultLayout: typeof import('./src/components/Layout/DefaultLayout.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']
     ElButton: typeof import('element-plus/es')['ElButton']
@@ -73,7 +71,6 @@ declare module 'vue' {
     TopNav: typeof import('./src/components/TopNav.vue')['default']
     TranscriptBubbles: typeof import('./src/components/Calls/TranscriptBubbles.vue')['default']
     TranscriptTimeline: typeof import('./src/components/Calls/TranscriptTimeline.vue')['default']
-    VoicePreview: typeof import('./src/components/VoiceModel/VoicePreview.vue')['default']
   }
   export interface ComponentCustomProperties {
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']

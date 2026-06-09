@@ -1,20 +1,11 @@
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { nextTick } from "vue";
 
 import RoleConfigDialog from "@/components/Campaign/RoleConfigDialog.vue";
 import BasicTab from "@/views/Campaigns/Tabs/BasicTab.vue";
 import { CAMPAIGN_DEFAULTS, type CampaignBase } from "@/types/campaign";
-
-// jsdom can't actually hit the dev server; silence the voice list call
-// BasicTab fires onMounted so error stderr stays clean.
-vi.mock("@/api/voice", () => ({
-  voiceApi: {
-    list: () => Promise.resolve([]),
-    preview: () => Promise.resolve(new ArrayBuffer(0)),
-  },
-}));
 
 describe("BasicTab", () => {
   beforeEach(() => {

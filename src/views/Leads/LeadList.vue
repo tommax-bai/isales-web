@@ -165,8 +165,6 @@ const statuses: { value: LeadStatus; label: string }[] = [
   { value: "calling", label: "呼叫中" },
   { value: "retrying", label: "重试中" },
   { value: "following_up", label: "跟进中" },
-  { value: "appointed", label: "已预约" },
-  { value: "visited", label: "已到店" },
   { value: "transferred", label: "已转人工" },
   { value: "completed", label: "已完成" },
   { value: "failed", label: "失败" },

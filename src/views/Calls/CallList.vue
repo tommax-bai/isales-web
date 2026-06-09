@@ -59,15 +59,6 @@
             <MessageSquare :size="16" style="margin-right: 6px" />
             {{ expanded[call.id] ? "收起对话" : "查看通话内容" }}
           </el-button>
-          <el-button
-            v-if="canCreateAppointment(call)"
-            size="large"
-            type="primary"
-            @click="onCreateAppointment(call)"
-          >
-            <Calendar :size="16" style="margin-right: 6px" />
-            创建预约
-          </el-button>
           <IconButton label="查看详情" @click="onDetail(call)">
             <ArrowRight :size="16" />
           </IconButton>
@@ -100,24 +91,16 @@
         @size-change="onRefresh"
       />
     </div>
-
-    <CreateAppointmentDialog
-      v-model="appointmentDialogVisible"
-      :lead-id="appointmentLeadId"
-      :call-id="appointmentCallId"
-      @created="onAppointmentCreated"
-    />
   </section>
 </template>
 
 <script setup lang="ts">
 import { ElMessage } from "element-plus";
-import { ArrowRight, Calendar, MessageSquare } from "lucide-vue-next";
+import { ArrowRight, MessageSquare } from "lucide-vue-next";
 import { onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 
 import { callsApi } from "@/api/calls";
-import CreateAppointmentDialog from "@/components/Calls/CreateAppointmentDialog.vue";
 import GoalAchievementPanel from "@/components/Calls/GoalAchievementPanel.vue";
 import TranscriptBubbles from "@/components/Calls/TranscriptBubbles.vue";
 import IconButton from "@/components/Common/IconButton.vue";
@@ -134,10 +117,6 @@ const total = ref<number | null>(null);
 const page = ref(1);
 const pageSize = ref(20);
 const loading = ref(false);
-
-const appointmentDialogVisible = ref(false);
-const appointmentLeadId = ref<number | null>(null);
-const appointmentCallId = ref<number | null>(null);
 
 async function onRefresh() {
   loading.value = true;
@@ -204,21 +183,6 @@ function callResultLabel(status: string): string {
     completed: "已完成",
   };
   return map[status] ?? status;
-}
-
-function canCreateAppointment(call: CallRecordSummary): boolean {
-  return ["answered", "interested"].includes(call.status);
-}
-
-function onCreateAppointment(call: CallRecordSummary) {
-  appointmentLeadId.value = call.lead_id;
-  appointmentCallId.value = call.id;
-  appointmentDialogVisible.value = true;
-}
-
-function onAppointmentCreated() {
-  ElMessage.success("已创建预约，可前往预约管理查看");
-  void onRefresh();
 }
 
 function onDetail(call: CallRecordSummary) {

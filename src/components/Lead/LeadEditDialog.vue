@@ -110,8 +110,6 @@ const statuses: LeadStatus[] = [
   "calling",
   "retrying",
   "following_up",
-  "appointed",
-  "visited",
   "transferred",
   "completed",
   "failed",

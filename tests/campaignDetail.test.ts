@@ -11,10 +11,6 @@ vi.mock("vue-router", async (importOriginal) => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
-vi.mock("@/api/voice", () => ({
-  voiceApi: { list: () => Promise.resolve([]) },
-}));
-
 // Hoisted so the (hoisted) vi.mock factory can reference them. A detail carrying
 // the self-managed children (role_configs / callback_configs) that buildPayload
 // MUST strip so a scalar save doesn't children-replace-clobber them. filler_phrases
