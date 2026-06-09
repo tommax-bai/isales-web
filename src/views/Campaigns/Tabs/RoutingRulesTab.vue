@@ -1,13 +1,9 @@
 <template>
   <div class="routing-tab">
-    <el-alert
-      type="info"
-      :closable="false"
-      show-icon
-      class="intro"
-      title="门控路由"
-      description="旁路监管（在「AI 配置」里增删）并行判定，引擎按下方规则顺序逐条匹配，第一条命中即生效；都不命中则继续对话。规则动作可转移状态或切到重组流（口语化重说上一句 / 补上被打断内容）。"
-    />
+    <p class="tab-intro">
+      <Info :size="13" class="tab-intro__icon" />
+      <span>旁路监管（在「AI 配置」里增删）并行判定，引擎按下方规则顺序逐条匹配，第一条命中即生效；都不命中则继续对话。规则动作可转移状态或切到重组流（口语化重说上一句 / 补上被打断内容）。</span>
+    </p>
 
     <el-form label-width="160px" class="form">
       <el-form-item label="连续重组上限">
@@ -160,6 +156,7 @@
 </template>
 
 <script setup lang="ts">
+import { Info } from "lucide-vue-next";
 import { computed } from "vue";
 
 import type {
@@ -277,8 +274,20 @@ defineExpose({ addRule, removeRule, move, onActionTypeChange, onTransitionTarget
 </script>
 
 <style scoped>
-.intro {
+/* 配置说明：无背景、小号灰字、小号 info 图标（card_title 已给名字，不再重复）。 */
+.tab-intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
   margin-bottom: 16px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--isales-muted-foreground);
+}
+.tab-intro__icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--isales-status-blue-700);
 }
 .header {
   display: flex;

@@ -1,13 +1,9 @@
 <template>
   <div class="tools-tab">
-    <el-alert
-      type="info"
-      :closable="false"
-      show-icon
-      class="intro"
-      title="工具触发"
-      description="客户说了某类话时（关键词由旁路监管判定），AI 触发对应工具。挂断：主动结束本通电话；结束语为挂断前说的一句话，留空则直接挂断不播话术。同一种工具可被不同关键词复用、各说不同的结束语。"
-    />
+    <p class="tab-intro">
+      <Info :size="13" class="tab-intro__icon" />
+      <span>客户说了某类话时（关键词由旁路监管判定），AI 触发对应工具。挂断：主动结束本通电话；结束语为挂断前说的一句话，留空则直接挂断不播话术。同一种工具可被不同关键词复用、各说不同的结束语。</span>
+    </p>
 
     <el-alert
       v-if="refereeLabels.length === 0"
@@ -79,6 +75,7 @@
 </template>
 
 <script setup lang="ts">
+import { Info } from "lucide-vue-next";
 import { computed, ref } from "vue";
 
 import type {
@@ -176,8 +173,24 @@ defineExpose({ rows, flatReferee, addRule, removeRule, rebuild, isHangupRule });
 </script>
 
 <style scoped>
+/* 空状态 warning（尚无旁路监管）仍用 el-alert，保留其间距。 */
 .intro {
   margin-bottom: 16px;
+}
+/* 配置说明：无背景、小号灰字、小号 info 图标（card_title 已给名字，不再重复）。 */
+.tab-intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--isales-muted-foreground);
+}
+.tab-intro__icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--isales-status-blue-700);
 }
 .form {
   margin-bottom: 8px;
