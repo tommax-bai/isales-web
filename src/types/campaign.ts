@@ -110,6 +110,104 @@ export interface RoutingRule {
   action: RoutingAction;
 }
 
+// ── campaign.interruption_rules (composable barge-in rule tree) ──────────────
+// Mirrors isales-common schemas.jsonb.InterruptionRule (engine-interruption-
+// rule-tree). NULL on the campaign → engine synthesizes a default tree from the
+// legacy interruption_whitelist + interruption_min_duration_ms.
+export interface KeywordRule {
+  type: "keyword";
+  values: string[];
+  match: "contains" | "exact";
+}
+export interface LengthRule {
+  type: "length";
+  value: number; // min rune count (>=1)
+}
+export interface DurationRule {
+  type: "duration";
+  value_ms: number; // elapsed since user speech_start (>=0)
+}
+export interface RegexRule {
+  type: "regex";
+  pattern: string; // <=128 chars (api-enforced)
+}
+export interface SplitByDelimiterRule {
+  type: "split_by_delimiter";
+  delimiters: string[];
+}
+export interface NoneRule {
+  type: "none";
+}
+export interface AndRule {
+  type: "and";
+  rules: InterruptionRule[];
+}
+export interface OrRule {
+  type: "or";
+  rules: InterruptionRule[];
+}
+export interface NotRule {
+  type: "not";
+  rule: InterruptionRule;
+}
+export type InterruptionRule =
+  | KeywordRule
+  | LengthRule
+  | DurationRule
+  | RegexRule
+  | SplitByDelimiterRule
+  | NoneRule
+  | AndRule
+  | OrRule
+  | NotRule;
+
+export type InterruptionRuleType = InterruptionRule["type"];
+
+// Factory: a fresh, legal default node for a given type (used when the editor
+// adds a node or switches a node's type — design D2).
+export function makeRule(type: InterruptionRuleType): InterruptionRule {
+  switch (type) {
+    case "keyword":
+      return { type: "keyword", values: [], match: "contains" };
+    case "length":
+      return { type: "length", value: 2 };
+    case "duration":
+      return { type: "duration", value_ms: 400 };
+    case "regex":
+      return { type: "regex", pattern: "" };
+    case "split_by_delimiter":
+      return { type: "split_by_delimiter", delimiters: [] };
+    case "none":
+      return { type: "none" };
+    case "and":
+      return { type: "and", rules: [{ type: "length", value: 2 }] };
+    case "or":
+      return { type: "or", rules: [{ type: "length", value: 2 }] };
+    case "not":
+      return { type: "not", rule: { type: "keyword", values: [], match: "exact" } };
+  }
+}
+
+// Synthesize the same default tree the engine builds from legacy columns
+// (isales_engine.realtime.interruption_rules.default_rule): AND( NOT
+// keyword(exact, whitelist), length(>=2), duration(>=min_duration_ms) ). The
+// keyword leaf is omitted when the whitelist is empty.
+export function defaultTreeFrom(
+  whitelist: string[],
+  minDurationMs: number,
+): InterruptionRule {
+  const rules: InterruptionRule[] = [];
+  if (whitelist.length > 0) {
+    rules.push({
+      type: "not",
+      rule: { type: "keyword", values: [...whitelist], match: "exact" },
+    });
+  }
+  rules.push({ type: "length", value: 2 });
+  rules.push({ type: "duration", value_ms: minDurationMs });
+  return { type: "and", rules };
+}
+
 // ── campaign.tools (alias → tool config) ─────────────────────────────────────
 
 export interface HangupToolConfig {
@@ -216,6 +314,9 @@ export interface CampaignBase {
   // default 600ms: only play a filler when first audio is slow.
   filler_delay_ms: number | null;
 
+  // Composable barge-in rule tree; NULL → engine synthesizes from the legacy
+  // whitelist + min_duration below (engine-interruption-rule-tree).
+  interruption_rules: InterruptionRule | null;
   interruption_whitelist: string[];
   interruption_min_duration_ms: number;
   max_continuous_interruptions: number;
@@ -305,6 +406,7 @@ export const CAMPAIGN_DEFAULTS: CampaignBase = {
   greeting: null,
   filler_enabled: false,
   filler_delay_ms: null,
+  interruption_rules: null,
   interruption_whitelist: [],
   interruption_min_duration_ms: 400,
   max_continuous_interruptions: 3,

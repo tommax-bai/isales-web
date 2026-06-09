@@ -49,13 +49,42 @@
         <el-radio value="listen_only">仅倾听</el-radio>
       </el-radio-group>
     </el-form-item>
+
+    <el-divider content-position="left">高级：可组合打断规则</el-divider>
+    <el-form-item label="打断规则" :error="fieldErrors?.interruption_rules">
+      <template v-if="form.interruption_rules == null">
+        <div class="hint">
+          当前使用<strong>默认规则</strong>：由上面的「打断白名单」+「最小打断时长」自动合成
+          —— 白名单内精确命中不打断 · 其余话字数≥2 且 时长达标才算打断。
+          需要更复杂的「且/或/非 + 正则/分隔符」组合时，再展开编辑。
+        </div>
+        <el-button size="small" @click="seedDefault">基于默认规则开始编辑</el-button>
+      </template>
+      <template v-else>
+        <div class="tree-wrap">
+          <InterruptionRuleEditor
+            :model-value="form.interruption_rules"
+            @update:model-value="onRulesUpdate"
+          />
+        </div>
+        <el-button size="small" text type="danger" @click="restoreDefault">
+          恢复为默认（清空规则树，回到白名单+时长合成）
+        </el-button>
+      </template>
+    </el-form-item>
   </el-form>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 
-import type { CampaignBase } from "@/types/campaign";
+import {
+  type CampaignBase,
+  type InterruptionRule,
+  defaultTreeFrom,
+} from "@/types/campaign";
+
+import InterruptionRuleEditor from "./InterruptionRuleEditor.vue";
 
 const props = defineProps<{
   modelValue: CampaignBase;
@@ -85,6 +114,23 @@ function commitWhitelist(): void {
     .map((s) => s.trim())
     .filter(Boolean);
 }
+
+// 可组合规则树（advanced）。NULL = 引擎从白名单+时长合成默认树。
+function seedDefault(): void {
+  form.value.interruption_rules = defaultTreeFrom(
+    form.value.interruption_whitelist,
+    form.value.interruption_min_duration_ms,
+  );
+}
+function restoreDefault(): void {
+  form.value.interruption_rules = null;
+}
+function onRulesUpdate(v: InterruptionRule): void {
+  form.value.interruption_rules = v;
+}
+
+// Exposed for unit tests.
+defineExpose({ seedDefault, restoreDefault, onRulesUpdate });
 </script>
 
 <style scoped>
@@ -95,5 +141,9 @@ function commitWhitelist(): void {
   font-size: 12px;
   color: #909399;
   line-height: 1.6;
+}
+.tree-wrap {
+  width: 100%;
+  margin-bottom: 8px;
 }
 </style>
