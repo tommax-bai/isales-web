@@ -5,7 +5,8 @@
       <div class="filler__title-block">
         <h3 class="filler__title">垫词</h3>
         <p class="filler__desc">
-          客户语音空档期播放的过渡语料。本场景下配多句即可，触发时随机播一句、同一通电话不重复。
+          <Info :size="13" class="tab-intro__icon" />
+          <span>客户语音空档期播放的过渡语料。本场景下配多句即可，触发时随机播一句、同一通电话不重复。</span>
         </p>
       </div>
     </header>
@@ -66,7 +67,7 @@
 
 <script setup lang="ts">
 import { ElMessage } from "element-plus";
-import { Plus, Save, Settings, Trash2 } from "lucide-vue-next";
+import { Info, Plus, Save, Settings, Trash2 } from "lucide-vue-next";
 import { computed, onMounted, ref, watch } from "vue";
 
 import { fillersApi } from "@/api/fillers";
@@ -169,7 +170,8 @@ onMounted(() => void load());
 .filler__head {
   display: flex;
   align-items: center;
-  gap: var(--isales-space-3);
+  /* 与 .card__head 同 gap，使标题与 form 卡对齐。 */
+  gap: var(--isales-space-2);
 }
 /* 裸齿轮（无彩色底框），与 form 小节的 <Settings> 一致；左色条仍为黄色。 */
 .filler__icon-plain {
@@ -185,6 +187,9 @@ onMounted(() => void load());
   line-height: var(--isales-line-height-tight);
 }
 .filler__desc {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
   margin-top: 2px;
   font-size: var(--isales-font-size-xs);
   color: var(--isales-muted-foreground);

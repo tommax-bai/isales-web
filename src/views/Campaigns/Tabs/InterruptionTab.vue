@@ -1,4 +1,8 @@
 <template>
+  <p class="tab-intro">
+    <Info :size="13" class="tab-intro__icon" />
+    <span>判定客户插话是否算「打断」：白名单短语、最小时长、连续打断策略，避免误打断或被反复打断。</span>
+  </p>
   <el-form label-width="220px" class="form">
     <el-form-item label="打断白名单">
       <ExpandingTextarea
@@ -62,6 +66,7 @@
 </template>
 
 <script setup lang="ts">
+import { Info } from "lucide-vue-next";
 import { computed, ref, watch } from "vue";
 
 import {

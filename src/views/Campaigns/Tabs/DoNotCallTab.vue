@@ -1,4 +1,8 @@
 <template>
+  <p class="tab-intro">
+    <Info :size="13" class="tab-intro__icon" />
+    <span>命中勿打条件的客户后续不再外呼：关键词命中 / LLM 判定。</span>
+  </p>
   <el-form label-width="200px" class="form">
     <el-form-item label="勿打关键词">
       <ExpandingTextarea
@@ -21,6 +25,7 @@
 </template>
 
 <script setup lang="ts">
+import { Info } from "lucide-vue-next";
 import { computed, ref, watch } from "vue";
 
 import type { CampaignBase } from "@/types/campaign";

@@ -1,0 +1,21 @@
+/* Shared utility classes (non-token). Imported once in main.ts.
+   Kept deliberately small — only cross-component patterns live here. */
+
+/* Panel intro annotation: a subtle gray hint line rendered under a card title —
+   small muted text + small gray info glyph, no background. Used by the config
+   panels (门控路由 / 工具触发 / 回调 / 用户断句判定 / …) so every panel header
+   reads the same. */
+.tab-intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--isales-muted-foreground);
+}
+.tab-intro__icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--isales-muted-foreground);
+}

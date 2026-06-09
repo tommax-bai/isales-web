@@ -1,4 +1,8 @@
 <template>
+  <p class="tab-intro">
+    <Info :size="13" class="tab-intro__icon" />
+    <span>达成目标后如何自然收尾：最多再聊几轮、最长多少秒，以及收尾结束语。</span>
+  </p>
   <el-form label-width="200px" class="form">
     <el-form-item
       label="收尾最大轮数"
@@ -20,6 +24,7 @@
 </template>
 
 <script setup lang="ts">
+import { Info } from "lucide-vue-next";
 import { computed, ref, watch } from "vue";
 
 import type { CampaignBase } from "@/types/campaign";

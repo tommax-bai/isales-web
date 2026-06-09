@@ -83,19 +83,5 @@ function onEditExisting(row: CallbackRow): void {
   font-size: 14px;
   font-weight: 600;
 }
-/* 配置说明：无背景、小号灰字、小号 info 图标。 */
-.tab-intro {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  margin-bottom: 12px;
-  font-size: 12px;
-  line-height: 1.6;
-  color: var(--isales-muted-foreground);
-}
-.tab-intro__icon {
-  flex-shrink: 0;
-  margin-top: 2px;
-  color: var(--isales-status-blue-700);
-}
+/* .tab-intro / .tab-intro__icon 提为全局 utility（src/styles/utilities.css）。 */
 </style>

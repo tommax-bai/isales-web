@@ -1,4 +1,8 @@
 <template>
+  <p class="tab-intro">
+    <Info :size="13" class="tab-intro__icon" />
+    <span>用户长时间不出声时 AI 主动开口唤醒；多次唤醒无效则按兜底语挂断或转人工。</span>
+  </p>
   <el-form label-width="200px" class="form">
     <el-form-item
       label="沉默阈值 (ms)"
@@ -46,6 +50,7 @@
 </template>
 
 <script setup lang="ts">
+import { Info } from "lucide-vue-next";
 import { computed, ref, watch } from "vue";
 
 import type { CampaignBase } from "@/types/campaign";

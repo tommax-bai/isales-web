@@ -1,4 +1,8 @@
 <template>
+  <p class="tab-intro">
+    <Info :size="13" class="tab-intro__icon" />
+    <span>未接通线索的重拨与跟进节奏：重试间隔序列、最大次数、跟进间隔与上限。</span>
+  </p>
   <el-form label-width="200px" class="form">
     <el-form-item label="重试间隔 (秒)">
       <el-input
@@ -21,6 +25,7 @@
 </template>
 
 <script setup lang="ts">
+import { Info } from "lucide-vue-next";
 import { computed, ref, watch } from "vue";
 
 import type { CampaignBase } from "@/types/campaign";

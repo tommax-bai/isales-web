@@ -1,4 +1,8 @@
 <template>
+  <p class="tab-intro">
+    <Info :size="13" class="tab-intro__icon" />
+    <span>满足条件时把通话转接人工坐席：关键词 / 意图分 / 对话轮数 / LLM 判定，可多路并存。</span>
+  </p>
   <el-form label-width="220px" class="form">
     <h4 class="section">关键词触发</h4>
     <el-form-item label="启用">
@@ -69,6 +73,7 @@
 </template>
 
 <script setup lang="ts">
+import { Info } from "lucide-vue-next";
 import { computed, ref, watch } from "vue";
 
 import type { CampaignBase } from "@/types/campaign";

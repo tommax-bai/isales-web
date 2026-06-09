@@ -7,7 +7,10 @@
       </span>
       <div class="tier__title-block">
         <h3 class="tier__title">{{ title }}</h3>
-        <p v-if="description" class="tier__desc">{{ description }}</p>
+        <p v-if="description" class="tier__desc">
+          <Info :size="13" class="tab-intro__icon" />
+          <span>{{ description }}</span>
+        </p>
       </div>
       <template v-if="!singleton">
         <StatusBadge :color="badgeColor">{{ rows.length }} 条</StatusBadge>
@@ -100,7 +103,7 @@
 
 <script setup lang="ts">
 import { ElMessage } from "element-plus";
-import { Plus, Save, Trash2 } from "lucide-vue-next";
+import { Info, Plus, Save, Trash2 } from "lucide-vue-next";
 import { computed, onMounted, ref, watch, type Component } from "vue";
 
 import { promptVersionsApi } from "@/api/promptVersions";
@@ -323,7 +326,8 @@ onMounted(() => void load());
 .tier__head {
   display: flex;
   align-items: center;
-  gap: var(--isales-space-3);
+  /* 与 .card__head 同 gap，使 plain-icon 卡（referee/extractor）标题与 form 卡对齐。 */
+  gap: var(--isales-space-2);
 }
 .tier__icon {
   width: 36px;
@@ -348,6 +352,9 @@ onMounted(() => void load());
   line-height: var(--isales-line-height-tight);
 }
 .tier__desc {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
   margin-top: 2px;
   font-size: var(--isales-font-size-xs);
   color: var(--isales-muted-foreground);

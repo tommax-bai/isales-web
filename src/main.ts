@@ -1,6 +1,7 @@
 import "@/styles/design-tokens.css";
 import "element-plus/dist/index.css";
 import "@/assets/reset.css";
+import "@/styles/utilities.css";
 
 import { createPinia } from "pinia";
 import piniaPersistedState from "pinia-plugin-persistedstate";
