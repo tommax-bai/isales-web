@@ -107,7 +107,7 @@ describe("CampaignDetail (single-page scene config)", () => {
     const { wrapper } = await mountDetail();
     const text = wrapper.text();
     for (const title of [
-      "多流路由", "工具触发", "沉默激活", "打断保护",
+      "门控路由", "工具触发", "沉默激活", "打断保护",
       "转人工", "收尾", "重试 / 跟进", "勿打", "回调",
     ]) {
       expect(text).toContain(title);

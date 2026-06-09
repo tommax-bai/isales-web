@@ -110,7 +110,7 @@ const refereeLabels = computed(() =>
 );
 
 // A rule belongs to this surface iff its action is a tool pointing at a hangup
-// tool. Persona / transition / restructure rules stay in 「多流路由」 untouched.
+// tool. Persona / transition / restructure rules stay in 「门控路由」 untouched.
 function isHangupRule(r: RoutingRule): boolean {
   if (r.action.type !== "tool") return false;
   const alias = (r.action as RouteToolAction).tool;

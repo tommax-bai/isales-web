@@ -197,7 +197,7 @@
       <section class="card">
         <header class="card__head">
           <Settings :size="16" />
-          <h3 class="card__title">多流路由</h3>
+          <h3 class="card__title">门控路由</h3>
         </header>
         <RoutingRulesTab v-model="form" :role-configs="roleConfigs" />
       </section>
@@ -215,7 +215,7 @@
         :campaign-id="id"
         kind="referee"
         title="旁路监管 (referee)"
-        description="与主对话并行的旁路小模型，实时给每轮对话打类别标签，由「多流路由」据此决策动作"
+        description="与主对话并行的旁路小模型，实时给每轮对话打类别标签，由「门控路由」据此决策动作"
         :icon="Target"
         badge-color="purple"
       />
@@ -373,7 +373,7 @@ const progress = ref<CampaignProgress>(EMPTY_PROGRESS);
 // 完整 CampaignBase —— 单页承载全部 per-campaign 字段（路由/工具/沉默/打断/
 // 转人工/收尾/重试/勿打 等 form-driven 小节直接 v-model 本对象）。
 const form = reactive<CampaignBase>({ ...CAMPAIGN_DEFAULTS });
-// 只读：供「多流路由 / 工具触发」小节取 referee label。角色本身由 3 个
+// 只读：供「门控路由 / 工具触发」小节取 referee label。角色本身由 3 个
 // PromptTier 卡按 campaign-id 自存，不经本页 form/buildPayload。
 const roleConfigs = ref<RoleConfigRead[]>([]);
 // 回调列表（只读，CallbacksTab 跳独立页编辑）；不参与 buildPayload。
