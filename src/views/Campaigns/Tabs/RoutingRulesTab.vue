@@ -2,7 +2,7 @@
   <div class="routing-tab">
     <p class="tab-intro">
       <Info :size="13" class="tab-intro__icon" />
-      <span>旁路监管（在「AI 配置」里增删）并行判定，引擎按下方规则顺序逐条匹配，第一条命中即生效；都不命中则继续对话。规则动作可转移状态或切到重组流（口语化重说上一句 / 补上被打断内容）。</span>
+      <span>门控监管（在「AI 配置」里增删）并行判定，引擎按下方规则顺序逐条匹配，第一条命中即生效；都不命中则继续对话。规则动作可转移状态或切到重组流（口语化重说上一句 / 补上被打断内容）。</span>
     </p>
 
     <el-form label-width="160px" class="form">
@@ -16,12 +16,12 @@
       <el-form-item label="人设并发上限">
         <el-input-number v-model="form.persona_fanout_cap" :min="1" :max="3" />
         <div class="hint">
-          投机并行的人设总数（含主对话），上限 3。设为 1 即关闭多人设。旁路监管选中其一、其余取消（厂商按取消前已生成的 token 计费）。
+          投机并行的人设总数（含主对话），上限 3。设为 1 即关闭多人设。门控监管选中其一、其余取消（厂商按取消前已生成的 token 计费）。
         </div>
       </el-form-item>
       <el-form-item label="门控超时 (ms)">
         <el-input-number v-model="form.referee_timeout_ms" :min="1" :step="100" />
-        <div class="hint">旁路监管在开口前需在该时限内给出判定；超时则按下方兜底路由放行。默认 600ms。</div>
+        <div class="hint">门控监管在开口前需在该时限内给出判定；超时则按下方兜底路由放行。默认 600ms。</div>
       </el-form-item>
       <el-form-item label="超时兜底路由">
         <el-select v-model="form.referee_fail_open_route" style="width: 280px" placeholder="选择兜底路由">
@@ -48,15 +48,15 @@
       type="warning"
       :closable="false"
       show-icon
-      title="尚无旁路监管"
-      description="请先在「AI 配置」中添加至少一个旁路监管（kind=referee 并填写标识），才能编辑路由规则。"
+      title="尚无门控监管"
+      description="请先在「AI 配置」中添加至少一个门控监管（kind=referee 并填写标识），才能编辑路由规则。"
     />
 
     <el-table v-else :data="form.routing_rules" border>
       <el-table-column label="#" type="index" width="48" />
-      <el-table-column label="旁路监管" width="160">
+      <el-table-column label="门控监管" width="160">
         <template #default="{ row }">
-          <el-select v-model="row.referee" size="small" placeholder="旁路监管 label">
+          <el-select v-model="row.referee" size="small" placeholder="门控监管 label">
             <el-option v-for="l in refereeLabels" :key="l" :label="l" :value="l" />
           </el-select>
         </template>
@@ -70,7 +70,7 @@
             filterable
             allow-create
             default-first-option
-            placeholder="输入旁路监管输出的分类值"
+            placeholder="输入门控监管输出的分类值"
             style="width: 100%"
           />
         </template>
@@ -274,21 +274,7 @@ defineExpose({ addRule, removeRule, move, onActionTypeChange, onTransitionTarget
 </script>
 
 <style scoped>
-/* 配置说明：无背景、小号灰字、小号 info 图标（card_title 已给名字，不再重复）。 */
-.tab-intro {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  margin-bottom: 16px;
-  font-size: 12px;
-  line-height: 1.6;
-  color: var(--isales-muted-foreground);
-}
-.tab-intro__icon {
-  flex-shrink: 0;
-  margin-top: 2px;
-  color: var(--isales-status-blue-700);
-}
+/* .tab-intro / .tab-intro__icon 提为全局 utility（src/styles/utilities.css）。 */
 .header {
   display: flex;
   justify-content: space-between;

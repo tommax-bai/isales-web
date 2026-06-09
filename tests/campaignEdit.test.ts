@@ -88,7 +88,7 @@ describe("RoleConfigDialog", () => {
       (n) => n.textContent?.trim(),
     );
     expect(labels).toEqual(
-      expect.arrayContaining(["主对话", "裁判", "重组", "抽取"]),
+      expect.arrayContaining(["主对话", "门控监管", "重组", "抽取"]),
     );
     wrapper.unmount();
   });

@@ -2,7 +2,7 @@
   <div class="tools-tab">
     <p class="tab-intro">
       <Info :size="13" class="tab-intro__icon" />
-      <span>客户说了某类话时（关键词由旁路监管判定），AI 触发对应工具。挂断：主动结束本通电话；结束语为挂断前说的一句话，留空则直接挂断不播话术。同一种工具可被不同关键词复用、各说不同的结束语。</span>
+      <span>客户说了某类话时（关键词由门控监管判定），AI 触发对应工具。挂断：主动结束本通电话；结束语为挂断前说的一句话，留空则直接挂断不播话术。同一种工具可被不同关键词复用、各说不同的结束语。</span>
     </p>
 
     <el-alert
@@ -10,17 +10,17 @@
       type="warning"
       :closable="false"
       show-icon
-      title="尚无旁路监管"
-      description="请先在「AI 配置」添加旁路监管角色——工具触发需要由旁路监管输出关键词来匹配。"
+      title="尚无门控监管"
+      description="请先在「AI 配置」添加门控监管角色——工具触发需要由门控监管输出关键词来匹配。"
       class="intro"
     />
 
     <el-form v-if="refereeLabels.length > 1" label-width="100px" class="form">
-      <el-form-item label="判定旁路监管">
+      <el-form-item label="判定门控监管">
         <el-select v-model="flatReferee" style="width: 240px" @change="rebuild">
           <el-option v-for="l in refereeLabels" :key="l" :label="l" :value="l" />
         </el-select>
-        <span class="hint">这些关键词由哪个旁路监管输出（整表共用）</span>
+        <span class="hint">这些关键词由哪个门控监管输出（整表共用）</span>
       </el-form-item>
     </el-form>
 
@@ -38,7 +38,7 @@
 
     <el-table v-if="rows.length > 0" :data="rows" border>
       <el-table-column label="#" type="index" width="48" />
-      <el-table-column label="关键词 (旁路监管输出)" width="220">
+      <el-table-column label="关键词 (门控监管输出)" width="220">
         <template #default="{ row }">
           <el-input
             v-model="row.keyword"
@@ -173,25 +173,11 @@ defineExpose({ rows, flatReferee, addRule, removeRule, rebuild, isHangupRule });
 </script>
 
 <style scoped>
-/* 空状态 warning（尚无旁路监管）仍用 el-alert，保留其间距。 */
+/* 空状态 warning（尚无门控监管）仍用 el-alert，保留其间距。 */
 .intro {
   margin-bottom: 16px;
 }
-/* 配置说明：无背景、小号灰字、小号 info 图标（card_title 已给名字，不再重复）。 */
-.tab-intro {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  margin-bottom: 16px;
-  font-size: 12px;
-  line-height: 1.6;
-  color: var(--isales-muted-foreground);
-}
-.tab-intro__icon {
-  flex-shrink: 0;
-  margin-top: 2px;
-  color: var(--isales-status-blue-700);
-}
+/* .tab-intro / .tab-intro__icon 提为全局 utility（src/styles/utilities.css）。 */
 .form {
   margin-bottom: 8px;
 }

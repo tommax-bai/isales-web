@@ -52,17 +52,35 @@
         </div>
 
         <div class="section">
-          <h5>旁路监管 (referee)</h5>
+          <h5>门控监管 (referee)</h5>
+          <div
+            v-if="turn.referee_results && turn.referee_results.length"
+            class="referee-list"
+          >
+            <div
+              v-for="r in turn.referee_results"
+              :key="r.label"
+              class="row metrics"
+            >
+              <el-tag type="info" size="small">{{ r.label }}</el-tag>
+              <el-tag type="primary" size="small">{{ r.category }}</el-tag>
+              <span class="lbl">耗时:</span>
+              <span>{{ fmtMs(r.duration_ms) }}</span>
+            </div>
+          </div>
+          <div v-else class="row metrics">
+            <span class="lbl">本轮无门控监管输出</span>
+          </div>
           <div class="row metrics">
-            <el-tag :type="decisionTag(turn.referee_decision)" size="small">
-              {{ turn.referee_decision ?? "–" }}
-            </el-tag>
-            <span class="lbl">goal_type:</span>
-            <span>{{ turn.referee_goal_type ?? "–" }}</span>
-            <span class="lbl">confidence:</span>
-            <span>{{ turn.referee_confidence ?? "–" }}</span>
-            <span class="lbl">耗时:</span>
-            <span>{{ fmtMs(turn.referee_duration_ms) }}</span>
+            <span class="lbl">命中路由:</span>
+            <span>{{ turn.selected_route_id ?? "–" }}</span>
+            <template v-if="turn.matched_rule">
+              <span class="lbl">命中规则:</span>
+              <span
+                >{{ turn.matched_rule.referee }} →
+                {{ (turn.matched_rule.match ?? []).join(" / ") || "–" }}</span
+              >
+            </template>
           </div>
         </div>
 
@@ -117,23 +135,6 @@ function truncate(s: string | null | undefined, n: number): string {
 
 function fmtMs(ms: number | null): string {
   return ms === null || ms === undefined ? "–" : `${ms}ms`;
-}
-
-function decisionTag(
-  decision: string | null,
-): "primary" | "success" | "warning" | "danger" | "info" {
-  switch (decision) {
-    case "goal_achieved":
-      return "success";
-    case "transfer":
-      return "warning";
-    case "customer_decline":
-      return "danger";
-    case "continue":
-      return "primary";
-    default:
-      return "info";
-  }
 }
 
 defineExpose({ load: onLoad });
@@ -198,6 +199,11 @@ defineExpose({ load: onLoad });
   gap: 4px 10px;
   font-size: 12px;
   margin-top: 6px;
+}
+.referee-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 .lbl {
   font-size: 12px;

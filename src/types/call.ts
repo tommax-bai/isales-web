@@ -35,8 +35,25 @@ export interface CallRecordDetail extends CallRecordSummary {
   extracted_fields?: Record<string, unknown>;
 }
 
-// pipeline-stream-and-referee: dual-LLM trace fields (was role_candidates /
-// judge_results / polish_*).
+// One side-band 门控监管 (referee) result. category is a bare token defined by
+// the campaign's referee prompt enum (engine pins confidence=1.0), plus a
+// fail-open marker ("timeout" / "invalid") when the referee did not return.
+export interface RefereeResult {
+  label: string;
+  category: string;
+  confidence: number;
+  duration_ms: number;
+}
+
+// The routing rule the decider matched this turn, or null → continue.
+export interface MatchedRule {
+  referee: string;
+  match: string[];
+  action: Record<string, unknown>;
+}
+
+// engine-multi-referee-and-restructure: single referee_* scalars replaced by
+// referee_results[] + matched_rule + selected_route_id.
 export interface PipelineTraceTurn {
   turn_id: number;
   user_input: string | null;
@@ -45,10 +62,9 @@ export interface PipelineTraceTurn {
   main_tokens_in: number | null;
   main_tokens_out: number | null;
   main_fallback_used: boolean;
-  referee_decision: string | null;
-  referee_goal_type: string | null;
-  referee_confidence: number | null;
-  referee_duration_ms: number | null;
+  referee_results: RefereeResult[];
+  matched_rule: MatchedRule | null;
+  selected_route_id: string | null;
   first_audio_ms: number | null;
   error: string | null;
   ts: number | null;

@@ -83,7 +83,7 @@ const editingIndex = ref<number | null>(null);
 function kindLabel(kind: RoleKind): string {
   return {
     main: "主对话",
-    referee: "裁判",
+    referee: "门控监管",
     restructure: "重组",
     extractor: "抽取",
     persona: "人设",

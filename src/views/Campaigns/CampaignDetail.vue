@@ -182,12 +182,12 @@
         <ToolsTab v-model="form" :role-configs="roleConfigs" />
       </section>
 
-      <!-- 旁路监管 (referee) — 即时保存 -->
+      <!-- 门控监管 (referee) — 即时保存 -->
       <PromptTierEditor
         :campaign-id="id"
         kind="referee"
-        title="旁路监管 (referee)"
-        description="与主对话并行的旁路小模型，实时给每轮对话打类别标签，由「门控路由」据此决策动作"
+        title="门控监管 (referee)"
+        description="与主对话并行的门控小模型，实时给每轮对话打类别标签，由「门控路由」据此决策动作"
         :icon="Settings"
         badge-color="purple"
         plain-icon

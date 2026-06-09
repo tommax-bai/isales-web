@@ -14,7 +14,7 @@
       <el-form-item label="类型" prop="kind">
         <el-radio-group v-model="form.kind">
           <el-radio value="main">主对话</el-radio>
-          <el-radio value="referee">裁判</el-radio>
+          <el-radio value="referee">门控监管</el-radio>
           <el-radio value="persona">人设</el-radio>
           <el-radio value="restructure">重组</el-radio>
           <el-radio value="extractor">抽取</el-radio>
@@ -26,7 +26,7 @@
           placeholder="路由规则按此标识引用，如 main_referee / warm"
         />
         <div class="hint">
-          裁判 / 重组 / 人设必填，同一任务内唯一（人设与裁判标识互不冲突）；路由规则通过 label 绑定。人设为投机并行，启用总数（含主对话）上限 3。
+          门控监管 / 重组 / 人设必填，同一任务内唯一（人设与门控监管标识互不冲突）；路由规则通过 label 绑定。人设为投机并行，启用总数（含主对话）上限 3。
         </div>
       </el-form-item>
       <el-form-item label="模型" prop="model">
@@ -132,7 +132,7 @@ const rules: FormRules = {
     {
       validator: (_rule, value: string, cb) => {
         if (needsLabel.value && !String(value ?? "").trim()) {
-          cb(new Error("裁判 / 重组 / 人设必须填写标识"));
+          cb(new Error("门控监管 / 重组 / 人设必须填写标识"));
         } else {
           cb();
         }
