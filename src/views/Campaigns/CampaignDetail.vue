@@ -156,14 +156,15 @@
            按 campaign-id 即时保存；其余 form-driven 小节统一经底部保存条提交。原
            .cd__tiers 分组已拆散，三角色卡随链路嵌在 form-driven 小节之间。 -->
 
-      <!-- 主对话 (main) — 即时保存 -->
+      <!-- 主对话 (main) — 即时保存；单条、必有、不可禁用/删除/新增/改名（is-main）。 -->
       <PromptTierEditor
         :campaign-id="id"
         kind="main"
         title="主对话 (main)"
-        description="纯文本流式回复，直喂 TTS。不要输出 JSON / markdown / emoji"
+        description="纯文本流式回复，直喂 TTS。不要输出 JSON / markdown / emoji。每个场景恒有且仅有一条，无法禁用或删除。"
         :icon="MessageSquare"
         badge-color="blue"
+        is-main
       />
 
       <section class="card card--green">
@@ -182,15 +183,32 @@
         <ToolsTab v-model="form" :role-configs="roleConfigs" />
       </section>
 
-      <!-- 门控监管 (referee) — 即时保存 -->
+      <!-- 门控监管 (referee) — 即时保存；标识(label)被「门控路由」按 label 引用，故 labeled。 -->
       <PromptTierEditor
         :campaign-id="id"
         kind="referee"
         title="门控监管 (referee)"
-        description="与主对话并行的门控小模型，实时给每轮对话打类别标签，由「门控路由」据此决策动作"
+        description="与主对话并行的门控小模型，实时给每轮对话打类别标签，由「门控路由」据此决策动作。标识(label)即路由规则引用源。"
         :icon="Settings"
         badge-color="purple"
         plain-icon
+        labeled
+      />
+
+      <!-- 多人设推测对话 (persona) — 即时保存；标识(label)被「门控路由」route 动作引用。
+           投机并行：每轮按「人设并发上限」(form.persona_fanout_cap, 1=关) 与 main 并行
+           起跑，门控选中其一放行、其余取消。删除前据 routing_rules 做引用校验。 -->
+      <PromptTierEditor
+        :campaign-id="id"
+        kind="persona"
+        title="多人设推测对话 (persona)"
+        description="可选的并行话术人设：每轮与主对话一起投机起跑，门控按「门控路由」规则选中其一放行、其余取消。标识(label)即路由规则引用源；并发上限在「门控路由 → 人设并发上限」设置（设为 1 即关闭）。"
+        :icon="Users"
+        badge-color="yellow"
+        plain-icon
+        labeled
+        :persona-fanout-cap="form.persona_fanout_cap"
+        :routing-rules="form.routing_rules"
       />
 
       <!-- 话后信息提取 (extractor) — 即时保存；逻辑上只有一条配置 -->
@@ -300,6 +318,7 @@ import {
   Settings,
   Square,
   Trash2,
+  Users,
 } from "lucide-vue-next";
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";

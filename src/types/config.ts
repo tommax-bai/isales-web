@@ -10,6 +10,9 @@ export interface RoleConfig {
   id: number;
   campaign_id: number;
   kind: RoleKind;
+  // Routing label for referee/restructure/persona rows (referenced by
+  // routing_rules). null for main/extractor (not routable).
+  label: string | null;
   model: string;
   current_prompt_version_id: number | null;
   temperature: number;
@@ -23,6 +26,7 @@ export interface RoleConfig {
 export interface RoleConfigCreate {
   campaign_id: number;
   kind: RoleKind;
+  label?: string | null;
   model: string;
   current_prompt_version_id?: number | null;
   temperature: number;
@@ -32,6 +36,7 @@ export interface RoleConfigCreate {
 }
 
 export interface RoleConfigUpdate {
+  label?: string | null;
   model?: string;
   current_prompt_version_id?: number | null;
   temperature?: number;

@@ -12,7 +12,7 @@
           <span>{{ description }}</span>
         </p>
       </div>
-      <template v-if="!singleton">
+      <template v-if="!solo">
         <StatusBadge :color="badgeColor">{{ rows.length }} 条</StatusBadge>
         <el-button size="small" type="primary" :disabled="!campaignId" @click="addRow">
           <Plus :size="14" style="margin-right: 4px" />
@@ -21,21 +21,26 @@
       </template>
     </header>
 
-    <p v-if="rows.length === 0 && !singleton" class="tier__empty">
+    <p v-if="rows.length === 0 && !solo" class="tier__empty">
       暂无配置——点击「新增」添加一条 {{ title }}。
     </p>
 
     <article v-for="(row, i) in rows" :key="row.key" class="cfg">
       <div class="cfg__row">
         <el-input
-          v-if="!singleton"
+          v-if="!solo"
           v-model="row.name"
-          placeholder="配置名称"
+          :placeholder="labeled ? '标识 label（路由规则按此引用，必填且唯一）' : '配置名称'"
           class="cfg__name"
         />
-        <el-switch v-model="row.enabled" active-text="启用" inactive-text="禁用" />
+        <el-switch
+          v-if="!isMain"
+          v-model="row.enabled"
+          active-text="启用"
+          inactive-text="禁用"
+        />
         <el-button
-          v-if="!singleton"
+          v-if="!solo"
           size="small"
           plain
           type="danger"
@@ -110,7 +115,7 @@ import { promptVersionsApi } from "@/api/promptVersions";
 import { roleConfigsApi } from "@/api/roleConfigs";
 import StatusBadge from "@/components/Common/StatusBadge.vue";
 import ExpandingTextarea from "@/components/Common/ExpandingTextarea.vue";
-import type { RoleKind } from "@/types/campaign";
+import type { RoleKind, RoutingRule } from "@/types/campaign";
 import {
   LLM_PROVIDER_DEFAULT_MODEL,
   LLM_PROVIDER_LABEL,
@@ -131,7 +136,23 @@ const props = defineProps<{
   // plainIcon: 用裸 lucide 图标（无彩色底框），与 form 小节的 <Settings> 一致；
   // 左色条仍由 badgeColor 驱动。默认 false = 彩色图标底框（main 保留）。
   plainIcon?: boolean;
+  // isMain: main 角色卡锁定——单条、必有、不可禁用/删除/新增/改名。main 是流式
+  // 回复唯一驱动，data-model 保证每 campaign 恰好 1 行且 mandatory；禁用/删除/加
+  // 第二个都会破坏该不变量。隐藏 enable 开关（恒 on）+ 标识 + 删除 + 新增。
+  isMain?: boolean;
+  // labeled: 该 kind 由 routing_rules 按 role_config.label 引用（referee / persona）。
+  // 启用后「标识」输入映射到顶层 label（必填、kind 内唯一），而非 ext_params.name。
+  // 不启用时旧行为不变（标识写 ext_params.name）。
+  labeled?: boolean;
+  // personaFanoutCap: persona 卡专用——启用人设总数（含 main）不得超过该并发上限。
+  personaFanoutCap?: number;
+  // routingRules: persona 卡专用——删除前据此校验该 label 是否仍被 route 动作引用。
+  routingRules?: RoutingRule[];
 }>();
+
+// solo: 逻辑上单条、无列表操作的卡（extractor singleton / main）——隐藏「新增 /
+// X 条 / 标识 / 删除」；load 后若无配置自动补一条空白可编辑行。
+const solo = computed(() => props.singleton || props.isMain);
 
 // 对齐 SSOT @/types/llmProviders (volcengine + openai + dashscope + mock)；
 // 增减 provider 改 SSOT。mock 是 engine factory 合法 provider 但不在
@@ -186,7 +207,13 @@ async function load() {
       key: rid(),
       id: c.id,
       prompt_version_id: c.current_prompt_version_id,
-      name: typeof ext.name === "string" ? ext.name : "",
+      // labeled（referee/persona）：标识来自顶层 role_config.label（routing 引用源）；
+      // 否则沿用 ext_params.name。
+      name: props.labeled
+        ? (c.label ?? "")
+        : typeof ext.name === "string"
+          ? ext.name
+          : "",
       provider: typeof ext.provider === "string" ? ext.provider : "volcengine",
       model: c.model,
       temperature: c.temperature,
@@ -197,9 +224,11 @@ async function load() {
       dirty: false,
     });
   }
-  // singleton（如 extractor）逻辑上只有一条：若后端尚无配置，补一条空白行，
+  // solo（extractor singleton / main）逻辑上只有一条：若后端尚无配置，补一条空白行，
   // 让用户直接编辑保存（无「新增」按钮）。
-  if (props.singleton && out.length === 0) out.push(blankRow(false));
+  if (solo.value && out.length === 0) out.push(blankRow(false));
+  // main 必有且恒启用：纠正任何历史 enabled=false（隐藏了开关，避免静默关闭）。
+  if (props.isMain) for (const r of out) r.enabled = true;
   rows.value = out;
 }
 
@@ -227,19 +256,47 @@ function addRow() {
 async function saveRow(i: number) {
   const row = rows.value[i];
   if (!props.campaignId) return;
+  // labeled（referee/persona）：标识即 routing label，必填 + kind 内唯一。
+  if (props.labeled) {
+    const label = row.name.trim();
+    if (!label) {
+      ElMessage.error("请填写标识 (label)——路由规则按此引用");
+      return;
+    }
+    if (rows.value.some((r, j) => j !== i && r.name.trim() === label)) {
+      ElMessage.error(`标识「${label}」重复，请改为唯一值`);
+      return;
+    }
+  }
+  // persona 卡：启用人设总数（含 main）不得超过并发上限。
+  if (
+    props.kind === "persona" &&
+    row.enabled &&
+    props.personaFanoutCap != null &&
+    1 + rows.value.filter((r) => r.enabled).length > props.personaFanoutCap
+  ) {
+    ElMessage.error(
+      `启用人设总数（含主对话）不能超过并发上限 ${props.personaFanoutCap}；请调高「门控路由 → 人设并发上限」或先禁用其他人设。`,
+    );
+    return;
+  }
   row.saving = true;
   try {
     const extParams = { name: row.name, provider: row.provider };
+    // main 恒启用（开关已隐藏）；labeled 行额外写顶层 label 供 routing 引用。
+    const enabled = props.isMain ? true : row.enabled;
+    const labelPatch = props.labeled ? { label: row.name.trim() } : {};
     if (row.id == null) {
       // 新建：role_config → prompt_version → 回填 current_prompt_version_id
       const rc = await roleConfigsApi.create({
         campaign_id: props.campaignId,
         kind: props.kind,
+        ...labelPatch,
         model: row.model,
         temperature: row.temperature,
         top_p: row.top_p,
         ext_params: extParams,
-        enabled: row.enabled,
+        enabled,
       });
       row.id = rc.id;
       const pv = await promptVersionsApi.create({
@@ -253,11 +310,12 @@ async function saveRow(i: number) {
     } else {
       // 编辑：PATCH role_config + upsert prompt_version
       await roleConfigsApi.update(row.id, {
+        ...labelPatch,
         model: row.model,
         temperature: row.temperature,
         top_p: row.top_p,
         ext_params: extParams,
-        enabled: row.enabled,
+        enabled,
       });
       if (row.prompt_version_id != null) {
         await promptVersionsApi.update(row.prompt_version_id, {
@@ -297,11 +355,31 @@ function onProviderChange(i: number) {
 
 async function removeRow(i: number) {
   const row = rows.value[i];
+  // persona 删除前置校验：客户端先扫已加载 routing_rules，命中 route 引用则拦截
+  // （对应后端 422 routing_rule_unknown_persona delete-guard，避免直接吞裸错误码）。
+  if (props.kind === "persona") {
+    const label = row.name.trim();
+    const refs = (props.routingRules ?? []).filter(
+      (r) => r.action.type === "route" && r.action.to === label,
+    ).length;
+    if (label && refs > 0) {
+      ElMessage.warning(
+        `人设「${label}」仍被 ${refs} 条路由规则引用，请先在「门控路由」中移除这些引用再删除。`,
+      );
+      return;
+    }
+  }
   if (row.id != null) {
     try {
       await roleConfigsApi.remove(row.id);
     } catch (err: unknown) {
-      ElMessage.error(err instanceof Error ? err.message : "删除失败");
+      // 后端兜底 delete-guard：翻译 routing_rule_unknown_persona 为可读提示。
+      const msg = err instanceof Error ? err.message : "删除失败";
+      ElMessage.error(
+        msg.includes("routing_rule_unknown_persona")
+          ? "该人设仍被路由规则引用，请先在「门控路由」中移除引用再删除。"
+          : msg,
+      );
       return;
     }
   }
