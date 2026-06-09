@@ -7,12 +7,20 @@
       </span>
       <div class="tier__title-block">
         <h3 class="tier__title">{{ title }}</h3>
-        <p v-if="description" class="tier__desc">
+        <p v-if="description && open" class="tier__desc">
           <Info :size="13" class="tab-intro__icon" />
           <span>{{ description }}</span>
         </p>
       </div>
-      <template v-if="!solo">
+      <!-- collapsible（如 persona）：默认收起、仅显示 title；开关展开后才露配置体。 -->
+      <el-switch
+        v-if="collapsible"
+        v-model="expanded"
+        active-text="展开"
+        inactive-text="收起"
+        class="tier__toggle"
+      />
+      <template v-if="!solo && open">
         <StatusBadge :color="badgeColor">{{ rows.length }} 条</StatusBadge>
         <el-button size="small" type="primary" :disabled="!campaignId" @click="addRow">
           <Plus :size="14" style="margin-right: 4px" />
@@ -21,11 +29,12 @@
       </template>
     </header>
 
-    <p v-if="rows.length === 0 && !solo" class="tier__empty">
-      暂无配置——点击「新增」添加一条 {{ title }}。
-    </p>
+    <template v-if="open">
+      <p v-if="rows.length === 0 && !solo" class="tier__empty">
+        暂无配置——点击「新增」添加一条 {{ title }}。
+      </p>
 
-    <article v-for="(row, i) in rows" :key="row.key" class="cfg">
+      <article v-for="(row, i) in rows" :key="row.key" class="cfg">
       <div class="cfg__row">
         <el-input
           v-if="!solo"
@@ -102,7 +111,8 @@
         </el-button>
         <span v-if="row.dirty" class="cfg__dirty">未保存</span>
       </div>
-    </article>
+      </article>
+    </template>
   </section>
 </template>
 
@@ -148,11 +158,18 @@ const props = defineProps<{
   personaFanoutCap?: number;
   // routingRules: persona 卡专用——删除前据此校验该 label 是否仍被 route 动作引用。
   routingRules?: RoutingRule[];
+  // collapsible: 卡可折叠（如 persona 高级选项）——默认收起、仅显示 title，开关展开
+  // 后才露配置体。纯展示折叠，不影响 persona_fanout_cap 运行语义（那个在「门控路由」配）。
+  collapsible?: boolean;
 }>();
 
 // solo: 逻辑上单条、无列表操作的卡（extractor singleton / main）——隐藏「新增 /
 // X 条 / 标识 / 删除」；load 后若无配置自动补一条空白可编辑行。
 const solo = computed(() => props.singleton || props.isMain);
+
+// collapsible 卡的展开态（默认收起）。非 collapsible 卡 open 恒 true，行为不变。
+const expanded = ref(false);
+const open = computed(() => !props.collapsible || expanded.value);
 
 // 对齐 SSOT @/types/llmProviders (volcengine + openai + dashscope + mock)；
 // 增减 provider 改 SSOT。mock 是 engine factory 合法 provider 但不在

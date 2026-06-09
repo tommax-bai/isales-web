@@ -1,6 +1,7 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { MessageSquare } from "lucide-vue-next";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { nextTick } from "vue";
 
 import PromptTierEditor from "@/components/Campaign/PromptTierEditor.vue";
 import type { RoleConfig } from "@/types/config";
@@ -212,6 +213,22 @@ describe("PromptTierEditor — main lock + labeled + persona", () => {
     const vm = w.vm as unknown as Vm;
     await vm.removeRow(0);
     expect(removeSpy).toHaveBeenCalledWith(7);
+    w.unmount();
+  });
+
+  it("collapsible：默认收起仅显示 title + 开关，展开后才露配置体", async () => {
+    listSpy.mockResolvedValue([rc({ kind: "persona", label: "warm", id: 3 })]);
+    const w = mountEditor({ kind: "persona", labeled: true, collapsible: true });
+    await flushPromises();
+    // 收起：title 在、有展开开关、配置体(.cfg)与新增按钮不渲染
+    expect(w.find(".tier__title").text()).toContain("T");
+    expect(w.find(".tier__toggle").exists()).toBe(true);
+    expect(w.find(".cfg").exists()).toBe(false);
+    expect(w.findAll("button").some((b) => b.text().includes("新增"))).toBe(false);
+    // 展开
+    (w.vm as unknown as { expanded: boolean }).expanded = true;
+    await nextTick();
+    expect(w.find(".cfg").exists()).toBe(true);
     w.unmount();
   });
 });
