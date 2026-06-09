@@ -1,9 +1,7 @@
 <template>
   <section class="filler">
     <header class="filler__head">
-      <span class="filler__icon">
-        <Music :size="16" />
-      </span>
+      <Settings :size="16" class="filler__icon-plain" />
       <div class="filler__title-block">
         <h3 class="filler__title">垫词</h3>
         <p class="filler__desc">客户语音空档期播放的过渡语料，按组管理。</p>
@@ -81,7 +79,7 @@
 
 <script setup lang="ts">
 import { ElMessage } from "element-plus";
-import { Music, Plus, Save, Trash2 } from "lucide-vue-next";
+import { Plus, Save, Settings, Trash2 } from "lucide-vue-next";
 import { computed, onMounted, ref, watch } from "vue";
 
 import { fillersApi } from "@/api/fillers";
@@ -232,15 +230,8 @@ onMounted(() => void load());
   align-items: center;
   gap: var(--isales-space-3);
 }
-.filler__icon {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--isales-radius-md);
-  background: var(--isales-status-yellow-100);
-  color: var(--isales-status-yellow-800);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+/* 裸齿轮（无彩色底框），与 form 小节的 <Settings> 一致；左色条仍为黄色。 */
+.filler__icon-plain {
   flex-shrink: 0;
 }
 .filler__title-block {

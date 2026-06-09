@@ -37,7 +37,7 @@
       />
 
       <!-- 启停 + 进度概览 -->
-      <section class="card">
+      <section class="card card--green">
         <header class="card__head">
           <Activity :size="16" />
           <h3 class="card__title">外呼进度</h3>
@@ -57,7 +57,7 @@
       </section>
 
       <!-- 基本信息 -->
-      <section class="card">
+      <section class="card card--yellow">
         <header class="card__head">
           <Settings :size="16" />
           <h3 class="card__title">基本信息</h3>
@@ -107,7 +107,7 @@
       </section>
 
       <!-- 可拨时段 -->
-      <section class="card">
+      <section class="card card--red">
         <header class="card__head">
           <Clock :size="16" />
           <h3 class="card__title">可拨时段</h3>
@@ -166,7 +166,7 @@
         badge-color="blue"
       />
 
-      <section class="card">
+      <section class="card card--green">
         <header class="card__head">
           <Settings :size="16" />
           <h3 class="card__title">门控路由</h3>
@@ -174,7 +174,7 @@
         <RoutingRulesTab v-model="form" :role-configs="roleConfigs" />
       </section>
 
-      <section class="card">
+      <section class="card card--yellow">
         <header class="card__head">
           <Settings :size="16" />
           <h3 class="card__title">工具触发</h3>
@@ -188,24 +188,27 @@
         kind="referee"
         title="旁路监管 (referee)"
         description="与主对话并行的旁路小模型，实时给每轮对话打类别标签，由「门控路由」据此决策动作"
-        :icon="Target"
+        :icon="Settings"
         badge-color="purple"
+        plain-icon
       />
 
-      <!-- 话后信息提取 (extractor) — 即时保存 -->
+      <!-- 话后信息提取 (extractor) — 即时保存；逻辑上只有一条配置 -->
       <PromptTierEditor
         :campaign-id="id"
         kind="extractor"
         title="话后信息提取 (extractor)"
         description="通话结束后异步从对话全文提取结构化字段（customer_name / intent / …）"
-        :icon="Sparkles"
+        :icon="Settings"
         badge-color="green"
+        plain-icon
+        singleton
       />
 
       <!-- 垫词 (filler) — 垫词组即时保存；开关/触发延迟随底部保存条提交。 -->
       <FillerEditor v-model="form" :campaign-id="id" />
 
-      <section class="card">
+      <section class="card card--red">
         <header class="card__head">
           <Settings :size="16" />
           <h3 class="card__title">用户断句判定</h3>
@@ -213,7 +216,7 @@
         <EndpointingTab v-model="form" :field-errors="fieldErrors" />
       </section>
 
-      <section class="card">
+      <section class="card card--blue">
         <header class="card__head">
           <Settings :size="16" />
           <h3 class="card__title">打断保护</h3>
@@ -221,7 +224,7 @@
         <InterruptionTab v-model="form" :field-errors="fieldErrors" />
       </section>
 
-      <section class="card">
+      <section class="card card--purple">
         <header class="card__head">
           <Settings :size="16" />
           <h3 class="card__title">沉默激活</h3>
@@ -229,7 +232,7 @@
         <SilenceTab v-model="form" :field-errors="fieldErrors" />
       </section>
 
-      <section class="card">
+      <section class="card card--green">
         <header class="card__head">
           <Settings :size="16" />
           <h3 class="card__title">转人工</h3>
@@ -237,7 +240,7 @@
         <TransferTab v-model="form" :field-errors="fieldErrors" />
       </section>
 
-      <section class="card">
+      <section class="card card--yellow">
         <header class="card__head">
           <Settings :size="16" />
           <h3 class="card__title">收尾</h3>
@@ -245,7 +248,7 @@
         <WrapUpTab v-model="form" :field-errors="fieldErrors" />
       </section>
 
-      <section class="card">
+      <section class="card card--red">
         <header class="card__head">
           <Settings :size="16" />
           <h3 class="card__title">重试 / 跟进</h3>
@@ -253,7 +256,7 @@
         <RetryFollowUpTab v-model="form" :field-errors="fieldErrors" />
       </section>
 
-      <section class="card">
+      <section class="card card--gray">
         <header class="card__head">
           <Settings :size="16" />
           <h3 class="card__title">勿打</h3>
@@ -261,7 +264,7 @@
         <DoNotCallTab v-model="form" />
       </section>
 
-      <section class="card">
+      <section class="card card--blue">
         <header class="card__head">
           <Settings :size="16" />
           <h3 class="card__title">回调</h3>
@@ -295,9 +298,7 @@ import {
   Plus,
   Save,
   Settings,
-  Sparkles,
   Square,
-  Target,
   Trash2,
 } from "lucide-vue-next";
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
@@ -562,8 +563,29 @@ defineExpose({ form, roleConfigs, callbackConfigs, buildPayload, onSave, fieldEr
 .card {
   background: var(--isales-card);
   border: 1px solid var(--isales-border);
+  /* 彩色左色条：与 main/referee/extractor/垫词 卡（.tier/.filler 的 border-left）
+     统一的视觉语言，每张卡按 .card--<color> 取不同状态色。 */
+  border-left-width: 4px;
   border-radius: var(--isales-radius);
   padding: var(--isales-space-4);
+}
+.card--blue {
+  border-left-color: var(--isales-status-blue-700);
+}
+.card--green {
+  border-left-color: var(--isales-status-green-700);
+}
+.card--yellow {
+  border-left-color: var(--isales-status-yellow-700);
+}
+.card--purple {
+  border-left-color: var(--isales-status-purple-700);
+}
+.card--red {
+  border-left-color: var(--isales-status-red-700);
+}
+.card--gray {
+  border-left-color: var(--isales-status-gray-700);
 }
 .card__head {
   display: flex;

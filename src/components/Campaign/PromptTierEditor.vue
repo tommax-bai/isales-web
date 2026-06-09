@@ -1,29 +1,43 @@
 <template>
   <section class="tier" :style="{ borderLeftColor: `var(--isales-status-${badgeColor}-700)` }">
     <header class="tier__head">
-      <span class="tier__icon" :style="iconStyle">
+      <component v-if="plainIcon" :is="icon" :size="16" class="tier__icon-plain" />
+      <span v-else class="tier__icon" :style="iconStyle">
         <component :is="icon" :size="16" />
       </span>
       <div class="tier__title-block">
         <h3 class="tier__title">{{ title }}</h3>
         <p v-if="description" class="tier__desc">{{ description }}</p>
       </div>
-      <StatusBadge :color="badgeColor">{{ rows.length }} 条</StatusBadge>
-      <el-button size="small" type="primary" :disabled="!campaignId" @click="addRow">
-        <Plus :size="14" style="margin-right: 4px" />
-        新增
-      </el-button>
+      <template v-if="!singleton">
+        <StatusBadge :color="badgeColor">{{ rows.length }} 条</StatusBadge>
+        <el-button size="small" type="primary" :disabled="!campaignId" @click="addRow">
+          <Plus :size="14" style="margin-right: 4px" />
+          新增
+        </el-button>
+      </template>
     </header>
 
-    <p v-if="rows.length === 0" class="tier__empty">
+    <p v-if="rows.length === 0 && !singleton" class="tier__empty">
       暂无配置——点击「新增」添加一条 {{ title }}。
     </p>
 
     <article v-for="(row, i) in rows" :key="row.key" class="cfg">
       <div class="cfg__row">
-        <el-input v-model="row.name" placeholder="配置名称" class="cfg__name" />
+        <el-input
+          v-if="!singleton"
+          v-model="row.name"
+          placeholder="配置名称"
+          class="cfg__name"
+        />
         <el-switch v-model="row.enabled" active-text="启用" inactive-text="禁用" />
-        <el-button size="small" plain type="danger" @click="removeRow(i)">
+        <el-button
+          v-if="!singleton"
+          size="small"
+          plain
+          type="danger"
+          @click="removeRow(i)"
+        >
           <Trash2 :size="14" />
         </el-button>
       </div>
@@ -108,6 +122,12 @@ const props = defineProps<{
   description?: string;
   icon: Component;
   badgeColor: "blue" | "green" | "yellow" | "purple" | "gray" | "red";
+  // singleton: 该 kind 逻辑上只有一条配置（如 extractor）——隐藏「新增 / X 条 /
+  // 配置名称 / 删除」，load 后若无配置自动补一条空白可编辑行。
+  singleton?: boolean;
+  // plainIcon: 用裸 lucide 图标（无彩色底框），与 form 小节的 <Settings> 一致；
+  // 左色条仍由 badgeColor 驱动。默认 false = 彩色图标底框（main 保留）。
+  plainIcon?: boolean;
 }>();
 
 // 对齐 SSOT @/types/llmProviders (volcengine + openai + dashscope + mock)；
@@ -174,11 +194,14 @@ async function load() {
       dirty: false,
     });
   }
+  // singleton（如 extractor）逻辑上只有一条：若后端尚无配置，补一条空白行，
+  // 让用户直接编辑保存（无「新增」按钮）。
+  if (props.singleton && out.length === 0) out.push(blankRow(false));
   rows.value = out;
 }
 
-function addRow() {
-  rows.value.push({
+function blankRow(dirty: boolean): PromptRow {
+  return {
     key: rid(),
     id: null,
     prompt_version_id: null,
@@ -190,8 +213,12 @@ function addRow() {
     enabled: true,
     prompt: "",
     saving: false,
-    dirty: true,
-  });
+    dirty,
+  };
+}
+
+function addRow() {
+  rows.value.push(blankRow(true));
 }
 
 async function saveRow(i: number) {
@@ -305,6 +332,10 @@ onMounted(() => void load());
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+}
+/* plainIcon: 裸 lucide 图标（无彩色底框），与 form 小节的 <Settings> 一致。 */
+.tier__icon-plain {
   flex-shrink: 0;
 }
 .tier__title-block {
