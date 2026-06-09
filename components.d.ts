@@ -56,7 +56,6 @@ declare module 'vue' {
     ErrorBoundary: typeof import('./src/components/Common/ErrorBoundary.vue')['default']
     ExpandingTextarea: typeof import('./src/components/Common/ExpandingTextarea.vue')['default']
     FillerEditor: typeof import('./src/components/Campaign/FillerEditor.vue')['default']
-    FillerSetDialog: typeof import('./src/components/Campaign/FillerSetDialog.vue')['default']
     GoalAchievementPanel: typeof import('./src/components/Calls/GoalAchievementPanel.vue')['default']
     IconButton: typeof import('./src/components/Common/IconButton.vue')['default']
     KeyValueEditor: typeof import('./src/components/Common/KeyValueEditor.vue')['default']

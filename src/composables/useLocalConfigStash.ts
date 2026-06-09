@@ -1,7 +1,7 @@
 /**
  * useLocalConfigStash — localStorage-backed JSON store for config views
  * whose backend endpoints aren't HTTP-exposed yet (role_config /
- * prompt_version / filler_set / filler_phrase / provider_credential).
+ * prompt_version / filler_phrase / provider_credential).
  *
  * Design.md Open Q §2 notes these as a deferred follow-up. This composable
  * lets the redesigned config views ship with a working UI today — the user

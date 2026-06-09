@@ -227,7 +227,7 @@ export type GenerationStatus = "pending" | "running" | "succeeded" | "failed";
 
 export interface FillerPhraseRead {
   id: number;
-  filler_set_id: number;
+  campaign_id: number;
   phrase: string;
   audio_url: string | null;
   generation_status: GenerationStatus;
@@ -239,22 +239,6 @@ export interface FillerPhraseNestedWrite {
   phrase: string;
   audio_url?: string | null;
   generation_status?: GenerationStatus;
-}
-
-export interface FillerSetRead {
-  id: number;
-  campaign_id: number;
-  name: string;
-  sort_order: number;
-  phrases: FillerPhraseRead[];
-  created_at: string;
-  updated_at: string;
-}
-
-export interface FillerSetNestedWrite {
-  name: string;
-  sort_order?: number;
-  phrases: FillerPhraseNestedWrite[];
 }
 
 export interface CallbackConfigNestedWrite {
@@ -349,7 +333,7 @@ export interface CampaignDetail extends CampaignBase {
   created_at: string;
   updated_at: string;
   role_configs: RoleConfigRead[];
-  filler_sets: FillerSetRead[];
+  filler_phrases: FillerPhraseRead[];
   callback_configs: unknown[];
 }
 
@@ -368,13 +352,13 @@ export interface CampaignNestedCreate extends Partial<CampaignBase> {
   name: string;
   concurrency: number;
   role_configs?: RoleConfigNestedWrite[];
-  filler_sets?: FillerSetNestedWrite[];
+  filler_phrases?: FillerPhraseNestedWrite[];
   callback_configs?: CallbackConfigNestedWrite[];
 }
 
 export type CampaignNestedUpdate = Partial<CampaignBase> & {
   role_configs?: RoleConfigNestedWrite[];
-  filler_sets?: FillerSetNestedWrite[];
+  filler_phrases?: FillerPhraseNestedWrite[];
   callback_configs?: CallbackConfigNestedWrite[];
 };
 

@@ -72,31 +72,11 @@ export interface PromptVersionUpdate {
   is_active?: boolean;
 }
 
-// ---- filler_set / filler_phrase ------------------------------------------
-
-export interface FillerSet {
-  id: number;
-  campaign_id: number;
-  name: string;
-  sort_order: number;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface FillerSetCreate {
-  campaign_id: number;
-  name: string;
-  sort_order?: number;
-}
-
-export interface FillerSetUpdate {
-  name?: string;
-  sort_order?: number;
-}
+// ---- filler_phrase (per-campaign flat pool) -------------------------------
 
 export interface FillerPhrase {
   id: number;
-  filler_set_id: number;
+  campaign_id: number;
   phrase: string;
   audio_url: string | null;
   generation_status: GenerationStatus;
@@ -105,7 +85,7 @@ export interface FillerPhrase {
 }
 
 export interface FillerPhraseCreate {
-  filler_set_id: number;
+  campaign_id: number;
   phrase: string;
   audio_url?: string | null;
 }

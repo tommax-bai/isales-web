@@ -478,7 +478,7 @@ function buildPayload(): CampaignNestedUpdate {
   // 白名单：只发 CampaignBase 字段（CAMPAIGN_DEFAULTS 的 key 集）。这同时排除了
   //  ① onRefresh 的 Object.assign 灌进 form 的只读字段（id/created_at/updated_at/
   //     status 等——后端 extra=forbid 会拒）；
-  //  ② role_configs/filler_sets/callback_configs（自包含编辑器各自存，不在
+  //  ② role_configs/filler_phrases/callback_configs（自包含编辑器各自存，不在
   //     CampaignBase 里），避免 children-replace 清空。
   const src = form as unknown as Record<string, unknown>;
   const payload: Record<string, unknown> = {};
