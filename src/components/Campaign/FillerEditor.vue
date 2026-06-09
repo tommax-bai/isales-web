@@ -30,54 +30,32 @@
             首音频超过此时长还没出，才播一句垫词遮等待；快的轮次不会播。留空使用默认 600ms。
           </div>
         </el-form-item>
+        <el-form-item v-if="form.filler_enabled" label="垫词短语">
+          <ExpandingTextarea
+            v-model="fillerText"
+            placeholder="用分号(；)分隔，如「好的我看一下；嗯嗯稍等；让我确认下」"
+            @change="commitFiller"
+          />
+          <div class="filler__hint">
+            触发时从这些短语里随机播一句、同一通电话不重复。随页面底部「保存」一起生效。
+          </div>
+        </el-form-item>
       </el-form>
-      <p class="filler__save-note">
-        开关与触发延迟随页面底部「保存」生效；下面的垫词改完即时保存。
-      </p>
-    </div>
-
-    <div class="fset">
-      <p v-if="phrases.length === 0" class="filler__empty">
-        暂无垫词——点击「添加垫词」开始。
-      </p>
-
-      <div v-for="ph in phrases" :key="ph.key" class="phrase">
-        <el-input v-model="ph.text" placeholder="一句垫词，如「好的，我看一下」" />
-        <el-button
-          size="small"
-          type="primary"
-          :loading="ph.saving"
-          :disabled="!campaignId"
-          @click="savePhrase(ph)"
-        >
-          <Save :size="13" />
-        </el-button>
-        <el-button size="small" plain type="danger" @click="removePhrase(ph)">
-          <Trash2 :size="13" />
-        </el-button>
-      </div>
-
-      <el-button size="small" text :disabled="!campaignId" @click="addPhrase">
-        <Plus :size="13" style="margin-right: 4px" />
-        添加垫词
-      </el-button>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ElMessage } from "element-plus";
-import { Info, Plus, Save, Settings, Trash2 } from "lucide-vue-next";
-import { computed, onMounted, ref, watch } from "vue";
+import { Info, Settings } from "lucide-vue-next";
+import { computed, ref, watch } from "vue";
 
-import { fillersApi } from "@/api/fillers";
 import type { CampaignBase } from "@/types/campaign";
+import ExpandingTextarea from "@/components/Common/ExpandingTextarea.vue";
 
-// `form` (= modelValue) 承载 filler_enabled / filler_delay_ms（CampaignBase 字段，
-// 随页面底部「保存」提交）；垫词本身按 campaign-id 即时保存，两套保存语义并存。
-// 经 computed 间接持有 modelValue，与各 Tab 一致——直接 v-model prop 会触发
-// vue/no-mutating-props。
-const props = defineProps<{ campaignId: number | null; modelValue: CampaignBase }>();
+// `form` (= modelValue) 承载 filler_enabled / filler_delay_ms / filler_phrases
+// （都是 CampaignBase 字段），随页面底部「保存」走 campaign PATCH。经 computed
+// 间接持有 modelValue，与各 Tab 一致——直接 v-model prop 会触发 vue/no-mutating-props。
+const props = defineProps<{ modelValue: CampaignBase }>();
 const emit = defineEmits<{
   (e: "update:modelValue", v: CampaignBase): void;
 }>();
@@ -86,74 +64,22 @@ const form = computed({
   set: (v) => emit("update:modelValue", v),
 });
 
-interface PhraseRow {
-  key: string;
-  id: number | null;
-  text: string;
-  saving: boolean;
+// 垫词一行分号输入（参照打断白名单）。filler_phrases 是 CampaignBase 的 list[str]。
+const fillerText = ref(form.value.filler_phrases.join("；"));
+watch(
+  () => form.value.filler_phrases,
+  (next) => {
+    const j = next.join("；");
+    if (j !== fillerText.value) fillerText.value = j;
+  },
+);
+// 失焦时才解析（输入中不动 array，否则刚敲的分号被吃掉）。
+function commitFiller(): void {
+  form.value.filler_phrases = fillerText.value
+    .split(/[;；\n]/) // 兼容半角 ; / 全角 ； / 换行
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
-
-const phrases = ref<PhraseRow[]>([]);
-
-function rid(): string {
-  return `f-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-}
-
-async function load() {
-  phrases.value = [];
-  if (!props.campaignId) return;
-  const rows = await fillersApi.list(props.campaignId);
-  phrases.value = rows.map((p) => ({
-    key: rid(),
-    id: p.id,
-    text: p.phrase,
-    saving: false,
-  }));
-}
-
-function addPhrase() {
-  phrases.value.push({ key: rid(), id: null, text: "", saving: false });
-}
-
-async function savePhrase(ph: PhraseRow) {
-  if (!props.campaignId) return;
-  if (!ph.text.trim()) {
-    ElMessage.warning("垫词内容不能为空");
-    return;
-  }
-  ph.saving = true;
-  try {
-    if (ph.id == null) {
-      const created = await fillersApi.create({
-        campaign_id: props.campaignId,
-        phrase: ph.text,
-      });
-      ph.id = created.id;
-    } else {
-      await fillersApi.update(ph.id, { phrase: ph.text });
-    }
-    ElMessage.success("已保存");
-  } catch (err: unknown) {
-    ElMessage.error(err instanceof Error ? err.message : "保存失败");
-  } finally {
-    ph.saving = false;
-  }
-}
-
-async function removePhrase(ph: PhraseRow) {
-  if (ph.id != null) {
-    try {
-      await fillersApi.remove(ph.id);
-    } catch (err: unknown) {
-      ElMessage.error(err instanceof Error ? err.message : "删除失败");
-      return;
-    }
-  }
-  phrases.value = phrases.value.filter((p) => p.key !== ph.key);
-}
-
-watch(() => props.campaignId, () => void load());
-onMounted(() => void load());
 </script>
 
 <style scoped>
@@ -203,32 +129,5 @@ onMounted(() => void load());
   font-size: 12px;
   color: var(--isales-muted-foreground);
   line-height: 1.6;
-}
-.filler__save-note {
-  margin-top: var(--isales-space-1);
-  font-size: var(--isales-font-size-xs);
-  color: var(--isales-muted-foreground);
-}
-.filler__empty {
-  margin: var(--isales-space-2) 0;
-  font-size: var(--isales-font-size-sm);
-  color: var(--isales-muted-foreground);
-  text-align: center;
-  padding: var(--isales-space-4);
-  border: 1px dashed var(--isales-border);
-  border-radius: var(--isales-radius-md);
-}
-.fset {
-  display: flex;
-  flex-direction: column;
-  gap: var(--isales-space-2);
-  padding: var(--isales-space-3);
-  background: var(--isales-muted);
-  border-radius: var(--isales-radius-md);
-}
-.phrase {
-  display: flex;
-  align-items: center;
-  gap: var(--isales-space-2);
 }
 </style>

@@ -223,8 +223,8 @@
         singleton
       />
 
-      <!-- 垫词 (filler) — 垫词组即时保存；开关/触发延迟随底部保存条提交。 -->
-      <FillerEditor v-model="form" :campaign-id="id" />
+      <!-- 垫词 (filler) — 开关/触发延迟/垫词短语随底部保存条一起提交。 -->
+      <FillerEditor v-model="form" />
 
       <section class="card card--red">
         <header class="card__head">

@@ -225,22 +225,6 @@ export type ToolConfig = HangupToolConfig | TransferToolConfig;
 
 export type GenerationStatus = "pending" | "running" | "succeeded" | "failed";
 
-export interface FillerPhraseRead {
-  id: number;
-  campaign_id: number;
-  phrase: string;
-  audio_url: string | null;
-  generation_status: GenerationStatus;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface FillerPhraseNestedWrite {
-  phrase: string;
-  audio_url?: string | null;
-  generation_status?: GenerationStatus;
-}
-
 export interface CallbackConfigNestedWrite {
   name: string;
   trigger: Record<string, unknown>;
@@ -298,6 +282,10 @@ export interface CampaignBase {
   // default 600ms: only play a filler when first audio is slow.
   filler_delay_ms: number | null;
 
+  // filler phrases — flat per-campaign pool (filler-campaign-column), edited as
+  // a semicolon-separated input like interruption_whitelist.
+  filler_phrases: string[];
+
   // Composable barge-in rule tree; NULL → engine synthesizes from the legacy
   // whitelist + min_duration below (engine-interruption-rule-tree).
   interruption_rules: InterruptionRule | null;
@@ -333,7 +321,6 @@ export interface CampaignDetail extends CampaignBase {
   created_at: string;
   updated_at: string;
   role_configs: RoleConfigRead[];
-  filler_phrases: FillerPhraseRead[];
   callback_configs: unknown[];
 }
 
@@ -352,13 +339,11 @@ export interface CampaignNestedCreate extends Partial<CampaignBase> {
   name: string;
   concurrency: number;
   role_configs?: RoleConfigNestedWrite[];
-  filler_phrases?: FillerPhraseNestedWrite[];
   callback_configs?: CallbackConfigNestedWrite[];
 }
 
 export type CampaignNestedUpdate = Partial<CampaignBase> & {
   role_configs?: RoleConfigNestedWrite[];
-  filler_phrases?: FillerPhraseNestedWrite[];
   callback_configs?: CallbackConfigNestedWrite[];
 };
 
@@ -390,6 +375,7 @@ export const CAMPAIGN_DEFAULTS: CampaignBase = {
   greeting: null,
   filler_enabled: false,
   filler_delay_ms: null,
+  filler_phrases: [],
   interruption_rules: null,
   interruption_whitelist: [],
   interruption_min_duration_ms: 400,

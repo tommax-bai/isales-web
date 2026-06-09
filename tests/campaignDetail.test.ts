@@ -16,8 +16,9 @@ vi.mock("@/api/voice", () => ({
 }));
 
 // Hoisted so the (hoisted) vi.mock factory can reference them. A detail carrying
-// the self-managed children (role_configs / filler_phrases / callback_configs) that
-// buildPayload MUST strip so a scalar save doesn't children-replace-clobber them.
+// the self-managed children (role_configs / callback_configs) that buildPayload
+// MUST strip so a scalar save doesn't children-replace-clobber them. filler_phrases
+// is now a plain CampaignBase list[str] field, so it rides along in the payload.
 const { DETAIL, updateSpy } = vi.hoisted(() => {
   const DETAIL = {
     id: 3,
@@ -33,7 +34,7 @@ const { DETAIL, updateSpy } = vi.hoisted(() => {
     role_configs: [
       { id: 1, campaign_id: 3, kind: "referee", label: "intent", model: "m", current_prompt_version_id: null, temperature: 0.5, top_p: 1, ext_params: {}, enabled: true, created_at: "", updated_at: "" },
     ],
-    filler_phrases: [{ id: 1, campaign_id: 3, phrase: "嗯", audio_url: null, generation_status: "pending", created_at: "", updated_at: "" }],
+    filler_phrases: ["嗯"],
     callback_configs: [{ id: 9 }],
   };
   return { DETAIL, updateSpy: vi.fn(() => Promise.resolve(DETAIL)) };
@@ -96,8 +97,8 @@ describe("CampaignDetail (single-page scene config)", () => {
     vm.form.greeting = "   "; // whitespace-only → null
     const payload = vm.buildPayload();
     expect("role_configs" in payload).toBe(false);
-    expect("filler_phrases" in payload).toBe(false);
     expect("callback_configs" in payload).toBe(false);
+    expect(payload.filler_phrases).toEqual(["嗯"]); // CampaignBase scalar — rides along
     expect(payload.greeting).toBeNull();
     expect(payload.name).toBe("测试场景"); // scalar fields ride along
     wrapper.unmount();

@@ -1,6 +1,6 @@
-// per-campaign 配置 DTO —— 对齐 isales-api 的 role_config / prompt_version /
-// filler 端点（web-admin-campaign-workflow §2）。
-import type { GenerationStatus, RoleKind } from "@/types/campaign";
+// per-campaign 配置 DTO —— 对齐 isales-api 的 role_config / prompt_version
+// 端点（web-admin-campaign-workflow §2）。
+import type { RoleKind } from "@/types/campaign";
 
 export type { GenerationStatus, RoleKind } from "@/types/campaign";
 
@@ -75,28 +75,4 @@ export interface PromptVersionCreate {
 export interface PromptVersionUpdate {
   content?: string;
   is_active?: boolean;
-}
-
-// ---- filler_phrase (per-campaign flat pool) -------------------------------
-
-export interface FillerPhrase {
-  id: number;
-  campaign_id: number;
-  phrase: string;
-  audio_url: string | null;
-  generation_status: GenerationStatus;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface FillerPhraseCreate {
-  campaign_id: number;
-  phrase: string;
-  audio_url?: string | null;
-}
-
-export interface FillerPhraseUpdate {
-  phrase?: string;
-  audio_url?: string | null;
-  generation_status?: GenerationStatus;
 }
