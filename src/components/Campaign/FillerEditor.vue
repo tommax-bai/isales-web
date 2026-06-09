@@ -14,6 +14,31 @@
       </el-button>
     </header>
 
+    <div class="filler__config">
+      <el-form label-width="96px" label-position="left">
+        <el-form-item label="启用垫词">
+          <el-switch v-model="form.filler_enabled" />
+          <div class="filler__hint">
+            streaming 主链路首音频 ~500ms，filler 仅在用慢模型时建议启用。默认关闭。
+          </div>
+        </el-form-item>
+        <el-form-item v-if="form.filler_enabled" label="触发延迟 (ms)">
+          <el-input-number
+            v-model="form.filler_delay_ms"
+            :min="0"
+            :step="100"
+            placeholder="留空默认 600ms"
+          />
+          <div class="filler__hint">
+            首音频超过此时长还没出，才播一句垫词遮等待；快的轮次不会播。留空使用默认 600ms。
+          </div>
+        </el-form-item>
+      </el-form>
+      <p class="filler__save-note">
+        开关与触发延迟随页面底部「保存」生效；下面的垫词组改完即时保存。
+      </p>
+    </div>
+
     <p v-if="sets.length === 0" class="filler__empty">
       暂无垫词组——点击「新增垫词组」开始。
     </p>
@@ -57,11 +82,23 @@
 <script setup lang="ts">
 import { ElMessage } from "element-plus";
 import { Music, Plus, Save, Trash2 } from "lucide-vue-next";
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 
 import { fillersApi } from "@/api/fillers";
+import type { CampaignBase } from "@/types/campaign";
 
-const props = defineProps<{ campaignId: number | null }>();
+// `form` (= modelValue) 承载 filler_enabled / filler_delay_ms（CampaignBase 字段，
+// 随页面底部「保存」提交）；垫词组本身按 campaign-id 即时保存，两套保存语义并存。
+// 经 computed 间接持有 modelValue，与各 Tab 一致——直接 v-model prop 会触发
+// vue/no-mutating-props。
+const props = defineProps<{ campaignId: number | null; modelValue: CampaignBase }>();
+const emit = defineEmits<{
+  (e: "update:modelValue", v: CampaignBase): void;
+}>();
+const form = computed({
+  get: () => props.modelValue,
+  set: (v) => emit("update:modelValue", v),
+});
 
 interface PhraseRow {
   key: string;
@@ -217,6 +254,21 @@ onMounted(() => void load());
 }
 .filler__desc {
   margin-top: 2px;
+  font-size: var(--isales-font-size-xs);
+  color: var(--isales-muted-foreground);
+}
+.filler__config {
+  padding: var(--isales-space-3);
+  background: var(--isales-muted);
+  border-radius: var(--isales-radius-md);
+}
+.filler__hint {
+  font-size: 12px;
+  color: var(--isales-muted-foreground);
+  line-height: 1.6;
+}
+.filler__save-note {
+  margin-top: var(--isales-space-1);
   font-size: var(--isales-font-size-xs);
   color: var(--isales-muted-foreground);
 }

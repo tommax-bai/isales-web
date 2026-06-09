@@ -14,12 +14,7 @@
       <el-input-number v-model="form.wrap_up_max_seconds" :min="0" />
     </el-form-item>
     <el-form-item label="收尾结束语">
-      <el-input
-        v-model="closingText"
-        type="textarea"
-        :rows="3"
-        placeholder="每行一句"
-      />
+      <ExpandingTextarea v-model="closingText" placeholder="每行一句" />
     </el-form-item>
   </el-form>
 </template>
@@ -28,6 +23,7 @@
 import { computed, ref, watch } from "vue";
 
 import type { CampaignBase } from "@/types/campaign";
+import ExpandingTextarea from "@/components/Common/ExpandingTextarea.vue";
 
 const props = defineProps<{
   modelValue: CampaignBase;

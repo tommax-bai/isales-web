@@ -395,7 +395,7 @@ export const CAMPAIGN_DEFAULTS: CampaignBase = {
   referee_timeout_ms: 600,
   referee_fail_open_route: "main",
   max_silence_activations: 2,
-  silence_threshold_ms: 3000,
+  silence_threshold_ms: 4000,
   silence_phrases: [],
   silence_hangup_phrase: null,
   max_no_progress_seconds: null,

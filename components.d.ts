@@ -54,6 +54,7 @@ declare module 'vue' {
     ElUpload: typeof import('element-plus/es')['ElUpload']
     EmptyState: typeof import('./src/components/Common/EmptyState.vue')['default']
     ErrorBoundary: typeof import('./src/components/Common/ErrorBoundary.vue')['default']
+    ExpandingTextarea: typeof import('./src/components/Common/ExpandingTextarea.vue')['default']
     FillerEditor: typeof import('./src/components/Campaign/FillerEditor.vue')['default']
     FillerSetDialog: typeof import('./src/components/Campaign/FillerSetDialog.vue')['default']
     GoalAchievementPanel: typeof import('./src/components/Calls/GoalAchievementPanel.vue')['default']

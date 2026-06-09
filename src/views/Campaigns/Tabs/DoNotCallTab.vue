@@ -1,10 +1,8 @@
 <template>
   <el-form label-width="200px" class="form">
     <el-form-item label="勿打关键词">
-      <el-input
+      <ExpandingTextarea
         v-model="keywordsText"
-        type="textarea"
-        :rows="3"
         placeholder="每行一个 — 用户说出即加入勿打名单"
       />
       <div class="hint">命中关键词的线索后续不再外呼（retry-followup spec § 勿打）。</div>
@@ -26,6 +24,7 @@
 import { computed, ref, watch } from "vue";
 
 import type { CampaignBase } from "@/types/campaign";
+import ExpandingTextarea from "@/components/Common/ExpandingTextarea.vue";
 
 const props = defineProps<{
   modelValue: CampaignBase;

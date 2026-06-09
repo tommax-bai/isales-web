@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { nextTick } from "vue";
 
 import BasicTab from "@/views/Campaigns/Tabs/BasicTab.vue";
+import EndpointingTab from "@/views/Campaigns/Tabs/EndpointingTab.vue";
 import InterruptionTab from "@/views/Campaigns/Tabs/InterruptionTab.vue";
 import RetryFollowUpTab from "@/views/Campaigns/Tabs/RetryFollowUpTab.vue";
 import SilenceTab from "@/views/Campaigns/Tabs/SilenceTab.vue";
@@ -46,10 +47,10 @@ describe("BasicTab", () => {
   });
 });
 
-describe("InterruptionTab", () => {
-  it("renders the asr_eos_silence_ms input and emits edits", async () => {
+describe("EndpointingTab", () => {
+  it("renders the asr_eos_silence_ms (静默时长) input and the clip-the-caller hint", async () => {
     const form: CampaignBase = { ...CAMPAIGN_DEFAULTS, asr_eos_silence_ms: 350 };
-    const wrapper = mount(InterruptionTab, {
+    const wrapper = mount(EndpointingTab, {
       props: { modelValue: form, fieldErrors: {} },
     });
     await nextTick();
@@ -60,7 +61,20 @@ describe("InterruptionTab", () => {
     );
     expect(values).toContain("350");
     // The clip-the-caller warning hint is present.
-    expect(wrapper.text()).toContain("太短会把停顿误判成说完打断客户");
+    expect(wrapper.text()).toContain("太短会把句中停顿误判成说完");
+    wrapper.unmount();
+  });
+});
+
+describe("InterruptionTab", () => {
+  it("explains the short_reply vs listen_only continuous-interruption strategy", async () => {
+    const form: CampaignBase = { ...CAMPAIGN_DEFAULTS };
+    const wrapper = mount(InterruptionTab, {
+      props: { modelValue: form, fieldErrors: {} },
+    });
+    await nextTick();
+    expect(wrapper.text()).toContain("仅倾听");
+    expect(wrapper.text()).toContain("AI 这轮不回应");
     wrapper.unmount();
   });
 });

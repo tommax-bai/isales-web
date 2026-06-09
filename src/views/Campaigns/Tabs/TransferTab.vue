@@ -5,10 +5,8 @@
       <el-switch v-model="form.transfer_keyword_enabled" />
     </el-form-item>
     <el-form-item label="关键词">
-      <el-input
+      <ExpandingTextarea
         v-model="keywordsText"
-        type="textarea"
-        :rows="3"
         placeholder="用分号(；)分隔 — 用户说出即触发转人工"
         :disabled="!form.transfer_keyword_enabled"
         @change="commitKeywords"
@@ -43,6 +41,9 @@
         :min="1"
         :disabled="!form.transfer_round_enabled"
       />
+      <div class="hint">
+        对话轮数达到此值且目标仍未达成时转人工——兜底防止 AI 原地打转。
+      </div>
     </el-form-item>
 
     <h4 class="section">LLM 触发</h4>
@@ -59,10 +60,8 @@
 
     <h4 class="section">转接话术</h4>
     <el-form-item label="转接兜底语">
-      <el-input
+      <ExpandingTextarea
         v-model="phrasesText"
-        type="textarea"
-        :rows="3"
         placeholder="每行一句 — 转人工前对用户说"
       />
     </el-form-item>
@@ -73,6 +72,7 @@
 import { computed, ref, watch } from "vue";
 
 import type { CampaignBase } from "@/types/campaign";
+import ExpandingTextarea from "@/components/Common/ExpandingTextarea.vue";
 
 const props = defineProps<{
   modelValue: CampaignBase;
@@ -129,5 +129,10 @@ watch(phrasesText, (text) => {
   color: #303133;
   border-left: 3px solid #409eff;
   padding-left: 8px;
+}
+.hint {
+  font-size: 12px;
+  color: #909399;
+  line-height: 1.6;
 }
 </style>

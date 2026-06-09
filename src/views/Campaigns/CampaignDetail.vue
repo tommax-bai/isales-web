@@ -64,38 +64,27 @@
         </header>
         <el-form label-width="96px" class="cd__form">
           <el-form-item label="场景名称">
-            <el-input v-model="form.name" />
+            <el-input v-model="form.name" style="width: 360px" />
           </el-form-item>
           <el-form-item label="并发上限">
             <el-input-number v-model="form.concurrency" :min="1" :max="100" />
           </el-form-item>
           <el-form-item label="音色 ID">
-            <el-select
+            <el-input
               v-model="form.voice_id"
-              filterable
-              allow-create
               clearable
-              default-first-option
-              placeholder="从音色目录选择，或手填 vendor voice id"
-              style="width: 100%"
-            >
-              <el-option
-                v-for="v in voiceModels"
-                :key="v.id"
-                :label="`${v.name}（${v.voice_id}）`"
-                :value="v.voice_id"
-              />
-            </el-select>
+              placeholder="手填 vendor voice id，如 zh_female_xiaohe_uranus_bigtts"
+              style="width: 360px"
+            />
             <div class="cd__hint">
-              从音色目录选择，或手填 vendor voice id（如 zh_female_xiaohe_uranus_bigtts）；留空走默认。
+              手填 vendor voice id（如 zh_female_xiaohe_uranus_bigtts）；留空走默认。
             </div>
           </el-form-item>
           <el-form-item label="开场白文案">
-            <el-input
+            <ExpandingTextarea
               v-model="form.greeting"
-              type="textarea"
-              :rows="3"
               placeholder="留空则由 LLM 生成开场白"
+              style="width: 520px"
             />
             <div class="cd__preview-row">
               <el-button
@@ -112,23 +101,6 @@
             </div>
             <div class="cd__hint">
               通话接通后引擎播放的第一句话。留空 = 走 LLM 路径。试听用上面填的音色现合成。
-            </div>
-          </el-form-item>
-          <el-form-item label="垫词 (filler)">
-            <el-switch v-model="form.filler_enabled" />
-            <div class="cd__hint">
-              streaming 主链路首音频 ~500ms，filler 仅在用慢模型时建议启用。默认关闭。
-            </div>
-          </el-form-item>
-          <el-form-item v-if="form.filler_enabled" label="垫词触发延迟 (ms)">
-            <el-input-number
-              v-model="form.filler_delay_ms"
-              :min="0"
-              :step="100"
-              placeholder="留空默认 600ms"
-            />
-            <div class="cd__hint">
-              首音频超过此时长还没出，才播一句垫词遮等待；快的轮次不会播。留空使用默认 600ms。
             </div>
           </el-form-item>
         </el-form>
@@ -230,8 +202,16 @@
         badge-color="green"
       />
 
-      <!-- 垫词 (filler) — 即时保存 -->
-      <FillerEditor :campaign-id="id" />
+      <!-- 垫词 (filler) — 垫词组即时保存；开关/触发延迟随底部保存条提交。 -->
+      <FillerEditor v-model="form" :campaign-id="id" />
+
+      <section class="card">
+        <header class="card__head">
+          <Settings :size="16" />
+          <h3 class="card__title">用户断句判定</h3>
+        </header>
+        <EndpointingTab v-model="form" :field-errors="fieldErrors" />
+      </section>
 
       <section class="card">
         <header class="card__head">
@@ -324,16 +304,16 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { campaignsApi, ttsPreviewError } from "@/api/campaigns";
-import { voiceApi } from "@/api/voice";
-import type { VoiceModel } from "@/types/voice";
 import FillerEditor from "@/components/Campaign/FillerEditor.vue";
 import PromptTierEditor from "@/components/Campaign/PromptTierEditor.vue";
 import PageHeader from "@/components/Common/PageHeader.vue";
 import StatusBadge from "@/components/Common/StatusBadge.vue";
+import ExpandingTextarea from "@/components/Common/ExpandingTextarea.vue";
 // form-driven 高级配置小节（折叠进单页，原 CampaignEdit 的 tab 组件复用为内联小节）
 import RoutingRulesTab from "@/views/Campaigns/Tabs/RoutingRulesTab.vue";
 import ToolsTab from "@/views/Campaigns/Tabs/ToolsTab.vue";
 import SilenceTab from "@/views/Campaigns/Tabs/SilenceTab.vue";
+import EndpointingTab from "@/views/Campaigns/Tabs/EndpointingTab.vue";
 import InterruptionTab from "@/views/Campaigns/Tabs/InterruptionTab.vue";
 import TransferTab from "@/views/Campaigns/Tabs/TransferTab.vue";
 import WrapUpTab from "@/views/Campaigns/Tabs/WrapUpTab.vue";
@@ -360,7 +340,6 @@ const campaign = ref<CampaignDetail | null>(null);
 const loading = ref(false);
 const saving = ref(false);
 const toggling = ref(false);
-const voiceModels = ref<VoiceModel[]>([]);
 
 const EMPTY_PROGRESS: CampaignProgress = {
   campaign_id: id,
@@ -446,19 +425,8 @@ async function loadProgress() {
   }
 }
 
-// 音色目录（one-role IA §1.4）—— voice_id 从手填字符串升级为可选目录。
-// 拉取失败不阻塞：el-select allow-create 仍可手填 vendor voice id。
-async function loadVoiceModels() {
-  try {
-    voiceModels.value = await voiceApi.list();
-  } catch {
-    voiceModels.value = [];
-  }
-}
-
 async function onRefresh() {
   loading.value = true;
-  void loadVoiceModels();
   try {
     campaign.value = await campaignsApi.get(id);
     // 全量灌入完整 CampaignBase；time_windows 深拷贝避免改动 campaign ref。
@@ -639,7 +607,8 @@ defineExpose({ form, roleConfigs, callbackConfigs, buildPayload, onSave, fieldEr
   color: var(--isales-muted-foreground);
 }
 .cd__form {
-  max-width: 520px;
+  /* no max-width: hints below each field render on a single line (white-space:
+     nowrap), so the content column needs the card's full width to fit them. */
 }
 .cd__preview-row {
   display: flex;
@@ -655,6 +624,7 @@ defineExpose({ form, roleConfigs, callbackConfigs, buildPayload, onSave, fieldEr
 }
 .cd__hint {
   margin-top: 4px;
+  white-space: nowrap;
 }
 .window {
   display: flex;

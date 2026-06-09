@@ -63,10 +63,9 @@
           />
         </div>
       </div>
-      <el-input
+      <ExpandingTextarea
         v-model="row.prompt"
-        type="textarea"
-        :rows="4"
+        :collapsed-rows="4"
         :placeholder="`${title} 的 system prompt`"
       />
       <div class="cfg__foot">
@@ -93,6 +92,7 @@ import { computed, onMounted, ref, watch, type Component } from "vue";
 import { promptVersionsApi } from "@/api/promptVersions";
 import { roleConfigsApi } from "@/api/roleConfigs";
 import StatusBadge from "@/components/Common/StatusBadge.vue";
+import ExpandingTextarea from "@/components/Common/ExpandingTextarea.vue";
 import type { RoleKind } from "@/types/campaign";
 import {
   LLM_PROVIDER_DEFAULT_MODEL,

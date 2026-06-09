@@ -19,10 +19,8 @@
       <div class="hint">同一通电话内沉默激活的上限；超出后挂断或转人工。</div>
     </el-form-item>
     <el-form-item label="沉默激活兜底语">
-      <el-input
+      <ExpandingTextarea
         v-model="silencePhrasesText"
-        type="textarea"
-        :rows="3"
         placeholder="用分号(；)分隔多句，如：请问您还在吗？；您好，能听到吗？"
         @change="commitSilencePhrases"
       />
@@ -31,8 +29,11 @@
     <el-form-item label="挂断兜底语">
       <el-input
         v-model="form.silence_hangup_phrase"
-        placeholder="达到 max_silence_activations 后说出"
+        placeholder="如：看来现在不太方便，那我先挂了，祝您生活愉快。"
       />
+      <div class="hint">
+        沉默激活已用满「最大激活次数」后，客户再次静音达到「沉默阈值」时，播这句然后挂断。
+      </div>
     </el-form-item>
     <el-form-item
       label="无进展超时 (s)"
@@ -48,6 +49,7 @@
 import { computed, ref, watch } from "vue";
 
 import type { CampaignBase } from "@/types/campaign";
+import ExpandingTextarea from "@/components/Common/ExpandingTextarea.vue";
 
 const props = defineProps<{
   modelValue: CampaignBase;

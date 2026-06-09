@@ -1,10 +1,8 @@
 <template>
   <el-form label-width="220px" class="form">
     <el-form-item label="打断白名单">
-      <el-input
+      <ExpandingTextarea
         v-model="whitelistText"
-        type="textarea"
-        :rows="3"
         placeholder="用分号(；)分隔 — 用户说出这些短语时不计入打断"
         @change="commitWhitelist"
       />
@@ -21,33 +19,21 @@
       <div class="hint">低于此时长的用户语音不视为打断。</div>
     </el-form-item>
     <el-form-item
-      label="ASR 端点静默 (ms)"
-      :error="fieldErrors?.asr_eos_silence_ms"
-    >
-      <el-input-number
-        v-model="form.asr_eos_silence_ms"
-        :min="0"
-        :step="50"
-        placeholder="留空走默认 400ms"
-      />
-      <div class="hint">
-        用户停顿多久判定为「说完」、AI 开口。越小开口越快；<strong
-          >太短会把停顿误判成说完打断客户</strong
-        >。留空使用默认 400ms。
-      </div>
-    </el-form-item>
-    <el-form-item
       label="最大连续打断"
       :error="fieldErrors?.max_continuous_interruptions"
     >
       <el-input-number v-model="form.max_continuous_interruptions" :min="0" />
-      <div class="hint">连续打断超过此次数触发策略切换。</div>
+      <div class="hint">连续打断超过此次数触发下面的「连续打断策略」。</div>
     </el-form-item>
     <el-form-item label="连续打断策略">
       <el-radio-group v-model="form.continuous_interruption_strategy">
         <el-radio value="short_reply">短回复</el-radio>
         <el-radio value="listen_only">仅倾听</el-radio>
       </el-radio-group>
+      <div class="hint">
+        连续打断达上限后这一轮的应对：<strong>短回复</strong> = AI 仍回应、但压成一句话；<strong>仅倾听</strong>
+        = AI 这轮不回应，只播「您请说」让客户先讲完并重置计数。
+      </div>
     </el-form-item>
 
     <el-divider content-position="left">高级：可组合打断规则</el-divider>
@@ -83,6 +69,7 @@ import {
   type InterruptionRule,
   defaultTreeFrom,
 } from "@/types/campaign";
+import ExpandingTextarea from "@/components/Common/ExpandingTextarea.vue";
 
 import InterruptionRuleEditor from "./InterruptionRuleEditor.vue";
 
