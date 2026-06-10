@@ -216,19 +216,57 @@ describe("PromptTierEditor — main lock + labeled + persona", () => {
     w.unmount();
   });
 
-  it("collapsible：默认收起仅显示 title + 开关，展开后才露配置体", async () => {
+  it("collapsible(persona)：cap=1 收起、cap≥2 展开露出配置体 + 并发上限控件", async () => {
     listSpy.mockResolvedValue([rc({ kind: "persona", label: "warm", id: 3 })]);
-    const w = mountEditor({ kind: "persona", labeled: true, collapsible: true });
+    const w = mountEditor({
+      kind: "persona",
+      labeled: true,
+      collapsible: true,
+      personaFanoutCap: 1,
+    });
     await flushPromises();
-    // 收起：title 在、有展开开关、配置体(.cfg)与新增按钮不渲染
+    // 关(cap=1)：title 在、有功能开关、配置体(.cfg)/新增/并发上限控件不渲染
     expect(w.find(".tier__title").text()).toContain("T");
     expect(w.find(".tier__toggle").exists()).toBe(true);
     expect(w.find(".cfg").exists()).toBe(false);
+    expect(w.find(".tier__fanout").exists()).toBe(false);
     expect(w.findAll("button").some((b) => b.text().includes("新增"))).toBe(false);
-    // 展开
-    (w.vm as unknown as { expanded: boolean }).expanded = true;
-    await nextTick();
+    // 开(cap≥2)：展开，配置体 + 卡内「人设并发上限」控件出现
+    await w.setProps({ personaFanoutCap: 2 });
     expect(w.find(".cfg").exists()).toBe(true);
+    expect(w.find(".tier__fanout").exists()).toBe(true);
+    w.unmount();
+  });
+
+  it("persona 卡头开关即功能开关：开→写 cap=2（emit persona_fanout_cap）", async () => {
+    const w = mountEditor({
+      kind: "persona",
+      labeled: true,
+      collapsible: true,
+      personaFanoutCap: 1,
+    });
+    await flushPromises();
+    const vm = w.vm as unknown as { personaOn: boolean };
+    expect(vm.personaOn).toBe(false); // cap=1 → 开关「关」
+    vm.personaOn = true; // 切「开」
+    await nextTick();
+    expect(w.emitted("update:personaFanoutCap")?.at(-1)).toEqual([2]);
+    w.unmount();
+  });
+
+  it("persona 卡头开关关闭：写 cap=1（emit persona_fanout_cap）", async () => {
+    const w = mountEditor({
+      kind: "persona",
+      labeled: true,
+      collapsible: true,
+      personaFanoutCap: 3,
+    });
+    await flushPromises();
+    const vm = w.vm as unknown as { personaOn: boolean };
+    expect(vm.personaOn).toBe(true); // cap=3 → 开关「开」
+    vm.personaOn = false; // 切「关」
+    await nextTick();
+    expect(w.emitted("update:personaFanoutCap")?.at(-1)).toEqual([1]);
     w.unmount();
   });
 });

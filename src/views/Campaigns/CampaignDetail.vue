@@ -167,21 +167,21 @@
         is-main
       />
 
-      <!-- 多人设推测对话 (persona) — 紧随 main；collapsible 默认收起（高级选项，
-           仅显示 title）。即时保存；标识(label)被「门控路由」route 动作引用。投机并行：
-           每轮按「人设并发上限」(form.persona_fanout_cap, 1=关) 与 main 并行起跑，门控
+      <!-- 多人设推测对话 (persona) — 紧随 main；卡头开关即功能开关（绑 persona_fanout_cap，
+           1=关仅 main、2/3=开），关→收起、开→展开露出「人设并发上限」+人设列表。人设行即时
+           保存；标识(label)被「门控路由」route 动作引用。投机并行：每轮与 main 并行起跑，门控
            选中其一放行、其余取消。删除前据 routing_rules 做引用校验。 -->
       <PromptTierEditor
         :campaign-id="id"
         kind="persona"
         title="多人设推测对话 (persona)"
-        description="可选的并行话术人设：每轮与主对话一起投机起跑，门控按「门控路由」规则选中其一放行、其余取消。标识(label)即路由规则引用源；并发上限在「门控路由 → 人设并发上限」设置（设为 1 即关闭）。"
+        description="可选的并行话术人设：卡头开关启用后，每轮与主对话一起投机起跑，门控按「门控路由」规则选中其一放行、其余取消。标识(label)即路由规则引用源；并发上限(2/3)在本卡内设置。"
         :icon="Users"
         badge-color="yellow"
         plain-icon
         labeled
         collapsible
-        :persona-fanout-cap="form.persona_fanout_cap"
+        v-model:persona-fanout-cap="form.persona_fanout_cap"
         :routing-rules="form.routing_rules"
       />
 

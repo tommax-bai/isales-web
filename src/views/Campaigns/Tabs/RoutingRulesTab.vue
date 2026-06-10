@@ -13,12 +13,8 @@
 
       <el-divider content-position="left">开口前门控 (gating)</el-divider>
 
-      <el-form-item label="人设并发上限">
-        <el-input-number v-model="form.persona_fanout_cap" :min="1" :max="3" />
-        <div class="hint">
-          投机并行的人设总数（含主对话），上限 3。设为 1 即关闭多人设。门控监管选中其一、其余取消（厂商按取消前已生成的 token 计费）。
-        </div>
-      </el-form-item>
+      <!-- 「人设并发上限」(persona_fanout_cap) 已迁入「多人设推测对话 (persona)」卡内
+           （卡头开关 + 卡内 2/3 选择器）；此处不再渲染，避免一处配置两个入口。 -->
       <el-form-item label="门控超时 (ms)">
         <el-input-number v-model="form.referee_timeout_ms" :min="1" :step="100" />
         <div class="hint">门控监管在开口前需在该时限内给出判定；超时则按下方兜底路由放行。默认 600ms。</div>

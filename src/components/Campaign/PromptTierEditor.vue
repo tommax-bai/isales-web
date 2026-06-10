@@ -12,12 +12,13 @@
           <span>{{ description }}</span>
         </p>
       </div>
-      <!-- collapsible（如 persona）：默认收起、仅显示 title；开关展开后才露配置体。 -->
+      <!-- collapsible（persona）：卡头开关即功能开关（绑 persona_fanout_cap）。
+           关=关闭多人设推测(cap=1)、卡体收起；开=启用(cap≥2)、卡体展开露出配置体。 -->
       <el-switch
         v-if="collapsible"
-        v-model="expanded"
-        active-text="展开"
-        inactive-text="收起"
+        v-model="personaOn"
+        active-text="启用"
+        inactive-text="关闭"
         class="tier__toggle"
       />
       <template v-if="!solo && open">
@@ -30,6 +31,15 @@
     </header>
 
     <template v-if="open">
+      <!-- persona 卡专属：人设并发上限（含 main 的投机并行路由总数）。开关为「开」时 cap 必 ≥2。 -->
+      <div v-if="collapsible" class="tier__fanout">
+        <span class="tier__fanout-label">人设并发上限</span>
+        <el-input-number v-model="fanoutCap" :min="2" :max="3" size="small" />
+        <span class="tier__fanout-hint">
+          每轮与主对话一起投机并行的路由总数（含 main），上限 3。门控选中其一放行、其余取消（厂商按取消前已生成的 token 计费）。
+        </span>
+      </div>
+
       <p v-if="rows.length === 0 && !solo" class="tier__empty">
         暂无配置——点击「新增」添加一条 {{ title }}。
       </p>
@@ -154,22 +164,30 @@ const props = defineProps<{
   // 启用后「标识」输入映射到顶层 label（必填、kind 内唯一），而非 ext_params.name。
   // 不启用时旧行为不变（标识写 ext_params.name）。
   labeled?: boolean;
-  // personaFanoutCap: persona 卡专用——启用人设总数（含 main）不得超过该并发上限。
-  personaFanoutCap?: number;
   // routingRules: persona 卡专用——删除前据此校验该 label 是否仍被 route 动作引用。
   routingRules?: RoutingRule[];
-  // collapsible: 卡可折叠（如 persona 高级选项）——默认收起、仅显示 title，开关展开
-  // 后才露配置体。纯展示折叠，不影响 persona_fanout_cap 运行语义（那个在「门控路由」配）。
+  // collapsible: persona 卡专用——卡头开关即功能开关（绑 persona_fanout_cap：关=1 仅 main、
+  // 开=2/3 启用推测）。开=卡体展开露出「人设并发上限」+人设列表；关=收起。非纯前端折叠。
   collapsible?: boolean;
 }>();
+
+// personaFanoutCap: persona 卡专用，双向——卡头开关与卡内「人设并发上限」控件共同读写
+// 顶层 campaign.persona_fanout_cap（1=关、2/3=开）。父用 v-model:persona-fanout-cap。
+const fanoutCap = defineModel<number>("personaFanoutCap");
 
 // solo: 逻辑上单条、无列表操作的卡（extractor singleton / main）——隐藏「新增 /
 // X 条 / 标识 / 删除」；load 后若无配置自动补一条空白可编辑行。
 const solo = computed(() => props.singleton || props.isMain);
 
-// collapsible 卡的展开态（默认收起）。非 collapsible 卡 open 恒 true，行为不变。
-const expanded = ref(false);
-const open = computed(() => !props.collapsible || expanded.value);
+// collapsible 卡（persona）卡头开关即功能开关：绑 persona_fanout_cap。关→cap=1 卡体收起；
+// 开→cap≥2（从 1 切开默认 2）卡体展开。非 collapsible 卡 open 恒 true，行为不变。
+const personaOn = computed<boolean>({
+  get: () => (fanoutCap.value ?? 1) > 1,
+  set: (on) => {
+    fanoutCap.value = on ? Math.max(2, fanoutCap.value ?? 2) : 1;
+  },
+});
+const open = computed(() => !props.collapsible || personaOn.value);
 
 // 对齐 SSOT @/types/llmProviders (volcengine + openai + dashscope + mock)；
 // 增减 provider 改 SSOT。mock 是 engine factory 合法 provider 但不在
@@ -285,15 +303,16 @@ async function saveRow(i: number) {
       return;
     }
   }
-  // persona 卡：启用人设总数（含 main）不得超过并发上限。
+  // persona 卡：启用人设总数（含 main）不得超过并发上限（卡内「人设并发上限」控件）。
+  const cap = fanoutCap.value;
   if (
     props.kind === "persona" &&
     row.enabled &&
-    props.personaFanoutCap != null &&
-    1 + rows.value.filter((r) => r.enabled).length > props.personaFanoutCap
+    cap != null &&
+    1 + rows.value.filter((r) => r.enabled).length > cap
   ) {
     ElMessage.error(
-      `启用人设总数（含主对话）不能超过并发上限 ${props.personaFanoutCap}；请调高「门控路由 → 人设并发上限」或先禁用其他人设。`,
+      `启用人设总数（含主对话）不能超过并发上限 ${cap}；请调高本卡「人设并发上限」或先禁用其他人设。`,
     );
     return;
   }
@@ -453,6 +472,26 @@ onMounted(() => void load());
   margin-top: 2px;
   font-size: var(--isales-font-size-xs);
   color: var(--isales-muted-foreground);
+}
+/* persona 卡内的「人设并发上限」行：开关为「开」时显示。 */
+.tier__fanout {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--isales-space-2);
+  padding: var(--isales-space-3);
+  background: var(--isales-muted);
+  border-radius: var(--isales-radius-md);
+}
+.tier__fanout-label {
+  font-size: var(--isales-font-size-sm);
+  font-weight: var(--isales-font-weight-medium);
+}
+.tier__fanout-hint {
+  flex-basis: 100%;
+  font-size: var(--isales-font-size-xs);
+  color: var(--isales-muted-foreground);
+  line-height: 1.6;
 }
 .tier__empty {
   margin: var(--isales-space-2) 0;

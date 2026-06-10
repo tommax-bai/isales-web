@@ -42,6 +42,18 @@ describe("RoutingRulesTab", () => {
     wrapper.unmount();
   });
 
+  it("不再渲染「人设并发上限」控件（已迁入 persona 卡，避免一处配置两个入口）", async () => {
+    const form: CampaignBase = { ...CAMPAIGN_DEFAULTS };
+    const wrapper = mount(RoutingRulesTab, {
+      props: { modelValue: form, roleConfigs: [] },
+    });
+    await nextTick();
+    expect(wrapper.text()).not.toContain("人设并发上限");
+    // 门控超时 / 兜底路由仍在
+    expect(wrapper.text()).toContain("门控超时");
+    wrapper.unmount();
+  });
+
   it("adds a default rule bound to the first referee", async () => {
     const form: CampaignBase = { ...CAMPAIGN_DEFAULTS, routing_rules: [] };
     const wrapper = mount(RoutingRulesTab, {
