@@ -14,6 +14,7 @@ const {
   removeSpy,
   pvCreateSpy,
   pvUpdateSpy,
+  campaignUpdateSpy,
   msg,
 } = vi.hoisted(() => ({
   listSpy: vi.fn(),
@@ -22,6 +23,7 @@ const {
   removeSpy: vi.fn(),
   pvCreateSpy: vi.fn(),
   pvUpdateSpy: vi.fn(),
+  campaignUpdateSpy: vi.fn(),
   msg: { success: vi.fn(), error: vi.fn(), warning: vi.fn() },
 }));
 
@@ -33,6 +35,9 @@ vi.mock("@/api/roleConfigs", () => ({
     remove: removeSpy,
     get: vi.fn(),
   },
+}));
+vi.mock("@/api/campaigns", () => ({
+  campaignsApi: { update: campaignUpdateSpy },
 }));
 vi.mock("@/api/promptVersions", () => ({
   promptVersionsApi: { get: vi.fn(), create: pvCreateSpy, update: pvUpdateSpy },
@@ -89,6 +94,7 @@ describe("PromptTierEditor — main lock + labeled + persona", () => {
     removeSpy.mockResolvedValue(undefined);
     pvCreateSpy.mockResolvedValue({ id: 10 });
     pvUpdateSpy.mockResolvedValue({});
+    campaignUpdateSpy.mockResolvedValue({});
   });
 
   it("main 卡：无 enable 开关 / 删除 / 新增 / 标识，且 load 自动补一条可编辑行", async () => {
@@ -267,6 +273,21 @@ describe("PromptTierEditor — main lock + labeled + persona", () => {
     vm.personaOn = false; // 切「关」
     await nextTick();
     expect(w.emitted("update:personaFanoutCap")?.at(-1)).toEqual([1]);
+    w.unmount();
+  });
+
+  it("persona 卡头开关切换即时落库 persona_fanout_cap（campaign PATCH，对齐同卡即时保存）", async () => {
+    const w = mountEditor({
+      kind: "persona",
+      labeled: true,
+      collapsible: true,
+      personaFanoutCap: 1,
+    });
+    await flushPromises();
+    // 用户点开关 → 切「开」(cap=2) → @change 即时 PATCH，不依赖底部保存条
+    await w.find(".tier__toggle").trigger("click");
+    await flushPromises();
+    expect(campaignUpdateSpy).toHaveBeenCalledWith(1, { persona_fanout_cap: 2 });
     w.unmount();
   });
 });

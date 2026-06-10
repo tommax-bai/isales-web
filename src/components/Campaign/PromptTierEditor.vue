@@ -20,6 +20,7 @@
         active-text="启用"
         inactive-text="关闭"
         class="tier__toggle"
+        @change="persistCap"
       />
       <template v-if="!solo && open">
         <StatusBadge :color="badgeColor">{{ rows.length }} 条</StatusBadge>
@@ -34,7 +35,13 @@
       <!-- persona 卡专属：人设并发上限（含 main 的投机并行路由总数）。开关为「开」时 cap 必 ≥2。 -->
       <div v-if="collapsible" class="tier__fanout">
         <span class="tier__fanout-label">人设并发上限</span>
-        <el-input-number v-model="fanoutCap" :min="2" :max="3" size="small" />
+        <el-input-number
+          v-model="fanoutLevel"
+          :min="2"
+          :max="3"
+          size="small"
+          @change="persistCap"
+        />
         <span class="tier__fanout-hint">
           每轮与主对话一起投机并行的路由总数（含 main），上限 3。门控选中其一放行、其余取消（厂商按取消前已生成的 token 计费）。
         </span>
@@ -131,6 +138,7 @@ import { ElMessage } from "element-plus";
 import { Info, Plus, Save, Trash2 } from "lucide-vue-next";
 import { computed, onMounted, ref, watch, type Component } from "vue";
 
+import { campaignsApi } from "@/api/campaigns";
 import { promptVersionsApi } from "@/api/promptVersions";
 import { roleConfigsApi } from "@/api/roleConfigs";
 import StatusBadge from "@/components/Common/StatusBadge.vue";
@@ -188,6 +196,32 @@ const personaOn = computed<boolean>({
   },
 });
 const open = computed(() => !props.collapsible || personaOn.value);
+
+// 卡内「人设并发上限」输入绑定：开时取值恒 clamp 到 [2,3]。拦截 el-input-number 清空时
+// 的 null/越界写回——否则 cap 瞬时变 null 会让 open 塌陷、卡体连同正在编辑的输入框一起卸载。
+const fanoutLevel = computed<number>({
+  get: () => Math.min(3, Math.max(2, fanoutCap.value ?? 2)),
+  set: (v) => {
+    fanoutCap.value = v == null ? 2 : Math.min(3, Math.max(2, v));
+  },
+});
+
+// 即时落库：persona 卡头开关 / 卡内并发上限改动后直接 PATCH 单字段 persona_fanout_cap，
+// 对齐同卡人设行的「即时保存」语义——避免开关看着已开、cap 却只存内存、不点底部保存就
+// 离开导致后端仍 =1（引擎 personas[:cap-1]=[] → 刚配的人设永不运行）。v-model 已同步父
+// form，故底部保存条不会回退该值。仅 collapsible(persona) 卡有这些控件。
+async function persistCap() {
+  if (!props.campaignId || !props.collapsible) return;
+  const cap = fanoutCap.value ?? 1;
+  try {
+    await campaignsApi.update(props.campaignId, { persona_fanout_cap: cap });
+    ElMessage.success(
+      cap > 1 ? `已启用多人设推测（并发上限 ${cap}）` : "已关闭多人设推测",
+    );
+  } catch (err: unknown) {
+    ElMessage.error(err instanceof Error ? err.message : "保存失败");
+  }
+}
 
 // 对齐 SSOT @/types/llmProviders (volcengine + openai + dashscope + mock)；
 // 增减 provider 改 SSOT。mock 是 engine factory 合法 provider 但不在
