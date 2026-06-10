@@ -259,7 +259,6 @@ export interface CampaignBase {
   silence_threshold_ms: number;
   silence_phrases: string[];
   silence_hangup_phrase: string | null;
-  max_no_progress_seconds: number | null;
 
   // ASR EOS endpoint threshold in ms (pipeline-latency-tail § A). null falls
   // back to the engine default (400ms). Lower = AI opens its turn faster but
@@ -367,7 +366,6 @@ export const CAMPAIGN_DEFAULTS: CampaignBase = {
   silence_threshold_ms: 4000,
   silence_phrases: [],
   silence_hangup_phrase: null,
-  max_no_progress_seconds: null,
   asr_eos_silence_ms: null,
   wrap_up_max_rounds: 3,
   wrap_up_max_seconds: 60,

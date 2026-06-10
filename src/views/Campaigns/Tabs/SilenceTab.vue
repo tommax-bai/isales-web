@@ -36,15 +36,8 @@
         placeholder="如：看来现在不太方便，那我先挂了，祝您生活愉快。"
       />
       <div class="hint">
-        沉默激活已用满「最大激活次数」后，客户再次静音达到「沉默阈值」时，播这句然后挂断。
+        沉默激活已用满「最大激活次数」后，客户再次静音达到「沉默阈值」时，播这句然后直接挂断；留空则直接挂断、不播话术。
       </div>
-    </el-form-item>
-    <el-form-item
-      label="无进展超时 (s)"
-      :error="fieldErrors?.max_no_progress_seconds"
-    >
-      <el-input-number v-model="form.max_no_progress_seconds" :min="0" />
-      <div class="hint">通话超过此时长无新进展则视为僵局，可挂断。空 = 不启用。</div>
     </el-form-item>
   </el-form>
 </template>
