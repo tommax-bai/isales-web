@@ -190,11 +190,13 @@ export function makeRule(type: InterruptionRuleType): InterruptionRule {
 
 // Synthesize the same default tree the engine builds from legacy columns
 // (isales_engine.realtime.interruption_rules.default_rule): AND( NOT
-// keyword(exact, whitelist), length(>=2), duration(>=min_duration_ms) ). The
-// keyword leaf is omitted when the whitelist is empty.
+// keyword(exact, whitelist), length(>=minChars), duration(>=min_duration_ms) ).
+// The keyword leaf is omitted when the whitelist is empty. minChars mirrors
+// campaign.interruption_min_chars (engine default 2).
 export function defaultTreeFrom(
   whitelist: string[],
   minDurationMs: number,
+  minChars: number,
 ): InterruptionRule {
   const rules: InterruptionRule[] = [];
   if (whitelist.length > 0) {
@@ -203,7 +205,7 @@ export function defaultTreeFrom(
       rule: { type: "keyword", values: [...whitelist], match: "exact" },
     });
   }
-  rules.push({ type: "length", value: 2 });
+  rules.push({ type: "length", value: minChars });
   rules.push({ type: "duration", value_ms: minDurationMs });
   return { type: "and", rules };
 }
@@ -290,6 +292,9 @@ export interface CampaignBase {
   interruption_rules: InterruptionRule | null;
   interruption_whitelist: string[];
   interruption_min_duration_ms: number;
+  // Min rune count for the NULL-rule default tree's length leaf (非高级 mode).
+  // Engine default 2; only read when interruption_rules is null.
+  interruption_min_chars: number;
   max_continuous_interruptions: number;
   continuous_interruption_strategy: ContinuousInterruptionStrategy;
 
@@ -377,6 +382,7 @@ export const CAMPAIGN_DEFAULTS: CampaignBase = {
   interruption_rules: null,
   interruption_whitelist: [],
   interruption_min_duration_ms: 400,
+  interruption_min_chars: 2,
   max_continuous_interruptions: 3,
   continuous_interruption_strategy: "short_reply",
   transfer_keyword_enabled: false,

@@ -239,7 +239,7 @@
       <section class="card card--blue">
         <header class="card__head">
           <Settings :size="16" />
-          <h3 class="card__title">打断保护</h3>
+          <h3 class="card__title">打断配置</h3>
         </header>
         <InterruptionTab v-model="form" :field-errors="fieldErrors" />
       </section>

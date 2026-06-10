@@ -1,5 +1,6 @@
 import { mount } from "@vue/test-utils";
-import { describe, expect, it } from "vitest";
+import { ElMessageBox } from "element-plus";
+import { describe, expect, it, vi } from "vitest";
 import { nextTick } from "vue";
 
 import BasicTab from "@/views/Campaigns/Tabs/BasicTab.vue";
@@ -75,6 +76,104 @@ describe("InterruptionTab", () => {
     await nextTick();
     expect(wrapper.text()).toContain("仅倾听");
     expect(wrapper.text()).toContain("AI 这轮不回应");
+    wrapper.unmount();
+  });
+
+  it("renders the 高级/非高级 mode toggle; basic mode shows 最小打断字数 and the mode-independent continuous fields", async () => {
+    const form: CampaignBase = { ...CAMPAIGN_DEFAULTS, interruption_rules: null };
+    const wrapper = mount(InterruptionTab, {
+      props: { modelValue: form, fieldErrors: {} },
+    });
+    await nextTick();
+    expect(wrapper.text()).toContain("高级设置");
+    expect(wrapper.text()).toContain("非高级设置");
+    // basic mode (interruption_rules == null): scalar fields visible
+    expect(wrapper.text()).toContain("打断白名单");
+    expect(wrapper.text()).toContain("最小打断字数");
+    // mode-independent fields below the toggle
+    expect(wrapper.text()).toContain("最大连续打断");
+    expect(wrapper.text()).toContain("连续打断策略");
+    wrapper.unmount();
+  });
+
+  it("switching to advanced seeds a length leaf from interruption_min_chars; switching back clears the tree", async () => {
+    const form: CampaignBase = {
+      ...CAMPAIGN_DEFAULTS,
+      interruption_rules: null,
+      interruption_whitelist: [],
+      interruption_min_chars: 4,
+      interruption_min_duration_ms: 400,
+    };
+    const wrapper = mount(InterruptionTab, {
+      props: { modelValue: form, fieldErrors: {} },
+    });
+    await nextTick();
+    // mode toggle wires through interruption_rules (null = basic sentinel)
+    (wrapper.vm as unknown as { seedDefault: () => void }).seedDefault();
+    await nextTick();
+    const tree = form.interruption_rules as {
+      type: string;
+      rules: { type: string; value?: number }[];
+    } | null;
+    expect(tree).not.toBeNull();
+    expect(tree!.type).toBe("and");
+    expect(tree!.rules.find((r) => r.type === "length")?.value).toBe(4);
+    // switching back to 非高级设置 clears the tree
+    (wrapper.vm as unknown as { restoreDefault: () => void }).restoreDefault();
+    await nextTick();
+    expect(form.interruption_rules).toBeNull();
+    wrapper.unmount();
+  });
+
+  it("switching to 非高级 with an EDITED tree confirms — cancel preserves it, confirm clears it", async () => {
+    // an edited tree (a bare length leaf ≠ the seeded AND default) triggers the guard
+    const form: CampaignBase = {
+      ...CAMPAIGN_DEFAULTS,
+      interruption_rules: { type: "length", value: 9 },
+    };
+    const wrapper = mount(InterruptionTab, {
+      props: { modelValue: form, fieldErrors: {} },
+    });
+    await nextTick();
+    const vm = wrapper.vm as unknown as {
+      onModeChange: (m: string) => Promise<void>;
+    };
+    const spy = vi.spyOn(ElMessageBox, "confirm").mockRejectedValue("cancel");
+    await vm.onModeChange("basic");
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(form.interruption_rules).not.toBeNull(); // cancelled → tree kept
+
+    spy.mockResolvedValue(
+      "confirm" as unknown as Awaited<ReturnType<typeof ElMessageBox.confirm>>,
+    );
+    await vm.onModeChange("basic");
+    expect(form.interruption_rules).toBeNull(); // confirmed → cleared
+    spy.mockRestore();
+    wrapper.unmount();
+  });
+
+  it("switching to 非高级 with an UNEDITED (auto-seeded) tree clears without a confirm dialog", async () => {
+    const form: CampaignBase = {
+      ...CAMPAIGN_DEFAULTS,
+      interruption_rules: null,
+      interruption_whitelist: [],
+      interruption_min_chars: 2,
+      interruption_min_duration_ms: 400,
+    };
+    const wrapper = mount(InterruptionTab, {
+      props: { modelValue: form, fieldErrors: {} },
+    });
+    await nextTick();
+    const vm = wrapper.vm as unknown as {
+      onModeChange: (m: string) => Promise<void>;
+    };
+    const spy = vi.spyOn(ElMessageBox, "confirm");
+    await vm.onModeChange("advanced"); // auto-seeds the default tree
+    expect(form.interruption_rules).not.toBeNull();
+    await vm.onModeChange("basic"); // unedited → no dialog
+    expect(spy).not.toHaveBeenCalled();
+    expect(form.interruption_rules).toBeNull();
+    spy.mockRestore();
     wrapper.unmount();
   });
 });

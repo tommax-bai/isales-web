@@ -16,8 +16,8 @@ import {
 // ---- pure helpers ----------------------------------------------------------
 
 describe("defaultTreeFrom", () => {
-  it("mirrors engine default_rule: AND(NOT keyword exact, length>=2, duration)", () => {
-    const tree = defaultTreeFrom(["嗯", "好"], 200) as AndRule;
+  it("mirrors engine default_rule: AND(NOT keyword exact, length>=minChars, duration)", () => {
+    const tree = defaultTreeFrom(["嗯", "好"], 200, 2) as AndRule;
     expect(tree.type).toBe("and");
     expect(tree.rules).toHaveLength(3);
     expect(tree.rules[0]).toEqual({
@@ -28,15 +28,23 @@ describe("defaultTreeFrom", () => {
     expect(tree.rules[2]).toEqual({ type: "duration", value_ms: 200 });
   });
 
+  it("threads a custom minChars into the length leaf", () => {
+    const tree = defaultTreeFrom([], 400, 5) as AndRule;
+    expect(tree.rules.find((r) => r.type === "length")).toEqual({
+      type: "length",
+      value: 5,
+    });
+  });
+
   it("omits the keyword leaf when whitelist is empty", () => {
-    const tree = defaultTreeFrom([], 400) as AndRule;
+    const tree = defaultTreeFrom([], 400, 2) as AndRule;
     expect(tree.rules).toHaveLength(2);
     expect(tree.rules.map((r) => r.type)).toEqual(["length", "duration"]);
   });
 
   it("does not alias the input whitelist array", () => {
     const wl = ["嗯"];
-    const tree = defaultTreeFrom(wl, 200) as AndRule;
+    const tree = defaultTreeFrom(wl, 200, 2) as AndRule;
     const kw = (tree.rules[0] as { rule: { values: string[] } }).rule;
     kw.values.push("x");
     expect(wl).toEqual(["嗯"]); // original untouched
@@ -110,26 +118,39 @@ describe("InterruptionRuleEditor", () => {
 // ---- InterruptionTab integration -------------------------------------------
 
 describe("InterruptionTab advanced rules", () => {
-  it("shows '使用默认规则' + seed button when interruption_rules is null", async () => {
+  it("null interruption_rules → 非高级设置 mode (scalar fields, no rule-tree editor)", async () => {
     const form: CampaignBase = { ...CAMPAIGN_DEFAULTS, interruption_rules: null };
     const wrapper = mount(InterruptionTab, { props: { modelValue: form, fieldErrors: {} } });
     await nextTick();
-    expect(wrapper.text()).toContain("使用默认规则");
-    expect(wrapper.text()).toContain("基于默认规则开始编辑");
+    // basic mode: scalar fields shown, advanced rule-tree editor absent
+    expect(wrapper.text()).toContain("最小打断字数");
+    expect(wrapper.findComponent(InterruptionRuleEditor).exists()).toBe(false);
     wrapper.unmount();
   });
 
-  it("seedDefault builds a tree from the current whitelist + min_duration", async () => {
+  it("non-null interruption_rules → 高级设置 mode renders the rule-tree editor", async () => {
+    const form: CampaignBase = {
+      ...CAMPAIGN_DEFAULTS,
+      interruption_rules: { type: "length", value: 2 },
+    };
+    const wrapper = mount(InterruptionTab, { props: { modelValue: form, fieldErrors: {} } });
+    await nextTick();
+    expect(wrapper.findComponent(InterruptionRuleEditor).exists()).toBe(true);
+    wrapper.unmount();
+  });
+
+  it("seedDefault builds a tree from the current whitelist + min_duration + min_chars", async () => {
     const form: CampaignBase = {
       ...CAMPAIGN_DEFAULTS,
       interruption_rules: null,
       interruption_whitelist: ["嗯", "好"],
       interruption_min_duration_ms: 300,
+      interruption_min_chars: 3,
     };
     const wrapper = mount(InterruptionTab, { props: { modelValue: form, fieldErrors: {} } });
     await nextTick();
     (wrapper.vm as unknown as { seedDefault: () => void }).seedDefault();
-    expect(form.interruption_rules).toEqual(defaultTreeFrom(["嗯", "好"], 300));
+    expect(form.interruption_rules).toEqual(defaultTreeFrom(["嗯", "好"], 300, 3));
     wrapper.unmount();
   });
 
