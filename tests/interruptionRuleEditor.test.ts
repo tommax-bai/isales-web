@@ -118,7 +118,7 @@ describe("InterruptionRuleEditor", () => {
 // ---- InterruptionTab integration -------------------------------------------
 
 describe("InterruptionTab advanced rules", () => {
-  it("null interruption_rules → 非高级设置 mode (scalar fields, no rule-tree editor)", async () => {
+  it("null interruption_rules → 普通模式 (scalar fields, no rule-tree editor)", async () => {
     const form: CampaignBase = { ...CAMPAIGN_DEFAULTS, interruption_rules: null };
     const wrapper = mount(InterruptionTab, { props: { modelValue: form, fieldErrors: {} } });
     await nextTick();
@@ -128,7 +128,7 @@ describe("InterruptionTab advanced rules", () => {
     wrapper.unmount();
   });
 
-  it("non-null interruption_rules → 高级设置 mode renders the rule-tree editor", async () => {
+  it("non-null interruption_rules → 高级模式 renders the rule-tree editor", async () => {
     const form: CampaignBase = {
       ...CAMPAIGN_DEFAULTS,
       interruption_rules: { type: "length", value: 2 },

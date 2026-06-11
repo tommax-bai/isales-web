@@ -5,17 +5,25 @@
   </p>
   <el-form label-width="220px" class="form">
     <el-form-item label="配置模式">
-      <el-radio-group :model-value="mode" @change="onModeChange">
-        <el-radio-button value="advanced">高级设置</el-radio-button>
-        <el-radio-button value="basic">非高级设置</el-radio-button>
-      </el-radio-group>
+      <div class="mode-toggle">
+        <el-tag
+          :type="mode === 'advanced' ? 'warning' : 'info'"
+          size="small"
+          effect="plain"
+        >
+          当前：{{ mode === "advanced" ? "高级模式" : "普通模式" }}
+        </el-tag>
+        <el-button size="small" type="primary" plain @click="toggleMode">
+          {{ mode === "advanced" ? "切换到普通模式" : "切换到高级模式" }}
+        </el-button>
+      </div>
       <div class="hint">
-        <strong>非高级设置</strong> = 由 白名单 + 最小时长 + 最小字数 自动合成默认打断规则；<strong>高级设置</strong>
-        = 用「且/或/非 + 关键词/长度/时长/正则/分隔符」自由组合规则树。两种模式互斥，切到高级会用当前非高级字段播种初始规则树，切回非高级会清空规则树。
+        <strong>普通模式</strong> = 由 白名单 + 最小时长 + 最小字数 自动合成默认打断规则；<strong>高级模式</strong>
+        = 用「且/或/非 + 关键词/长度/时长/正则/分隔符」自由组合规则树。两种模式互斥，切到高级会用当前普通模式字段播种初始规则树，切回普通模式会清空规则树。
       </div>
     </el-form-item>
 
-    <!-- 非高级设置：三个标量字段（interruption_rules 保持 null，引擎合成默认树） -->
+    <!-- 普通模式：三个标量字段（interruption_rules 保持 null，引擎合成默认树） -->
     <template v-if="mode === 'basic'">
       <el-form-item label="打断白名单">
         <ExpandingTextarea
@@ -44,7 +52,7 @@
       </el-form-item>
     </template>
 
-    <!-- 高级设置：可组合规则树编辑器（写入 interruption_rules） -->
+    <!-- 高级模式：可组合规则树编辑器（写入 interruption_rules） -->
     <template v-else>
       <el-form-item label="打断规则" :error="fieldErrors?.interruption_rules">
         <div class="tree-wrap">
@@ -55,7 +63,7 @@
           />
         </div>
         <div class="hint">
-          以「且/或/非」组合「关键词 / 长度 / 时长 / 正则 / 分隔符」搭出判定规则；切回「非高级设置」会清空此规则树、回到白名单+时长+字数合成。
+          以「且/或/非」组合「关键词 / 长度 / 时长 / 正则 / 分隔符」搭出判定规则；切回「普通模式」会清空此规则树、回到白名单+时长+字数合成。
         </div>
       </el-form-item>
     </template>
@@ -110,13 +118,17 @@ const form = computed({
   set: (v) => emit("update:modelValue", v),
 });
 
-// 两段互斥模式，由 interruption_rules 是否为 null 派生（null = 非高级）。radio
-// 用 controlled 模式（:model-value + @change）以便拦截切换：切回非高级会清空
-// 规则树（破坏性），仅在树相对「播种默认」已被编辑过时弹确认，避免单击误删
-// 管理员手搭的树；未编辑的自动播种树直接清空、无摩擦。
+// 两段互斥模式，由 interruption_rules 是否为 null 派生（null = 普通模式，默认）。
+// 单个切换按钮：当前普通 → 切到高级；当前高级 → 切回普通（破坏性，切回时仅在
+// 树相对「播种默认」已被编辑过时弹确认，避免误删管理员手搭的树）。
 const mode = computed<"basic" | "advanced">(() =>
   form.value.interruption_rules == null ? "basic" : "advanced",
 );
+
+// 切换按钮：切到「另一个」模式。
+function toggleMode(): void {
+  void onModeChange(mode.value === "advanced" ? "basic" : "advanced");
+}
 
 // 当前树是否相对「由当前标量字段播种的默认树」有改动（用于决定是否需确认）。
 function isEditedTree(): boolean {
@@ -136,12 +148,12 @@ async function onModeChange(next: string | number | boolean): Promise<void> {
     if (form.value.interruption_rules == null) seedDefault();
     return;
   }
-  // → 非高级：清空树。仅在树被编辑过时确认；取消则保持高级（controlled radio
-  // 因 model-value 仍派生为 advanced 而自动回弹）。
+  // → 普通模式：清空树。仅在树被编辑过时确认；取消则保持高级（按钮派生自
+  // mode，未改 interruption_rules 故仍显示「切换到普通模式」）。
   if (isEditedTree()) {
     try {
       await ElMessageBox.confirm(
-        "切回「非高级设置」会清空已编辑的打断规则树，且无法恢复。确定继续？",
+        "切回「普通模式」会清空已编辑的打断规则树，且无法恢复。确定继续？",
         "清空规则树",
         {
           type: "warning",
@@ -188,7 +200,15 @@ function onRulesUpdate(v: InterruptionRule): void {
 }
 
 // Exposed for unit tests.
-defineExpose({ mode, onModeChange, isEditedTree, seedDefault, restoreDefault, onRulesUpdate });
+defineExpose({
+  mode,
+  toggleMode,
+  onModeChange,
+  isEditedTree,
+  seedDefault,
+  restoreDefault,
+  onRulesUpdate,
+});
 </script>
 
 <style scoped>
@@ -203,5 +223,10 @@ defineExpose({ mode, onModeChange, isEditedTree, seedDefault, restoreDefault, on
 .tree-wrap {
   width: 100%;
   margin-bottom: 8px;
+}
+.mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 </style>

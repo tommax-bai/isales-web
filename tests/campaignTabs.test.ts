@@ -79,20 +79,54 @@ describe("InterruptionTab", () => {
     wrapper.unmount();
   });
 
-  it("renders the 高级/非高级 mode toggle; basic mode shows 最小打断字数 and the mode-independent continuous fields", async () => {
+  it("defaults to 普通模式 with a single toggle button to 高级模式; basic shows 最小打断字数 + mode-independent continuous fields", async () => {
     const form: CampaignBase = { ...CAMPAIGN_DEFAULTS, interruption_rules: null };
     const wrapper = mount(InterruptionTab, {
       props: { modelValue: form, fieldErrors: {} },
     });
     await nextTick();
-    expect(wrapper.text()).toContain("高级设置");
-    expect(wrapper.text()).toContain("非高级设置");
-    // basic mode (interruption_rules == null): scalar fields visible
+    // default mode = 普通模式 (interruption_rules == null), button offers switching to 高级模式
+    expect(wrapper.text()).toContain("当前：普通模式");
+    expect(wrapper.text()).toContain("切换到高级模式");
+    expect(wrapper.text()).not.toContain("切换到普通模式");
+    // basic mode scalar fields visible
     expect(wrapper.text()).toContain("打断白名单");
     expect(wrapper.text()).toContain("最小打断字数");
     // mode-independent fields below the toggle
     expect(wrapper.text()).toContain("最大连续打断");
     expect(wrapper.text()).toContain("连续打断策略");
+    wrapper.unmount();
+  });
+
+  it("toggle button flips label: 高级模式 shows 当前：高级模式 + 切换到普通模式", async () => {
+    const form: CampaignBase = {
+      ...CAMPAIGN_DEFAULTS,
+      interruption_rules: { type: "length", value: 2 },
+    };
+    const wrapper = mount(InterruptionTab, {
+      props: { modelValue: form, fieldErrors: {} },
+    });
+    await nextTick();
+    expect(wrapper.text()).toContain("当前：高级模式");
+    expect(wrapper.text()).toContain("切换到普通模式");
+    expect(wrapper.text()).not.toContain("切换到高级模式");
+    // toggleMode from advanced (unedited default-shaped? no — bare length leaf
+    // is not the seeded default, but value 2 with empty whitelist/400ms differs;
+    // to avoid a confirm dialog in this label test, drive via the exposed method)
+    wrapper.unmount();
+  });
+
+  it("toggleMode switches 普通模式 → 高级模式 (seeds a tree, no confirm)", async () => {
+    const form: CampaignBase = { ...CAMPAIGN_DEFAULTS, interruption_rules: null };
+    const wrapper = mount(InterruptionTab, {
+      props: { modelValue: form, fieldErrors: {} },
+    });
+    await nextTick();
+    (wrapper.vm as unknown as { toggleMode: () => void }).toggleMode();
+    await nextTick();
+    expect(form.interruption_rules).not.toBeNull(); // now 高级模式
+    expect(wrapper.text()).toContain("当前：高级模式");
+    expect(wrapper.text()).toContain("切换到普通模式");
     wrapper.unmount();
   });
 
@@ -118,14 +152,14 @@ describe("InterruptionTab", () => {
     expect(tree).not.toBeNull();
     expect(tree!.type).toBe("and");
     expect(tree!.rules.find((r) => r.type === "length")?.value).toBe(4);
-    // switching back to 非高级设置 clears the tree
+    // switching back to 普通模式 clears the tree
     (wrapper.vm as unknown as { restoreDefault: () => void }).restoreDefault();
     await nextTick();
     expect(form.interruption_rules).toBeNull();
     wrapper.unmount();
   });
 
-  it("switching to 非高级 with an EDITED tree confirms — cancel preserves it, confirm clears it", async () => {
+  it("switching to 普通模式 with an EDITED tree confirms — cancel preserves it, confirm clears it", async () => {
     // an edited tree (a bare length leaf ≠ the seeded AND default) triggers the guard
     const form: CampaignBase = {
       ...CAMPAIGN_DEFAULTS,
