@@ -82,8 +82,10 @@
             >
               <el-option label="路由到角色" value="route" />
               <el-option label="工具" value="tool" />
-              <el-option label="转移(旧)" value="transition" />
-              <el-option label="重组(旧)" value="restructure" />
+              <!-- legacy 动作类型不可新建：engine 保留 removal-tracked shim 执行存量规则，
+                   故仅当本行已是该类型时显示（保持既有规则可编辑），避免下拉变空值。 -->
+              <el-option v-if="row.action.type === 'transition'" label="转移(旧·只读)" value="transition" />
+              <el-option v-if="row.action.type === 'restructure'" label="重组(旧·只读)" value="restructure" />
             </el-select>
             <template v-if="row.action.type === 'route'">
               <el-select v-model="row.action.to" size="small" style="width: 140px" placeholder="角色/内置">
@@ -217,10 +219,13 @@ const failOpenRoutes = computed(() => [
 ]);
 
 function addRule(): void {
+  // New rules default to the modern `route` action (legacy transition/restructure
+  // are no longer creatable — fix-goal-achievement-pipeline). Mirrors the route
+  // branch of onActionTypeChange.
   const rule: RoutingRule = {
     referee: refereeLabels.value[0] ?? "",
     match: [],
-    action: { type: "transition", to: "goal_achieved", goal_type: "appointment" },
+    action: { type: "route", to: personaLabels.value[0] ?? "closing", then_state: null },
   };
   form.value.routing_rules.push(rule);
 }

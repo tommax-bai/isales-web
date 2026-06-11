@@ -67,7 +67,10 @@ describe("RoutingRulesTab", () => {
     (wrapper.vm as unknown as { addRule: () => void }).addRule();
     expect(form.routing_rules).toHaveLength(1);
     expect(form.routing_rules[0].referee).toBe("intent");
-    expect(form.routing_rules[0].action.type).toBe("transition");
+    // New rules default to the modern `route` action (no personas here → closing),
+    // not the retired legacy `transition` (fix-goal-achievement-pipeline).
+    expect(form.routing_rules[0].action.type).toBe("route");
+    expect(form.routing_rules[0].action).toEqual({ type: "route", to: "closing", then_state: null });
     wrapper.unmount();
   });
 
