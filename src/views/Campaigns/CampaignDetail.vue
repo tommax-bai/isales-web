@@ -213,6 +213,19 @@
         labeled
       />
 
+      <!-- 重组 (restructure) — 即时保存；逻辑上只有一条配置（singleton），无需标识。
+           被「门控路由」切到重组时，把 AI 上一句/被打断没说完的残句口语化重说一遍。 -->
+      <PromptTierEditor
+        :campaign-id="id"
+        kind="restructure"
+        title="重组 (restructure)"
+        description="被「门控路由」切到时，把 AI 上一句/被打断的残句口语化重说一遍（不带对话历史、不带用户输入）。单条配置，无需标识；provider/model 即时生效。"
+        :icon="RefreshCw"
+        badge-color="gray"
+        plain-icon
+        singleton
+      />
+
       <!-- 话后信息提取 (extractor) — 即时保存；逻辑上只有一条配置 -->
       <PromptTierEditor
         :campaign-id="id"
@@ -316,6 +329,7 @@ import {
   MessageSquare,
   Play,
   Plus,
+  RefreshCw,
   Save,
   Settings,
   Square,

@@ -148,6 +148,29 @@ describe("PromptTierEditor — main lock + labeled + persona", () => {
     w.unmount();
   });
 
+  it("restructure 卡（singleton 非 labeled）：保存 kind=restructure + provider 进 ext_params + 不带 label", async () => {
+    const w = mountEditor({ kind: "restructure", singleton: true });
+    await flushPromises();
+    // singleton 在后端无配置时自动补一条可编辑行（solo 行为，同 extractor）
+    const vm = w.vm as unknown as Vm & {
+      rows: { model: string; prompt: string; provider: string }[];
+    };
+    expect(vm.rows).toHaveLength(1);
+    vm.rows[0].model = "qwen-plus";
+    vm.rows[0].prompt = "把这句话口语化重说一遍";
+    vm.rows[0].provider = "dashscope";
+    await vm.saveRow(0);
+    expect(createSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: "restructure",
+        ext_params: expect.objectContaining({ provider: "dashscope" }),
+      }),
+    );
+    // 非 labeled → 不写顶层 label（restructure 走内建路由，不需标识）
+    expect(createSpy.mock.calls[0][0]).not.toHaveProperty("label");
+    w.unmount();
+  });
+
   it("persona：空标识拦截保存", async () => {
     const w = mountEditor({ kind: "persona", labeled: true });
     await flushPromises();
