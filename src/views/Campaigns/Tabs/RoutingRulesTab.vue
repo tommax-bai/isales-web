@@ -88,12 +88,26 @@
               <el-option v-if="row.action.type === 'restructure'" label="重组(旧·只读)" value="restructure" />
             </el-select>
             <template v-if="row.action.type === 'route'">
-              <el-select v-model="row.action.to" size="small" style="width: 140px" placeholder="角色/内置">
+              <el-select
+                :model-value="row.action.to"
+                size="small"
+                style="width: 140px"
+                placeholder="角色/内置"
+                @change="(t: string) => onRouteTargetChange(row, t)"
+              >
                 <el-option v-for="p in personaLabels" :key="p" :label="p" :value="p" />
                 <el-option label="收尾(closing)" value="closing" />
                 <el-option label="挽留(recovery)" value="recovery" />
                 <el-option label="重组(restructure)" value="restructure" />
               </el-select>
+              <el-input
+                v-if="row.action.to === 'closing'"
+                v-model="row.action.goal_type"
+                size="small"
+                clearable
+                style="width: 150px"
+                placeholder="goal_type (达成标签)"
+              />
               <el-select v-model="row.action.then_state" size="small" clearable style="width: 130px" placeholder="then_state">
                 <el-option v-for="s in thenStates" :key="s" :label="s" :value="s" />
               </el-select>
@@ -269,9 +283,17 @@ function onTransitionTargetChange(row: RoutingRule, to: string): void {
   }
 }
 
+// route goal_type is only valid when to === "closing" (common RoutePersonaAction
+// validator). Clear it when routing elsewhere, else the backend 422s.
+function onRouteTargetChange(row: RoutingRule, to: string): void {
+  if (row.action.type !== "route") return;
+  row.action.to = to;
+  if (to !== "closing") row.action.goal_type = null;
+}
+
 // Exposed for unit tests (the rule-editing logic is the testable surface; the
 // Element Plus selects are awkward to drive in jsdom).
-defineExpose({ addRule, removeRule, move, onActionTypeChange, onTransitionTargetChange, isHangupTool });
+defineExpose({ addRule, removeRule, move, onActionTypeChange, onTransitionTargetChange, onRouteTargetChange, isHangupTool });
 </script>
 
 <style scoped>

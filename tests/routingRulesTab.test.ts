@@ -74,6 +74,23 @@ describe("RoutingRulesTab", () => {
     wrapper.unmount();
   });
 
+  it("clears route goal_type when target switches away from closing", async () => {
+    const form: CampaignBase = {
+      ...CAMPAIGN_DEFAULTS,
+      routing_rules: [
+        { referee: "a", match: ["SUCCESS"], action: { type: "route", to: "closing", then_state: "WRAPPING_UP", goal_type: "intent_confirmed" } },
+      ],
+    };
+    const wrapper = mount(RoutingRulesTab, {
+      props: { modelValue: form, roleConfigs: [_referee("a", 1)] },
+    });
+    await nextTick();
+    const vm = wrapper.vm as unknown as { onRouteTargetChange: (r: unknown, t: string) => void };
+    vm.onRouteTargetChange(form.routing_rules[0], "recovery");
+    expect(form.routing_rules[0].action).toEqual({ type: "route", to: "recovery", then_state: "WRAPPING_UP", goal_type: null });
+    wrapper.unmount();
+  });
+
   it("reorders rules with move()", async () => {
     const form: CampaignBase = {
       ...CAMPAIGN_DEFAULTS,

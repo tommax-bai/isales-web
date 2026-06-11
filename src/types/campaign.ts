@@ -84,6 +84,9 @@ export interface RoutePersonaAction {
   type: "route";
   to: string;
   then_state?: ThenState | null;
+  // Goal label recorded when this route fires the goal-achieved `closing` route
+  // (modern form of TransitionAction.goal_type). Only valid when to === "closing".
+  goal_type?: string | null;
 }
 
 // Route to a lazy tool (hangup/transfer) by campaign.tools alias.
