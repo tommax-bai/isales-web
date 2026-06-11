@@ -18,11 +18,10 @@
         填写后 SHALL 通过 `/api/provider-credentials` 写入服务端
         `provider_credential` 表 (Fernet 对称加密)。<strong>已对接</strong>
         (engine factory 实装): volcengine (火山方舟 / 豆包，app_key +
-        app_token 同时供 LLM / ASR / TTS) + openai (LLM)。<strong>占位</strong>
-        (待 engine 对接): dashscope (阿里通义千问)。改动 key 后需重启
-        `isales-engine` 才生效 (v1.0 不支持 live reload；点保存后服务端会
-        log 提示)。已配置字段以 `xxxx********yyyy` 掩码显示，UI 永不回显
-        明文；要换 key 整段重输。
+        app_token 同时供 LLM / ASR / TTS) + dashscope (阿里通义千问，
+        OpenAI 兼容模式，LLM)。改动 key 后需重启 `isales-engine` 才生效
+        (v1.0 不支持 live reload；点保存后服务端会 log 提示)。已配置字段
+        以 `xxxx********yyyy` 掩码显示，UI 永不回显明文；要换 key 整段重输。
       </template>
     </el-alert>
 
@@ -133,7 +132,7 @@ type ProviderId = LLMProviderId;
 // UI 用 4 个 user input 字段 (api_key / app_key / endpoint / default_model)。
 // volcengine 双密钥: api_key 输入框承载 app_token, app_key 单独一行。
 interface ProviderForm {
-  api_key_input: string;       // openai/dashscope=api_key；volcengine=app_token
+  api_key_input: string;       // dashscope=api_key；volcengine=app_token
   app_key_input: string;       // volcengine 专用
   endpoint_input: string;
   default_model_input: string;
@@ -157,16 +156,10 @@ const PROVIDER_PRESENTATION: Record<
     hint: "Doubao 系列 / 同时供 ASR + TTS（共用 app_key + app_token）",
     docs: "https://console.volcengine.com/ark",
   },
-  openai: {
-    short: "OAI",
-    color: "#10a37f",
-    hint: "GPT-4o / o-series 等",
-    docs: "https://platform.openai.com/api-keys",
-  },
   dashscope: {
     short: "通义",
     color: "#615ced",
-    hint: "Qwen 系列 / OpenAI 兼容模式 — 占位，engine 未对接",
+    hint: "Qwen 系列 / OpenAI 兼容模式",
     docs: "https://bailian.console.aliyun.com/?apiKey=1",
   },
 };

@@ -86,7 +86,7 @@
         </el-select>
         <el-input
           v-model="row.model"
-          :placeholder="`model（如 ${LLM_PROVIDER_DEFAULT_MODEL[row.provider as PromptTierProviderId] ?? 'doubao-pro-32k'}）`"
+          :placeholder="`model（如 ${LLM_PROVIDER_DEFAULT_MODEL[row.provider as LLMProviderId] ?? 'doubao-pro-32k'}）`"
         />
         <div class="cfg__slider">
           <span class="cfg__slider-label">temperature</span>
@@ -146,9 +146,9 @@ import ExpandingTextarea from "@/components/Common/ExpandingTextarea.vue";
 import type { RoleKind, RoutingRule } from "@/types/campaign";
 import {
   LLM_PROVIDER_DEFAULT_MODEL,
+  LLM_PROVIDER_IDS,
   LLM_PROVIDER_LABEL,
-  PROVIDER_OPTIONS_WITH_MOCK,
-  type PromptTierProviderId,
+  type LLMProviderId,
 } from "@/types/llmProviders";
 
 const props = defineProps<{
@@ -223,10 +223,10 @@ async function persistCap() {
   }
 }
 
-// 对齐 SSOT @/types/llmProviders (volcengine + openai + dashscope + mock)；
-// 增减 provider 改 SSOT。mock 是 engine factory 合法 provider 但不在
-// 模型厂商配置 view 里出现（无 API key 需要配）。
-const PROVIDERS = PROVIDER_OPTIONS_WITH_MOCK;
+// 对齐 SSOT @/types/llmProviders (volcengine + dashscope)；增减 provider 改 SSOT。
+// engine 的 mock provider 是测试 / dev 用 (经 env 配置)，无凭据可填、选中即把
+// 真活动配成假 LLM，故不在任何 UI 选择器里出现。
+const PROVIDERS = LLM_PROVIDER_IDS;
 
 interface PromptRow {
   key: string;
@@ -418,7 +418,7 @@ function onProviderChange(i: number) {
   const currentDefaults = Object.values(LLM_PROVIDER_DEFAULT_MODEL);
   if (!row.model || currentDefaults.includes(row.model)) {
     row.model =
-      LLM_PROVIDER_DEFAULT_MODEL[row.provider as PromptTierProviderId] ?? row.model;
+      LLM_PROVIDER_DEFAULT_MODEL[row.provider as LLMProviderId] ?? row.model;
   }
   row.dirty = true;
 }
