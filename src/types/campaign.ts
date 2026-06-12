@@ -315,10 +315,6 @@ export interface CampaignBase {
   follow_up_interval_days: number | null;
   follow_up_max_count: number;
 
-  do_not_call_keywords: string[];
-  do_not_call_llm_enabled: boolean;
-  do_not_call_llm_prompt_version_id: number | null;
-
   respect_holidays: boolean;
 }
 
@@ -401,9 +397,6 @@ export const CAMPAIGN_DEFAULTS: CampaignBase = {
   retry_max_count: 3,
   follow_up_interval_days: null,
   follow_up_max_count: 0,
-  do_not_call_keywords: [],
-  do_not_call_llm_enabled: false,
-  do_not_call_llm_prompt_version_id: null,
   respect_holidays: true,
 };
 

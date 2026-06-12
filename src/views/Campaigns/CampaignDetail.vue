@@ -213,19 +213,6 @@
         labeled
       />
 
-      <!-- 重组 (restructure) — 即时保存；逻辑上只有一条配置（singleton），无需标识。
-           被「门控路由」切到重组时，把 AI 上一句/被打断没说完的残句口语化重说一遍。 -->
-      <PromptTierEditor
-        :campaign-id="id"
-        kind="restructure"
-        title="重组 (restructure)"
-        description="被「门控路由」切到时，把 AI 上一句/被打断的残句口语化重说一遍（不带对话历史、不带用户输入）。单条配置，无需标识；provider/model 即时生效。"
-        :icon="RefreshCw"
-        badge-color="gray"
-        plain-icon
-        singleton
-      />
-
       <!-- 话后信息提取 (extractor) — 即时保存；逻辑上只有一条配置 -->
       <PromptTierEditor
         :campaign-id="id"
@@ -257,6 +244,20 @@
         <InterruptionTab v-model="form" :field-errors="fieldErrors" />
       </section>
 
+      <!-- 重组 (restructure) — 即时保存；逻辑上只有一条配置（singleton），无需标识。
+           被「门控路由」切到重组时，把 AI 上一句/被打断没说完的残句口语化重说一遍。
+           紧贴「打断配置」之下：重组是被打断后口语化重说的缺省出口。 -->
+      <PromptTierEditor
+        :campaign-id="id"
+        kind="restructure"
+        title="重组 (restructure)"
+        description="被「门控路由」切到时，把 AI 上一句/被打断的残句口语化重说一遍（不带对话历史、不带用户输入）。单条配置，无需标识；provider/model 即时生效。"
+        :icon="RefreshCw"
+        badge-color="gray"
+        plain-icon
+        singleton
+      />
+
       <section class="card card--purple">
         <header class="card__head">
           <Settings :size="16" />
@@ -287,14 +288,6 @@
           <h3 class="card__title">重试 / 跟进</h3>
         </header>
         <RetryFollowUpTab v-model="form" :field-errors="fieldErrors" />
-      </section>
-
-      <section class="card card--gray">
-        <header class="card__head">
-          <Settings :size="16" />
-          <h3 class="card__title">勿打</h3>
-        </header>
-        <DoNotCallTab v-model="form" />
       </section>
 
       <section class="card card--blue">
@@ -354,7 +347,6 @@ import InterruptionTab from "@/views/Campaigns/Tabs/InterruptionTab.vue";
 import TransferTab from "@/views/Campaigns/Tabs/TransferTab.vue";
 import WrapUpTab from "@/views/Campaigns/Tabs/WrapUpTab.vue";
 import RetryFollowUpTab from "@/views/Campaigns/Tabs/RetryFollowUpTab.vue";
-import DoNotCallTab from "@/views/Campaigns/Tabs/DoNotCallTab.vue";
 import CallbacksTab from "@/views/Campaigns/Tabs/CallbacksTab.vue";
 import { leadStatusMeta } from "@/composables/useStatusMeta";
 import {
@@ -386,7 +378,7 @@ const EMPTY_PROGRESS: CampaignProgress = {
 const progress = ref<CampaignProgress>(EMPTY_PROGRESS);
 
 // 完整 CampaignBase —— 单页承载全部 per-campaign 字段（路由/工具/沉默/打断/
-// 转人工/收尾/重试/勿打 等 form-driven 小节直接 v-model 本对象）。
+// 转人工/收尾/重试 等 form-driven 小节直接 v-model 本对象）。
 const form = reactive<CampaignBase>({ ...CAMPAIGN_DEFAULTS });
 // 只读：供「门控路由 / 工具触发」小节取 referee label。角色本身由 3 个
 // PromptTier 卡按 campaign-id 自存，不经本页 form/buildPayload。
