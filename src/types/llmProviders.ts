@@ -20,8 +20,10 @@ export const BACKEND_IMPLEMENTED: ReadonlySet<LLMProviderId> = new Set([
   "dashscope",
 ]);
 
+// volcengine 这里专指火山方舟 Ark 大模型 (LLM);豆包语音 ASR/TTS 是另一条
+// 产品线 provider_id `volcengine_speech`,见 @/types/speechProviders。
 export const LLM_PROVIDER_LABEL: Record<LLMProviderId, string> = {
-  volcengine: "火山方舟（豆包）",
+  volcengine: "火山方舟（豆包大模型）",
   dashscope: "阿里通义（DashScope）",
 };
 

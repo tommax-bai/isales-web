@@ -1,8 +1,8 @@
 <template>
   <section class="mp">
     <PageHeader
-      title="模型厂商"
-      subtitle="LLM 厂商 API key 与 endpoint 管理。"
+      title="模型与语音服务"
+      subtitle="LLM 模型厂商与 ASR/TTS 语音服务的 API key / endpoint 管理。"
       :icon="Key"
       icon-color="primary"
     />
@@ -15,13 +15,12 @@
     >
       <template #title>凭据已 DB 落库（Fernet 加密）</template>
       <template #default>
-        填写后 SHALL 通过 `/api/provider-credentials` 写入服务端
-        `provider_credential` 表 (Fernet 对称加密)。<strong>已对接</strong>
-        (engine factory 实装): volcengine (火山方舟 / 豆包，app_key +
-        app_token 同时供 LLM / ASR / TTS) + dashscope (阿里通义千问，
-        OpenAI 兼容模式，LLM)。改动 key 后需重启 `isales-engine` 才生效
-        (v1.0 不支持 live reload；点保存后服务端会 log 提示)。已配置字段
-        以 `xxxx********yyyy` 掩码显示，UI 永不回显明文；要换 key 整段重输。
+        填写后通过 <code>/api/provider-credentials</code> 写入服务端
+        <code>provider_credential</code> 表（Fernet 对称加密）。火山是
+        <strong>两条独立产品线、两套独立密钥</strong>：<strong>火山方舟（豆包大模型）</strong>
+        是 LLM，<strong>豆包语音（OpenSpeech）</strong>是 ASR/TTS，密钥各填各的、不可混用。
+        改动 key 后需重启 <code>isales-engine</code> 才生效（v1.0 不支持 live reload）。
+        已配置字段以 <code>xxxx********yyyy</code> 掩码显示，UI 永不回显明文；要换 key 整段重输。
       </template>
     </el-alert>
 
@@ -29,70 +28,84 @@
       <el-skeleton :rows="6" animated />
     </div>
 
-    <div v-else class="mp__grid">
-      <article v-for="p in PROVIDERS" :key="p.id" class="provider">
-        <header class="provider__head">
-          <div class="provider__brand">
-            <span class="provider__logo" :style="{ background: p.color }">
-              {{ p.short }}
-            </span>
-            <div>
-              <h3 class="provider__name">{{ p.name }}</h3>
-              <p class="provider__hint">{{ p.hint }}</p>
-            </div>
-          </div>
-          <StatusBadge :color="statusColor(p.id)">
-            {{ statusLabel(p.id) }}
-          </StatusBadge>
+    <template v-else>
+      <div
+        v-for="group in GROUPS"
+        :key="group.title"
+        class="mp__section"
+      >
+        <header class="mp__section-head">
+          <h2 class="mp__section-title">{{ group.title }}</h2>
+          <p class="mp__section-sub">{{ group.subtitle }}</p>
         </header>
 
-        <div class="provider__body">
-          <el-form-item v-if="p.id === 'volcengine'" label="app key">
-            <el-input
-              v-model="form[p.id].app_key_input"
-              :placeholder="
-                serverMasked[p.id].app_key ?? 'ISALES_VOLCENGINE_APP_KEY'
-              "
-            />
-          </el-form-item>
-          <el-form-item
-            :label="p.id === 'volcengine' ? 'app token' : 'API key'"
-          >
-            <div class="key-row">
-              <el-input
-                v-model="form[p.id].api_key_input"
-                :type="reveal[p.id] ? 'text' : 'password'"
-                :placeholder="
-                  serverMasked[p.id].api_key ?? 'sk-…（点保存后掩码会出现）'
-                "
-                clearable
-              />
-              <el-button @click="reveal[p.id] = !reveal[p.id]">
-                <component :is="reveal[p.id] ? EyeOff : Eye" :size="14" />
-              </el-button>
+        <div class="mp__grid">
+          <article v-for="card in group.cards" :key="card.id" class="provider">
+            <header class="provider__head">
+              <div class="provider__brand">
+                <span class="provider__logo" :style="{ background: card.color }">
+                  {{ card.short }}
+                </span>
+                <div>
+                  <h3 class="provider__name">{{ card.name }}</h3>
+                  <p class="provider__hint">{{ card.hint }}</p>
+                </div>
+              </div>
+              <StatusBadge :color="statusColor(card.id)">
+                {{ statusLabel(card.id) }}
+              </StatusBadge>
+            </header>
+
+            <div class="provider__body">
+              <el-form-item
+                v-for="field in card.fields"
+                :key="field.field_name"
+                :label="field.label"
+              >
+                <div v-if="field.sensitive" class="key-row">
+                  <el-input
+                    v-model="form[fkey(card.id, field.field_name)]"
+                    :type="reveal[fkey(card.id, field.field_name)] ? 'text' : 'password'"
+                    :placeholder="
+                      serverMasked[fkey(card.id, field.field_name)] ?? field.placeholder
+                    "
+                    clearable
+                  />
+                  <el-button
+                    @click="
+                      reveal[fkey(card.id, field.field_name)] =
+                        !reveal[fkey(card.id, field.field_name)]
+                    "
+                  >
+                    <component
+                      :is="reveal[fkey(card.id, field.field_name)] ? EyeOff : Eye"
+                      :size="14"
+                    />
+                  </el-button>
+                </div>
+                <el-input
+                  v-else
+                  v-model="form[fkey(card.id, field.field_name)]"
+                  :placeholder="
+                    serverMasked[fkey(card.id, field.field_name)] ?? field.placeholder
+                  "
+                />
+                <p v-if="field.hint" class="provider__field-hint">{{ field.hint }}</p>
+              </el-form-item>
+              <a
+                class="provider__doc"
+                :href="card.docs"
+                target="_blank"
+                rel="noopener"
+              >
+                <ExternalLink :size="12" />
+                获取 {{ card.docLabel }}
+              </a>
             </div>
-          </el-form-item>
-          <el-form-item label="endpoint">
-            <el-input
-              v-model="form[p.id].endpoint_input"
-              :placeholder="serverMasked[p.id].endpoint ?? p.default_endpoint"
-            />
-          </el-form-item>
-          <el-form-item label="默认 model">
-            <el-input
-              v-model="form[p.id].default_model_input"
-              :placeholder="
-                serverMasked[p.id].default_model ?? p.default_model
-              "
-            />
-          </el-form-item>
-          <a class="provider__doc" :href="p.docs" target="_blank" rel="noopener">
-            <ExternalLink :size="12" />
-            获取 API key
-          </a>
+          </article>
         </div>
-      </article>
-    </div>
+      </div>
+    </template>
 
     <div class="save-bar">
       <span class="save-bar__hint">
@@ -118,131 +131,192 @@ import PageHeader from "@/components/Common/PageHeader.vue";
 import StatusBadge from "@/components/Common/StatusBadge.vue";
 import type { ProviderCredentialRead } from "@/types/providerCredential";
 import {
-  BACKEND_IMPLEMENTED,
   LLM_PROVIDER_DEFAULT_ENDPOINT,
   LLM_PROVIDER_DEFAULT_MODEL,
-  LLM_PROVIDER_IDS,
   LLM_PROVIDER_LABEL,
-  type LLMProviderId,
 } from "@/types/llmProviders";
+import { SPEECH_PROVIDER_LABEL } from "@/types/speechProviders";
 
-// 厂商列表对齐 SSOT @/types/llmProviders。后端 ALLOWED_PROVIDER_IDS 同步。
-type ProviderId = LLMProviderId;
-
-// UI 用 4 个 user input 字段 (api_key / app_key / endpoint / default_model)。
-// volcengine 双密钥: api_key 输入框承载 app_token, app_key 单独一行。
-interface ProviderForm {
-  api_key_input: string;       // dashscope=api_key；volcengine=app_token
-  app_key_input: string;       // volcengine 专用
-  endpoint_input: string;
-  default_model_input: string;
+// 每个凭据字段的 UI 描述。field_name 直接对齐后端 ALLOWED_FIELD_NAMES;
+// 不再有「一个输入框承载另一字段」的复用 —— LLM key 与语音 token 各填各的。
+interface CredField {
+  field_name: string;
+  label: string;
+  placeholder: string;
+  sensitive?: boolean; // password 输入 + reveal 切换
+  hint?: string;
 }
 
-// 服务端 masked 值；null = 该字段后端没行。
-interface ServerMasked {
-  api_key: string | null;
-  app_key: string | null;
-  endpoint: string | null;
-  default_model: string | null;
+interface CredCard {
+  id: string; // provider_id (对齐后端 ALLOWED_PROVIDER_IDS)
+  name: string;
+  short: string;
+  color: string;
+  hint: string;
+  docs: string;
+  docLabel: string;
+  fields: CredField[];
 }
 
-const PROVIDER_PRESENTATION: Record<
-  ProviderId,
-  { short: string; color: string; hint: string; docs: string }
-> = {
-  volcengine: {
-    short: "豆包",
+// ── 模型配置 (LLM provider) ─────────────────────────────────────────────
+// 火山方舟 Ark = 豆包大模型,持独立 ark API Key (与豆包语音的 X-Api-Key 不同)。
+const LLM_CARDS: CredCard[] = [
+  {
+    id: "volcengine",
+    name: LLM_PROVIDER_LABEL.volcengine,
+    short: "方舟",
     color: "#d33d3d",
-    hint: "Doubao 系列 / 同时供 ASR + TTS（共用 app_key + app_token）",
+    hint: "Doubao 大模型 / 火山方舟 Ark（仅 LLM，语音另填）",
     docs: "https://console.volcengine.com/ark",
+    docLabel: "ark API key",
+    fields: [
+      {
+        field_name: "api_key",
+        label: "ark API key",
+        placeholder: "ark UUID（如 82989d4d-…）",
+        sensitive: true,
+      },
+      {
+        field_name: "endpoint",
+        label: "endpoint",
+        placeholder: LLM_PROVIDER_DEFAULT_ENDPOINT.volcengine,
+      },
+      {
+        field_name: "default_model",
+        label: "默认 model",
+        placeholder: LLM_PROVIDER_DEFAULT_MODEL.volcengine,
+        hint: "ark 需带版本模型 ID 或接入点 ep-xxx；裸 doubao-pro-32k 会 404。",
+      },
+    ],
   },
-  dashscope: {
+  {
+    id: "dashscope",
+    name: LLM_PROVIDER_LABEL.dashscope,
     short: "通义",
     color: "#615ced",
-    hint: "Qwen 系列 / OpenAI 兼容模式",
+    hint: "Qwen 系列 / OpenAI 兼容模式（LLM）",
     docs: "https://bailian.console.aliyun.com/?apiKey=1",
+    docLabel: "API key",
+    fields: [
+      {
+        field_name: "api_key",
+        label: "API key",
+        placeholder: "sk-…（点保存后掩码会出现）",
+        sensitive: true,
+      },
+      {
+        field_name: "endpoint",
+        label: "endpoint",
+        placeholder: LLM_PROVIDER_DEFAULT_ENDPOINT.dashscope,
+      },
+      {
+        field_name: "default_model",
+        label: "默认 model",
+        placeholder: LLM_PROVIDER_DEFAULT_MODEL.dashscope,
+      },
+    ],
   },
-};
+];
 
-const PROVIDERS = LLM_PROVIDER_IDS.map((id) => ({
-  id,
-  name: LLM_PROVIDER_LABEL[id],
-  short: PROVIDER_PRESENTATION[id].short,
-  color: PROVIDER_PRESENTATION[id].color,
-  hint: PROVIDER_PRESENTATION[id].hint,
-  default_endpoint: LLM_PROVIDER_DEFAULT_ENDPOINT[id],
-  default_model: LLM_PROVIDER_DEFAULT_MODEL[id],
-  docs: PROVIDER_PRESENTATION[id].docs,
-  implemented: BACKEND_IMPLEMENTED.has(id),
-}));
+// ── 语音服务配置 (ASR/TTS provider) ─────────────────────────────────────
+// 豆包语音 = 火山 OpenSpeech,新版控制台单 X-Api-Key / 旧版 app_key+app_token
+// 三件套两种鉴权都支持 (engine build_volcengine_tts / VolcengineASRProvider
+// 优先 api_key、降级 app_key+app_token)。
+const SPEECH_CARDS: CredCard[] = [
+  {
+    id: "volcengine_speech",
+    name: SPEECH_PROVIDER_LABEL.volcengine_speech,
+    short: "语音",
+    color: "#d3823d",
+    hint: "ASR + TTS（引擎进程级全局，非 per-campaign）",
+    docs: "https://console.volcengine.com/speech",
+    docLabel: "语音 API 鉴权信息",
+    fields: [
+      {
+        field_name: "api_key",
+        label: "API key（新版控制台 X-Api-Key）",
+        placeholder: "X-Api-Key UUID（新版控制台优先）",
+        sensitive: true,
+      },
+      {
+        field_name: "app_key",
+        label: "app key（旧版控制台）",
+        placeholder: "App ID（旧版三件套，可留空）",
+      },
+      {
+        field_name: "app_token",
+        label: "app token（旧版控制台）",
+        placeholder: "Access Token（旧版三件套，可留空）",
+        sensitive: true,
+      },
+      {
+        field_name: "tts_resource_id",
+        label: "TTS resource id",
+        placeholder: "seed-tts-2.0（默认）",
+      },
+    ],
+  },
+];
 
-// volcengine 字段映射: api_key_input → app_token, app_key_input → app_key。
-// 其他 provider: api_key_input → api_key。
-function fieldNameFor(
-  provider: ProviderId,
-  uiField: "api_key" | "app_key" | "endpoint" | "default_model",
-): string {
-  if (provider === "volcengine") {
-    if (uiField === "api_key") return "app_token";
-    if (uiField === "app_key") return "app_key";
-  }
-  return uiField;
+const GROUPS = [
+  {
+    title: "模型配置",
+    subtitle: "对话 / 决策 / 抽取所用的 LLM 厂商。各厂商持自己的 API key。",
+    cards: LLM_CARDS,
+  },
+  {
+    title: "语音服务配置",
+    subtitle: "通话语音识别 (ASR) 与合成 (TTS) 所用的语音厂商。",
+    cards: SPEECH_CARDS,
+  },
+];
+
+const ALL_CARDS: CredCard[] = [...LLM_CARDS, ...SPEECH_CARDS];
+
+// 已知 (provider_id, field_name) 全集 —— 只 ingest 属于本页卡片的行。
+function fkey(providerId: string, fieldName: string): string {
+  return `${providerId}.${fieldName}`;
 }
 
-const form = reactive<Record<ProviderId, ProviderForm>>(
-  Object.fromEntries(
-    LLM_PROVIDER_IDS.map((id) => [
-      id,
-      { api_key_input: "", app_key_input: "", endpoint_input: "", default_model_input: "" },
-    ]),
-  ) as Record<ProviderId, ProviderForm>,
+function buildKeys(): string[] {
+  const keys: string[] = [];
+  for (const card of ALL_CARDS) {
+    for (const field of card.fields) keys.push(fkey(card.id, field.field_name));
+  }
+  return keys;
+}
+
+const ALL_KEYS = buildKeys();
+const SENSITIVE_KEYS = new Set(
+  ALL_CARDS.flatMap((c) =>
+    c.fields.filter((f) => f.sensitive).map((f) => fkey(c.id, f.field_name)),
+  ),
 );
 
-const serverMasked = reactive<Record<ProviderId, ServerMasked>>(
-  Object.fromEntries(
-    LLM_PROVIDER_IDS.map((id) => [
-      id,
-      { api_key: null, app_key: null, endpoint: null, default_model: null },
-    ]),
-  ) as Record<ProviderId, ServerMasked>,
+// form: 用户输入的明文 (上送后清空);serverMasked: 服务端掩码 (null=无行)。
+const form = reactive<Record<string, string>>(
+  Object.fromEntries(ALL_KEYS.map((k) => [k, ""])),
 );
-
-const reveal = reactive<Record<ProviderId, boolean>>(
-  Object.fromEntries(LLM_PROVIDER_IDS.map((id) => [id, false])) as Record<
-    ProviderId,
-    boolean
-  >,
+const serverMasked = reactive<Record<string, string | null>>(
+  Object.fromEntries(ALL_KEYS.map((k) => [k, null])),
+);
+const reveal = reactive<Record<string, boolean>>(
+  Object.fromEntries([...SENSITIVE_KEYS].map((k) => [k, false])),
 );
 
 const loading = ref(true);
 const saving = ref(false);
 
 function ingestRow(row: ProviderCredentialRead): void {
-  const pid = row.provider_id as ProviderId;
-  if (!LLM_PROVIDER_IDS.includes(pid)) return;
-  const m = serverMasked[pid];
-  if (row.field_name === "api_key" || row.field_name === "app_token") {
-    m.api_key = row.masked_value;
-  } else if (row.field_name === "app_key") {
-    m.app_key = row.masked_value;
-  } else if (row.field_name === "endpoint") {
-    m.endpoint = row.masked_value;
-  } else if (row.field_name === "default_model") {
-    m.default_model = row.masked_value;
-  }
+  const k = fkey(row.provider_id, row.field_name);
+  if (k in serverMasked) serverMasked[k] = row.masked_value;
 }
 
 async function loadCredentials(): Promise<void> {
   loading.value = true;
   try {
     const rows = await providerCredentialsApi.list();
-    // reset server-masked
-    for (const pid of LLM_PROVIDER_IDS) {
-      serverMasked[pid].api_key = null;
-      serverMasked[pid].app_key = null;
-      serverMasked[pid].endpoint = null;
-      serverMasked[pid].default_model = null;
-    }
+    for (const k of ALL_KEYS) serverMasked[k] = null;
     rows.forEach(ingestRow);
   } catch (err) {
     ElMessage.error(err instanceof Error ? err.message : "加载凭据失败");
@@ -251,53 +325,43 @@ async function loadCredentials(): Promise<void> {
   }
 }
 
-function statusColor(id: ProviderId): "green" | "gray" | "yellow" {
-  const m = serverMasked[id];
-  if (!m.api_key) return "gray";
-  return "green";
+// 卡片视作「已配置」= 它的任一字段在服务端有掩码值。
+function isConfigured(cardId: string): boolean {
+  const card = ALL_CARDS.find((c) => c.id === cardId);
+  if (!card) return false;
+  return card.fields.some((f) => serverMasked[fkey(cardId, f.field_name)]);
 }
 
-function statusLabel(id: ProviderId): string {
-  const m = serverMasked[id];
-  if (!m.api_key) return "未配置";
-  if (!BACKEND_IMPLEMENTED.has(id)) return "已存（engine 未对接）";
-  return "已配置";
+function statusColor(cardId: string): "green" | "gray" {
+  return isConfigured(cardId) ? "green" : "gray";
+}
+
+function statusLabel(cardId: string): string {
+  return isConfigured(cardId) ? "已配置" : "未配置";
 }
 
 async function onSave(): Promise<void> {
   saving.value = true;
   let writeCount = 0;
   try {
-    for (const id of LLM_PROVIDER_IDS) {
-      const f = form[id];
-      const writes: { ui: "api_key" | "app_key" | "endpoint" | "default_model"; value: string }[] = [];
-      if (f.api_key_input.trim()) writes.push({ ui: "api_key", value: f.api_key_input.trim() });
-      if (f.app_key_input.trim() && id === "volcengine")
-        writes.push({ ui: "app_key", value: f.app_key_input.trim() });
-      if (f.endpoint_input.trim()) writes.push({ ui: "endpoint", value: f.endpoint_input.trim() });
-      if (f.default_model_input.trim())
-        writes.push({ ui: "default_model", value: f.default_model_input.trim() });
-
-      for (const w of writes) {
+    for (const card of ALL_CARDS) {
+      for (const field of card.fields) {
+        const k = fkey(card.id, field.field_name);
+        const value = form[k].trim();
+        if (!value) continue;
         await providerCredentialsApi.upsert({
-          provider_id: id,
-          field_name: fieldNameFor(id, w.ui),
-          plaintext_value: w.value,
+          provider_id: card.id,
+          field_name: field.field_name,
+          plaintext_value: value,
         });
         writeCount++;
+        form[k] = ""; // 清空避免重复提交
       }
-
-      // 清空 input (避免再次提交)
-      f.api_key_input = "";
-      f.app_key_input = "";
-      f.endpoint_input = "";
-      f.default_model_input = "";
     }
 
     if (writeCount === 0) {
       ElMessage.info("没有可保存的字段（输入框都为空）");
     } else {
-      // 提示运维 / log reload-required；不阻塞
       try {
         await providerCredentialsApi.reloadHint();
       } catch {
@@ -306,7 +370,7 @@ async function onSave(): Promise<void> {
       ElMessage.success(
         `已保存 ${writeCount} 个字段。重启 isales-engine 让新凭据生效。`,
       );
-      await loadCredentials();  // 刷新 masked
+      await loadCredentials(); // 刷新 masked
     }
   } catch (err) {
     ElMessage.error(err instanceof Error ? err.message : "保存失败");
@@ -316,8 +380,12 @@ async function onSave(): Promise<void> {
 }
 
 onMounted(() => {
-  // 清理旧 localStorage 残留 (v1/v2/v3 全清；本 change 起 UI 不再写)
-  for (const key of ["model-providers-v1", "model-providers-v2", "model-providers-v3"]) {
+  // 清理旧 localStorage 残留 (v1/v2/v3 全清;本 change 起 UI 不再写)
+  for (const key of [
+    "model-providers-v1",
+    "model-providers-v2",
+    "model-providers-v3",
+  ]) {
     try {
       localStorage.removeItem(key);
     } catch {
@@ -344,6 +412,26 @@ onMounted(() => {
   background: var(--isales-card);
   border: 1px solid var(--isales-border);
   border-radius: var(--isales-radius);
+}
+.mp__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--isales-space-3);
+}
+.mp__section-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mp__section-title {
+  font-size: var(--isales-font-size-title-2);
+  font-weight: var(--isales-font-weight-semibold);
+  line-height: var(--isales-line-height-tight);
+}
+.mp__section-sub {
+  font-size: var(--isales-font-size-xs);
+  color: var(--isales-muted-foreground);
+  line-height: var(--isales-line-height-snug);
 }
 .mp__grid {
   display: grid;
@@ -398,6 +486,12 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: var(--isales-space-1);
+}
+.provider__field-hint {
+  margin-top: 2px;
+  font-size: var(--isales-font-size-xs);
+  color: var(--isales-muted-foreground);
+  line-height: var(--isales-line-height-snug);
 }
 .key-row {
   display: flex;
