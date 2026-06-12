@@ -79,6 +79,35 @@ describe("InterruptionTab", () => {
     wrapper.unmount();
   });
 
+  it("toggles auto_restructure_on_interrupt; the switch is mode-independent", async () => {
+    // engine-auto-restructure-on-interrupt: a mode-independent switch below the
+    // mode toggle. Click flips the flag; label shows in both basic & advanced.
+    const form: CampaignBase = { ...CAMPAIGN_DEFAULTS };
+    const wrapper = mount(InterruptionTab, {
+      props: { modelValue: form, fieldErrors: {} },
+    });
+    await nextTick();
+    expect(wrapper.text()).toContain("被打断后自动续说");
+    const sw = wrapper.find(".el-switch");
+    expect(sw.exists()).toBe(true);
+    await sw.trigger("click");
+    await nextTick();
+    expect(form.auto_restructure_on_interrupt).toBe(true);
+    wrapper.unmount();
+
+    // still rendered in 高级模式 (interruption_rules != null) — mode-independent
+    const advForm: CampaignBase = {
+      ...CAMPAIGN_DEFAULTS,
+      interruption_rules: { type: "length", value: 2 },
+    };
+    const adv = mount(InterruptionTab, {
+      props: { modelValue: advForm, fieldErrors: {} },
+    });
+    await nextTick();
+    expect(adv.text()).toContain("被打断后自动续说");
+    adv.unmount();
+  });
+
   it("defaults to 普通模式 with a single toggle button to 高级模式; basic shows 最小打断字数 + mode-independent continuous fields", async () => {
     const form: CampaignBase = { ...CAMPAIGN_DEFAULTS, interruption_rules: null };
     const wrapper = mount(InterruptionTab, {

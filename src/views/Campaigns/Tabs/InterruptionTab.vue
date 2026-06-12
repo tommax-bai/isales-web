@@ -88,6 +88,15 @@
         = AI 这轮不回应，只播「您请说」让客户先讲完并重置计数。
       </div>
     </el-form-item>
+    <el-form-item label="被打断后自动续说">
+      <el-switch v-model="form.auto_restructure_on_interrupt" />
+      <div class="hint">
+        开启后：当客户用<strong>没有营养的话</strong>（垫词、语气词、随口附和）打断、且没有触发挂断 /
+        转人工 / 拒识等规则时，AI 会自动把刚被打断那句话顺一顺、接着说完。<br />
+        若客户是<strong>真的提问或反对</strong>而打断，仍由规则正常接管去回应——建议把挂断 / 转人工 /
+        拒识规则配齐再开此开关。
+      </div>
+    </el-form-item>
   </el-form>
 </template>
 

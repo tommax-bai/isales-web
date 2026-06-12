@@ -300,6 +300,10 @@ export interface CampaignBase {
   interruption_min_chars: number;
   max_continuous_interruptions: number;
   continuous_interruption_strategy: ContinuousInterruptionStrategy;
+  // engine-auto-restructure-on-interrupt: when on, a barge-in by a trivial
+  // interjection (with no hangup/transfer/decline rule matched) makes the AI
+  // resume its cut-off line instead of replying. Off by default.
+  auto_restructure_on_interrupt: boolean;
 
   transfer_keyword_enabled: boolean;
   transfer_keywords: string[];
@@ -388,6 +392,7 @@ export const CAMPAIGN_DEFAULTS: CampaignBase = {
   interruption_min_chars: 2,
   max_continuous_interruptions: 3,
   continuous_interruption_strategy: "short_reply",
+  auto_restructure_on_interrupt: false,
   transfer_keyword_enabled: false,
   transfer_keywords: [],
   transfer_intent_enabled: false,
