@@ -56,17 +56,11 @@ export interface RoleConfigNestedWrite {
 // ── multi-referee routing (engine-multi-referee-and-restructure) ─────────────
 
 export type TransitionTarget = "goal_achieved" | "transfer" | "customer_decline";
-export type RestructureSource = "last_reply" | "interrupt_remaining";
 
 export interface TransitionAction {
   type: "transition";
   to: TransitionTarget;
   goal_type?: string | null; // required iff to === "goal_achieved"
-}
-
-export interface RestructureAction {
-  type: "restructure";
-  source: RestructureSource;
 }
 
 // ── engine-tools-multidialogue-gating: route / tool actions + then_state ──────
@@ -79,7 +73,8 @@ export type ThenState =
   | "TRANSFERRING"
   | "END";
 
-// Route to a persona label or a builtin dialogue route (closing/recovery/restructure).
+// Route to a persona label or a builtin dialogue route (closing/recovery).
+// engine-auto-restructure-on-interrupt: restructure is no longer a route target.
 export interface RoutePersonaAction {
   type: "route";
   to: string;
@@ -100,10 +95,10 @@ export interface RouteToolAction {
   closing_phrase?: string | null;
 }
 
-// Legacy transition/restructure kept (removal-tracked shim); route/tool added.
+// Legacy transition kept (removal-tracked shim); route/tool are modern. The
+// legacy restructure action was removed (engine-auto-restructure-on-interrupt).
 export type RoutingAction =
   | TransitionAction
-  | RestructureAction
   | RoutePersonaAction
   | RouteToolAction;
 

@@ -2,7 +2,7 @@
   <div class="routing-tab">
     <p class="tab-intro">
       <Info :size="13" class="tab-intro__icon" />
-      <span>门控监管（在「AI 配置」里增删）并行判定，引擎按下方规则顺序逐条匹配，第一条命中即生效；都不命中则继续对话。规则动作可转移状态或切到重组流（口语化重说上一句 / 补上被打断内容）。</span>
+      <span>门控监管（在「AI 配置」里增删）并行判定，引擎按下方规则顺序逐条匹配，第一条命中即生效；都不命中则继续对话。规则动作可路由到角色 / 收尾 / 挽留，或调用工具（转人工 / 挂断）。「被打断后自动续说」在「打断」配置卡里开关，不在此处。</span>
     </p>
 
     <el-form label-width="160px" class="form">
@@ -85,7 +85,6 @@
               <!-- legacy 动作类型不可新建：engine 保留 removal-tracked shim 执行存量规则，
                    故仅当本行已是该类型时显示（保持既有规则可编辑），避免下拉变空值。 -->
               <el-option v-if="row.action.type === 'transition'" label="转移(旧·只读)" value="transition" />
-              <el-option v-if="row.action.type === 'restructure'" label="重组(旧·只读)" value="restructure" />
             </el-select>
             <template v-if="row.action.type === 'route'">
               <el-select
@@ -98,7 +97,6 @@
                 <el-option v-for="p in personaLabels" :key="p" :label="p" :value="p" />
                 <el-option label="收尾(closing)" value="closing" />
                 <el-option label="挽留(recovery)" value="recovery" />
-                <el-option label="重组(restructure)" value="restructure" />
               </el-select>
               <el-input
                 v-if="row.action.to === 'closing'"
@@ -146,12 +144,6 @@
                 placeholder="goal_type"
                 style="width: 110px"
               />
-            </template>
-            <template v-else>
-              <el-select v-model="row.action.source" size="small" style="width: 150px">
-                <el-option label="复述上一句" value="last_reply" />
-                <el-option label="补打断残留" value="interrupt_remaining" />
-              </el-select>
             </template>
           </div>
         </template>
@@ -222,14 +214,14 @@ function isHangupTool(alias: string): boolean {
 }
 
 // fail-open route options: main (the main persona) + configured personas + the
-// builtin closing/recovery/restructure routes — the same target space the engine
-// can resolve referee_fail_open_route to.
+// builtin closing/recovery routes — the same target space the engine can resolve
+// referee_fail_open_route to. (engine-auto-restructure-on-interrupt: restructure
+// is no longer a routable target.)
 const failOpenRoutes = computed(() => [
   { value: "main", label: "主对话 (main)" },
   ...personaLabels.value.map((p) => ({ value: p, label: p })),
   { value: "closing", label: "收尾 (closing)" },
   { value: "recovery", label: "挽留 (recovery)" },
-  { value: "restructure", label: "重组 (restructure)" },
 ]);
 
 function addRule(): void {
@@ -262,8 +254,6 @@ function onActionTypeChange(row: RoutingRule, type: string): void {
     action = { type: "route", to: personaLabels.value[0] ?? "closing", then_state: null };
   } else if (type === "tool") {
     action = { type: "tool", tool: toolAliases.value[0] ?? "", then_state: null };
-  } else if (type === "restructure") {
-    action = { type: "restructure", source: "last_reply" };
   } else {
     action = { type: "transition", to: "goal_achieved", goal_type: "appointment" };
   }

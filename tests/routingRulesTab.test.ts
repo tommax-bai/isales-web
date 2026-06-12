@@ -95,7 +95,7 @@ describe("RoutingRulesTab", () => {
     const form: CampaignBase = {
       ...CAMPAIGN_DEFAULTS,
       routing_rules: [
-        { referee: "a", match: ["X"], action: { type: "restructure", source: "last_reply" } },
+        { referee: "a", match: ["X"], action: { type: "route", to: "recovery", then_state: null } },
         { referee: "b", match: ["Y"], action: { type: "transition", to: "transfer" } },
       ],
     };
@@ -108,7 +108,9 @@ describe("RoutingRulesTab", () => {
     wrapper.unmount();
   });
 
-  it("switches action type between transition and restructure", async () => {
+  it("switches action type between transition and tool", async () => {
+    // engine-auto-restructure-on-interrupt: restructure is no longer a routing
+    // action type, so the action-type switch now toggles route/tool/transition.
     const form: CampaignBase = {
       ...CAMPAIGN_DEFAULTS,
       routing_rules: [
@@ -121,9 +123,9 @@ describe("RoutingRulesTab", () => {
     await nextTick();
     (wrapper.vm as unknown as { onActionTypeChange: (r: unknown, t: string) => void }).onActionTypeChange(
       form.routing_rules[0],
-      "restructure",
+      "tool",
     );
-    expect(form.routing_rules[0].action).toEqual({ type: "restructure", source: "last_reply" });
+    expect(form.routing_rules[0].action).toEqual({ type: "tool", tool: "", then_state: null });
     wrapper.unmount();
   });
 
