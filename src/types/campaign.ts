@@ -409,6 +409,20 @@ export const CAMPAIGN_DEFAULTS: CampaignBase = {
   respect_holidays: true,
 };
 
+// 背景环境音预设（engine-ambient-background-mix）。value = 服务端
+// $ISALES_AMBIENT_DIR（默认 /opt/isales/ambient）下的 WAV 文件名；运维更新素材后
+// 在此增删条目即可。空值由「启用」开关表达（关 → ambient_audio=null）。
+export interface AmbientPreset {
+  value: string;
+  label: string;
+  desc: string;
+}
+export const AMBIENT_PRESETS: AmbientPreset[] = [
+  { value: "quiet_room.wav", label: "安静室内", desc: "极轻环境底噪，几乎察觉不到" },
+  { value: "office.wav", label: "办公室", desc: "室内底噪 + 偶发键盘声" },
+  { value: "callcenter.wav", label: "呼叫中心", desc: "较忙的坐席环境：人声底噪 + 键盘声" },
+];
+
 // GET /campaigns/{id}/progress — 按 lead.status 聚合 + 启停状态。
 export interface CampaignProgress {
   campaign_id: number;
