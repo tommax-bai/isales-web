@@ -152,6 +152,14 @@
         </article>
       </section>
 
+      <section class="card card--blue">
+        <header class="card__head">
+          <Music :size="16" />
+          <h3 class="card__title">背景环境音</h3>
+        </header>
+        <AmbientAudioTab v-model="form" :field-errors="fieldErrors" />
+      </section>
+
       <!-- 模块顺序按外呼运行链路排布。AI 角色卡（main/referee/extractor）与垫词各自
            按 campaign-id 即时保存；其余 form-driven 小节统一经底部保存条提交。原
            .cd__tiers 分组已拆散，三角色卡随链路嵌在 form-driven 小节之间。 -->
@@ -227,14 +235,6 @@
 
       <!-- 垫词 (filler) — 开关/触发延迟/垫词短语随底部保存条一起提交。 -->
       <FillerEditor v-model="form" />
-
-      <section class="card card--blue">
-        <header class="card__head">
-          <Music :size="16" />
-          <h3 class="card__title">背景环境音</h3>
-        </header>
-        <AmbientAudioTab v-model="form" :field-errors="fieldErrors" />
-      </section>
 
       <section class="card card--red">
         <header class="card__head">
