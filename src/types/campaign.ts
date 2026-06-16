@@ -418,9 +418,7 @@ export interface AmbientPreset {
   desc: string;
 }
 export const AMBIENT_PRESETS: AmbientPreset[] = [
-  { value: "quiet_room.wav", label: "安静室内", desc: "极轻环境底噪，几乎察觉不到" },
-  { value: "office.wav", label: "办公室", desc: "室内底噪 + 偶发键盘声" },
-  { value: "callcenter.wav", label: "呼叫中心", desc: "较忙的坐席环境：人声底噪 + 键盘声" },
+  { value: "office.wav", label: "办公室", desc: "真实办公室环境底噪" },
 ];
 
 // GET /campaigns/{id}/progress — 按 lead.status 聚合 + 启停状态。
