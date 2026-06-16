@@ -228,6 +228,14 @@
       <!-- 垫词 (filler) — 开关/触发延迟/垫词短语随底部保存条一起提交。 -->
       <FillerEditor v-model="form" />
 
+      <section class="card card--blue">
+        <header class="card__head">
+          <Music :size="16" />
+          <h3 class="card__title">背景环境音</h3>
+        </header>
+        <AmbientAudioTab v-model="form" :field-errors="fieldErrors" />
+      </section>
+
       <section class="card card--red">
         <header class="card__head">
           <Settings :size="16" />
@@ -320,6 +328,7 @@ import {
   ArrowLeft,
   Clock,
   MessageSquare,
+  Music,
   Play,
   Plus,
   RefreshCw,
@@ -342,6 +351,7 @@ import ExpandingTextarea from "@/components/Common/ExpandingTextarea.vue";
 import RoutingRulesTab from "@/views/Campaigns/Tabs/RoutingRulesTab.vue";
 import ToolsTab from "@/views/Campaigns/Tabs/ToolsTab.vue";
 import SilenceTab from "@/views/Campaigns/Tabs/SilenceTab.vue";
+import AmbientAudioTab from "@/views/Campaigns/Tabs/AmbientAudioTab.vue";
 import EndpointingTab from "@/views/Campaigns/Tabs/EndpointingTab.vue";
 import InterruptionTab from "@/views/Campaigns/Tabs/InterruptionTab.vue";
 import TransferTab from "@/views/Campaigns/Tabs/TransferTab.vue";

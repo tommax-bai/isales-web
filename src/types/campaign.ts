@@ -265,6 +265,13 @@ export interface CampaignBase {
   // more likely to clip a hesitating caller's pause as "done".
   asr_eos_silence_ms: number | null;
 
+  // ambient background mix (engine-ambient-background-mix). ambient_audio: a
+  // background-noise asset id; null/empty → off (outbound unchanged).
+  // ambient_gain: linear mix level relative to TTS (0.1 ≈ -20dB), kept low to
+  // limit echo back into the caller's mic/ASR.
+  ambient_audio: string | null;
+  ambient_gain: number;
+
   wrap_up_max_rounds: number;
   wrap_up_max_seconds: number;
   wrap_up_closing_phrases: string[];
@@ -370,6 +377,8 @@ export const CAMPAIGN_DEFAULTS: CampaignBase = {
   silence_phrases: [],
   silence_hangup_phrase: null,
   asr_eos_silence_ms: null,
+  ambient_audio: null,
+  ambient_gain: 0.1,
   wrap_up_max_rounds: 3,
   wrap_up_max_seconds: 60,
   wrap_up_closing_phrases: [],
