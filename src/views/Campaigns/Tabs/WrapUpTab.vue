@@ -17,6 +17,19 @@
     >
       <el-input-number v-model="form.wrap_up_max_seconds" :min="0" />
     </el-form-item>
+    <el-form-item
+      label="收尾期静音挂断(ms)"
+      :error="fieldErrors?.wrap_up_silence_hangup_ms"
+    >
+      <el-input-number
+        v-model="form.wrap_up_silence_hangup_ms"
+        :min="0"
+        :step="500"
+      />
+      <div class="hint">
+        收尾期客户静默超过此时长即主动挂断，不再播放「你好，还在么？」。建议设得比通话中段的静音阈值长，给客户告别后留思考时间。
+      </div>
+    </el-form-item>
     <el-form-item label="收尾结束语">
       <ExpandingTextarea v-model="closingText" placeholder="每行一句" />
     </el-form-item>
