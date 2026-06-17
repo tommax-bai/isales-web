@@ -302,6 +302,9 @@ export interface CampaignBase {
   // Min rune count for the NULL-rule default tree's length leaf (非高级 mode).
   // Engine default 2; only read when interruption_rules is null.
   interruption_min_chars: number;
+  // engine-barge-in-fade-out: ms to fade the AI voice down on a barge-in
+  // instead of hard-cutting to silence. ~100 = human trail-off; 0 = hard cut.
+  barge_in_fadeout_ms: number;
   max_continuous_interruptions: number;
   continuous_interruption_strategy: ContinuousInterruptionStrategy;
   // engine-auto-restructure-on-interrupt: when on, a barge-in by a trivial
@@ -394,6 +397,7 @@ export const CAMPAIGN_DEFAULTS: CampaignBase = {
   interruption_whitelist: [],
   interruption_min_duration_ms: 400,
   interruption_min_chars: 2,
+  barge_in_fadeout_ms: 100,
   max_continuous_interruptions: 3,
   continuous_interruption_strategy: "short_reply",
   auto_restructure_on_interrupt: false,

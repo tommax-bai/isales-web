@@ -78,6 +78,16 @@
       <el-input-number v-model="form.max_continuous_interruptions" :min="0" />
       <div class="hint">连续打断超过此次数触发下面的「连续打断策略」。</div>
     </el-form-item>
+    <el-form-item
+      label="打断收声淡出 (ms)"
+      :error="fieldErrors?.barge_in_fadeout_ms"
+    >
+      <el-input-number v-model="form.barge_in_fadeout_ms" :min="0" :step="10" />
+      <div class="hint">
+        被打断时 AI 的声音<strong>渐弱收声</strong>的时长，而不是瞬间静音（瞬切会「咔哒」一声、也不像真人）。<br />
+        约 <strong>100ms</strong> 听起来像真人把话收住；15~30ms 只去爆音；<strong>0 = 旧的硬切</strong>。
+      </div>
+    </el-form-item>
     <el-form-item label="连续打断策略">
       <el-radio-group v-model="form.continuous_interruption_strategy">
         <el-radio value="short_reply">短回复</el-radio>
