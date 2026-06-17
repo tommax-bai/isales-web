@@ -30,6 +30,15 @@
         收尾期客户静默超过此时长即主动挂断，不再播放「你好，还在么？」。建议设得比通话中段的静音阈值长，给客户告别后留思考时间。
       </div>
     </el-form-item>
+    <el-form-item
+      label="收尾裁判（无实质问题即挂）"
+      :error="fieldErrors?.wrap_up_referee_enabled"
+    >
+      <el-switch v-model="form.wrap_up_referee_enabled" />
+      <div class="hint">
+        开启后，收尾期客户若再开口但没有实质性新问题（只是附和、客套、同意结束），AI 会直接挂断，不再硬聊。判不准时不挂、由轮数/时长兜底。
+      </div>
+    </el-form-item>
     <el-form-item label="收尾结束语">
       <ExpandingTextarea v-model="closingText" placeholder="每行一句" />
     </el-form-item>

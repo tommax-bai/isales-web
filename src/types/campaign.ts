@@ -276,6 +276,7 @@ export interface CampaignBase {
   wrap_up_max_seconds: number;
   wrap_up_closing_phrases: string[];
   wrap_up_silence_hangup_ms: number;
+  wrap_up_referee_enabled: boolean;
 
   // Fixed-template greeting (ai-pipeline § "开场白不走管线"). null falls
   // back to the LLM-generated greeting path.
@@ -384,6 +385,7 @@ export const CAMPAIGN_DEFAULTS: CampaignBase = {
   wrap_up_max_seconds: 60,
   wrap_up_closing_phrases: [],
   wrap_up_silence_hangup_ms: 6000,
+  wrap_up_referee_enabled: false,
   greeting: null,
   filler_enabled: false,
   filler_delay_ms: null,
